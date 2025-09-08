@@ -214,28 +214,36 @@
       const answersEl = document.createElement('div');
       answersEl.classList.add('answers');
 
+      let hasAnswered = false;
+
       questionData.answers.forEach((answer) => {
         const btn = document.createElement('button');
         btn.textContent = answer.text;
 
         btn.addEventListener('click', () => {
-          if (btn.classList.contains('disabled')) return;
+          if (hasAnswered) return;
+          hasAnswered = true;
 
           if (answer.correct) {
             btn.classList.add('correct');
             score++;
-            setTimeout(() => {
-              currentQuestion++;
-              if (currentQuestion < questions.length) {
-                showQuestion(currentQuestion);
-              } else {
-                showFinalResult();
-              }
-            }, 800);
           } else {
             btn.classList.add('incorrect');
-            disableWrongAnswers(answersEl);
           }
+
+          // Bloquer tous les boutons
+          const allButtons = answersEl.querySelectorAll('button');
+          allButtons.forEach(b => b.classList.add('disabled'));
+
+          // Attendre avant de passer à la question suivante
+          setTimeout(() => {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+              showQuestion(currentQuestion);
+            } else {
+              showFinalResult();
+            }
+          }, 1000);
         });
 
         answersEl.appendChild(btn);
@@ -244,13 +252,6 @@
       slide.appendChild(questionEl);
       slide.appendChild(answersEl);
       quizContainer.appendChild(slide);
-    }
-
-    function disableWrongAnswers(container) {
-      const buttons = container.querySelectorAll('button');
-      buttons.forEach(btn => {
-        btn.classList.add('disabled');
-      });
     }
 
     function showFinalResult() {
