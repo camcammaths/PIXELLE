@@ -19,6 +19,8 @@
       --text-color: #212529;
       --border-radius: 8px;
       --transition: 0.3s ease;
+      --green: #4CAF50;
+      --red: #e74c3c;
     }
 
     * {
@@ -91,9 +93,24 @@
       font-family: 'Mabry Pro', sans-serif;
     }
 
-    .answers button:hover {
+    .answers button:hover:not(.disabled) {
       background-color: var(--button-bg-hover);
       color: white;
+    }
+
+    .answers button.correct {
+      background-color: var(--green);
+      color: white;
+    }
+
+    .answers button.incorrect {
+      background-color: var(--red);
+      color: white;
+    }
+
+    .answers button.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     #result {
@@ -123,10 +140,12 @@
 </head>
 <body>
 
-  <h1>Quiz - Divisibilité</h1>
+  <h1>Quiz - Distributivite</h1>
+
   <div class="quiz-container" id="quiz-container">
-    <!-- Les questions seront injectées ici -->
+    <!-- Questions injectées ici -->
   </div>
+
   <div id="result"></div>
   <a href="index.html" class="back">← Retour à l'accueil</a>
 
@@ -183,44 +202,55 @@
 
     function showQuestion(index) {
       quizContainer.innerHTML = '';
+      const questionData = questions[index];
 
-      questions.forEach((q, i) => {
-        const slide = document.createElement('div');
-        slide.classList.add('question-slide');
-        if (i === index) slide.classList.add('active');
+      const slide = document.createElement('div');
+      slide.classList.add('question-slide', 'active');
 
-        const questionEl = document.createElement('div');
-        questionEl.classList.add('question');
-        questionEl.textContent = `${i + 1}) ${q.text}`;
+      const questionEl = document.createElement('div');
+      questionEl.classList.add('question');
+      questionEl.textContent = `${index + 1}) ${questionData.text}`;
 
-        const answersEl = document.createElement('div');
-        answersEl.classList.add('answers');
+      const answersEl = document.createElement('div');
+      answersEl.classList.add('answers');
 
-        q.answers.forEach((answer) => {
-          const btn = document.createElement('button');
-          btn.textContent = answer.text;
-          btn.addEventListener('click', () => {
-            if (answer.correct) score++;
-            goToNextQuestion();
-          });
-          answersEl.appendChild(btn);
+      questionData.answers.forEach((answer) => {
+        const btn = document.createElement('button');
+        btn.textContent = answer.text;
+
+        btn.addEventListener('click', () => {
+          if (btn.classList.contains('disabled')) return;
+
+          if (answer.correct) {
+            btn.classList.add('correct');
+            score++;
+            setTimeout(() => {
+              currentQuestion++;
+              if (currentQuestion < questions.length) {
+                showQuestion(currentQuestion);
+              } else {
+                showFinalResult();
+              }
+            }, 800);
+          } else {
+            btn.classList.add('incorrect');
+            disableWrongAnswers(answersEl);
+          }
         });
 
-        slide.appendChild(questionEl);
-        slide.appendChild(answersEl);
-        quizContainer.appendChild(slide);
+        answersEl.appendChild(btn);
       });
+
+      slide.appendChild(questionEl);
+      slide.appendChild(answersEl);
+      quizContainer.appendChild(slide);
     }
 
-    function goToNextQuestion() {
-      const slides = document.querySelectorAll('.question-slide');
-      if (currentQuestion < questions.length - 1) {
-        slides[currentQuestion].classList.remove('active');
-        currentQuestion++;
-        slides[currentQuestion].classList.add('active');
-      } else {
-        showFinalResult();
-      }
+    function disableWrongAnswers(container) {
+      const buttons = container.querySelectorAll('button');
+      buttons.forEach(btn => {
+        btn.classList.add('disabled');
+      });
     }
 
     function showFinalResult() {
@@ -228,7 +258,6 @@
       result.textContent = `Ton score : ${score} / ${questions.length}`;
     }
 
-    // Initialiser le quiz
     showQuestion(currentQuestion);
   </script>
 </body>
