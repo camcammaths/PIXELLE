@@ -3,251 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Maths Ludiques - Activités</title>
+  <title>Maths ludiques - Accueil</title>
 
-  <!-- Import Google Fonts -->
+  <!-- Import des polices -->
   <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --primary: #3a86ff;
-      --secondary: #8338ec;
-      --background: #f0f4f8;
-      --button-bg: #a0c4ff;
-      --button-active-bg: #3a86ff;
-      --text-primary: #222;
-      --text-secondary: #555;
-      --font-title: 'Androgy Demo', sans-serif;
-      --font-text: 'Poppins', sans-serif;
+      --primary-color: #3a86ff;       /* Bleu vif typform */
+      --secondary-color: #8338ec;     /* Violet typform */
+      --background-color: #f0f4f8;    /* Fond clair doux */
+      --button-bg: #a8d0ff;           /* Bouton doux bleu clair */
+      --button-bg-hover: #7ab3ff;     /* Hover bouton */
+      --text-color: #212529;          /* Texte sombre */
+      --border-radius: 8px;
+      --transition: 0.3s ease;
     }
 
+    /* Reset et base */
     * {
       box-sizing: border-box;
-      margin: 0; padding: 0;
     }
-
     body {
-      font-family: var(--font-text);
-      background-color: var(--background);
-      color: var(--text-primary);
-      min-height: 100vh;
-      padding: 40px 20px;
+      margin: 0; padding: 2rem;
+      font-family: 'Mabry Pro', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
       display: flex;
       flex-direction: column;
       align-items: center;
-      text-align: center;
+      min-height: 100vh;
     }
 
+    /* Titre principal */
     h1 {
-      font-family: var(--font-title);
+      font-family: 'Androgy Demo', sans-serif;
       font-weight: normal;
       font-size: 3rem;
+      text-transform: capitalize;
       margin-bottom: 1.5rem;
-      text-transform: none;
-    }
-    h1::first-letter {
-      text-transform: uppercase;
+      color: var(--primary-color);
+      user-select: none;
     }
 
-    p {
-      max-width: 600px;
-      font-size: 1.125rem;
-      color: var(--text-secondary);
-      margin-bottom: 2.5rem;
-      line-height: 1.6;
-    }
-
+    /* Container des boutons */
     nav {
       display: flex;
-      gap: 1.25rem;
-      justify-content: center;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
     }
 
-    button {
-      cursor: pointer;
-      font-family: var(--font-text);
-      font-size: 1rem;
+    /* Style des boutons */
+    .btn {
+      font-family: 'Mabry Pro', sans-serif;
+      font-size: 1.25rem;
       padding: 0.75rem 2rem;
-      border-radius: 0.375rem;
-      border: none;
       background-color: var(--button-bg);
-      color: var(--text-primary);
-      box-shadow: none;
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      text-transform: uppercase;
-      font-weight: 600;
+      border: none;
+      border-radius: var(--border-radius);
+      color: var(--text-color);
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(58, 134, 255, 0.3);
+      text-decoration: none;
+      text-align: center;
+      transition: background-color var(--transition), box-shadow var(--transition), transform var(--transition);
+      user-select: none;
+      display: inline-block;
     }
 
-    button.active,
-    button:hover {
-      background-color: var(--button-active-bg);
+    .btn:hover:not(.disabled) {
+      background-color: var(--button-bg-hover);
+      box-shadow: 0 6px 15px rgba(58, 134, 255, 0.6);
+      transform: translateY(-2px);
       color: white;
-      box-shadow: 0 4px 12px rgba(58, 134, 255, 0.4);
+      text-decoration: none;
     }
 
-    #content {
-      background: white;
-      max-width: 700px;
-      width: 100%;
-      padding: 1.5rem 2rem;
-      border-radius: 0.75rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    .btn.disabled, .btn[aria-disabled="true"] {
+      cursor: default;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Petite description */
+    p.description {
+      max-width: 400px;
       font-size: 1.125rem;
-      line-height: 1.6;
-      min-height: 180px;
-    }
-
-    /* Sous-menu pour multiples */
-    #sub-nav {
-      margin-bottom: 2rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-
-    #sub-nav button {
-      padding: 0.5rem 1.5rem;
-      font-weight: 500;
-      font-size: 0.9rem;
-      text-transform: none;
-      border-radius: 4px;
-    }
-
-    #sub-nav button.active,
-    #sub-nav button:hover {
-      background-color: var(--secondary);
-      color: white;
-      box-shadow: 0 3px 8px rgba(131, 56, 236, 0.5);
+      line-height: 1.5;
+      text-align: center;
+      color: #555;
+      user-select: none;
     }
   </style>
 </head>
 <body>
 
-  <h1 id="page-title">Maths ludiques</h1>
+  <h1>Maths ludiques</h1>
 
-  <p id="page-description">
-    Choisis une activité pour commencer à apprendre les mathématiques de manière ludique.
+  <nav>
+    <a href="index.html" class="btn disabled" aria-disabled="true">Main page</a>
+    <a href="matchcard.html" class="btn">Match cards</a>
+    <a href="quiz.html" class="btn">Quiz</a>
+  </nav>
+
+  <p class="description">
+    Bienvenue sur la plateforme de jeux mathématiques ludiques. Choisissez une activité pour commencer !
   </p>
-
-  <!-- Menu principal -->
-  <nav id="main-nav">
-    <button id="btn-multiples">MULTIPLES</button>
-    <button id="btn-pgcd">PGCD</button>
-  </nav>
-
-  <!-- Sous-menu (apparait uniquement pour Multiples) -->
-  <nav id="sub-nav" style="display:none;">
-    <button id="btn-quiz">Quiz</button>
-    <button id="btn-match">Match card</button>
-  </nav>
-
-  <section id="content">
-    <!-- Contenu dynamique -->
-  </section>
-
-  <script>
-    const title = document.getElementById("page-title");
-    const description = document.getElementById("page-description");
-    const content = document.getElementById("content");
-
-    const btnMultiples = document.getElementById("btn-multiples");
-    const btnPgcd = document.getElementById("btn-pgcd");
-
-    const subNav = document.getElementById("sub-nav");
-    const btnQuiz = document.getElementById("btn-quiz");
-    const btnMatch = document.getElementById("btn-match");
-
-    // Reset classes buttons main nav
-    function resetMainButtons() {
-      btnMultiples.classList.remove("active");
-      btnPgcd.classList.remove("active");
-    }
-
-    // Reset classes buttons sous-menu
-    function resetSubButtons() {
-      btnQuiz.classList.remove("active");
-      btnMatch.classList.remove("active");
-    }
-
-    // Affiche la page principale
-    function showHome() {
-      resetMainButtons();
-      resetSubButtons();
-      subNav.style.display = "none";
-      title.textContent = "Maths ludiques";
-      description.textContent = "Choisis une activité pour commencer à apprendre les mathématiques de manière ludique.";
-      content.innerHTML = "";
-    }
-
-    // Affiche la page PGCD
-    function showPgcd() {
-      resetMainButtons();
-      resetSubButtons();
-      subNav.style.display = "none";
-      btnPgcd.classList.add("active");
-      title.textContent = "Pgcd";
-      description.textContent = "Découvre des exercices pour maîtriser le PGCD.";
-      content.innerHTML = `
-        <p>Entraîne-toi à calculer le plus grand commun diviseur de plusieurs nombres avec nos activités.</p>
-      `;
-    }
-
-    // Affiche la page Multiples + sous-menu
-    function showMultiples() {
-      resetMainButtons();
-      btnMultiples.classList.add("active");
-      subNav.style.display = "flex";
-      resetSubButtons();
-
-      title.textContent = "Multiples";
-      description.textContent = "Choisis une activité sur les multiples.";
-
-      content.innerHTML = `
-        <p>Choisis Quiz ou Match card ci-dessous pour commencer.</p>
-      `;
-    }
-
-    // Affiche quiz multiples
-    function showQuiz() {
-      resetSubButtons();
-      btnQuiz.classList.add("active");
-
-      title.textContent = "Multiples - Quiz";
-      description.textContent = "Teste tes connaissances sur les multiples avec notre quiz interactif.";
-      content.innerHTML = `
-        <p>Quiz à venir ici...</p>
-        <!-- Ici tu peux intégrer ton quiz plus tard -->
-      `;
-    }
-
-    // Affiche match card multiples
-    function showMatchCard() {
-      resetSubButtons();
-      btnMatch.classList.add("active");
-
-      title.textContent = "Multiples - Match card";
-      description.textContent = "Amuse-toi à matcher les cartes sur les multiples.";
-      content.innerHTML = `
-        <p>Jeu de cartes à venir ici...</p>
-        <!-- Ici tu peux intégrer ton jeu de cartes plus tard -->
-      `;
-    }
-
-    // Évènements boutons
-    btnMultiples.addEventListener("click", showMultiples);
-    btnPgcd.addEventListener("click", showPgcd);
-
-    btnQuiz.addEventListener("click", showQuiz);
-    btnMatch.addEventListener("click", showMatchCard);
-
-    // Afficher page d'accueil au départ
-    showHome();
-  </script>
 
 </body>
 </html>
-
-<a href="multiple/matchcard.html">Match Card</a>
