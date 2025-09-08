@@ -7,11 +7,9 @@
 
   <!-- Import Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-  <!-- Mabry Pro n'est pas dispo sur Google Fonts, remplaçons par une alternative gratuite (ex: "Poppins") -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 
   <style>
-    /* Variables couleurs */
     :root {
       --primary: #3a86ff;
       --secondary: #8338ec;
@@ -21,14 +19,12 @@
       --text-primary: #222;
       --text-secondary: #555;
       --font-title: 'Androgy Demo', sans-serif;
-      --font-text: 'Poppins', sans-serif; /* Remplacement Mabry Pro */
+      --font-text: 'Poppins', sans-serif;
     }
 
-    /* Reset basique */
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
     }
 
     body {
@@ -36,10 +32,10 @@
       background-color: var(--background);
       color: var(--text-primary);
       min-height: 100vh;
+      padding: 40px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px 20px;
       text-align: center;
     }
 
@@ -50,8 +46,6 @@
       margin-bottom: 1.5rem;
       text-transform: none;
     }
-
-    /* Capitaliser uniquement la première lettre */
     h1::first-letter {
       text-transform: uppercase;
     }
@@ -94,7 +88,6 @@
       box-shadow: 0 4px 12px rgba(58, 134, 255, 0.4);
     }
 
-    /* Conteneur contenu */
     #content {
       background: white;
       max-width: 700px;
@@ -107,6 +100,28 @@
       min-height: 180px;
     }
 
+    /* Sous-menu pour multiples */
+    #sub-nav {
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    #sub-nav button {
+      padding: 0.5rem 1.5rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-transform: none;
+      border-radius: 4px;
+    }
+
+    #sub-nav button.active,
+    #sub-nav button:hover {
+      background-color: var(--secondary);
+      color: white;
+      box-shadow: 0 3px 8px rgba(131, 56, 236, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -117,9 +132,16 @@
     Choisis une activité pour commencer à apprendre les mathématiques de manière ludique.
   </p>
 
-  <nav>
+  <!-- Menu principal -->
+  <nav id="main-nav">
     <button id="btn-multiples">MULTIPLES</button>
     <button id="btn-pgcd">PGCD</button>
+  </nav>
+
+  <!-- Sous-menu (apparait uniquement pour Multiples) -->
+  <nav id="sub-nav" style="display:none;">
+    <button id="btn-quiz">Quiz</button>
+    <button id="btn-match">Match card</button>
   </nav>
 
   <section id="content">
@@ -130,36 +152,100 @@
     const title = document.getElementById("page-title");
     const description = document.getElementById("page-description");
     const content = document.getElementById("content");
+
     const btnMultiples = document.getElementById("btn-multiples");
     const btnPgcd = document.getElementById("btn-pgcd");
 
-    function resetButtons() {
+    const subNav = document.getElementById("sub-nav");
+    const btnQuiz = document.getElementById("btn-quiz");
+    const btnMatch = document.getElementById("btn-match");
+
+    // Reset classes buttons main nav
+    function resetMainButtons() {
       btnMultiples.classList.remove("active");
       btnPgcd.classList.remove("active");
     }
 
-    btnMultiples.addEventListener("click", () => {
-      resetButtons();
-      btnMultiples.classList.add("active");
-      title.textContent = "Multiples";
-      description.textContent = "Explore des activités interactives pour comprendre les multiples.";
-      content.innerHTML = `
-        <p>Apprends à identifier les multiples d’un nombre grâce à nos exercices ludiques.</p>
-        <!-- Ici tu peux ajouter plus de contenu ou liens vers les activités -->
-      `;
-    });
+    // Reset classes buttons sous-menu
+    function resetSubButtons() {
+      btnQuiz.classList.remove("active");
+      btnMatch.classList.remove("active");
+    }
 
-    btnPgcd.addEventListener("click", () => {
-      resetButtons();
+    // Affiche la page principale
+    function showHome() {
+      resetMainButtons();
+      resetSubButtons();
+      subNav.style.display = "none";
+      title.textContent = "Maths ludiques";
+      description.textContent = "Choisis une activité pour commencer à apprendre les mathématiques de manière ludique.";
+      content.innerHTML = "";
+    }
+
+    // Affiche la page PGCD
+    function showPgcd() {
+      resetMainButtons();
+      resetSubButtons();
+      subNav.style.display = "none";
       btnPgcd.classList.add("active");
       title.textContent = "Pgcd";
       description.textContent = "Découvre des exercices pour maîtriser le PGCD.";
       content.innerHTML = `
         <p>Entraîne-toi à calculer le plus grand commun diviseur de plusieurs nombres avec nos activités.</p>
-        <!-- Ici tu peux ajouter plus de contenu ou liens vers les activités -->
       `;
-    });
+    }
 
+    // Affiche la page Multiples + sous-menu
+    function showMultiples() {
+      resetMainButtons();
+      btnMultiples.classList.add("active");
+      subNav.style.display = "flex";
+      resetSubButtons();
+
+      title.textContent = "Multiples";
+      description.textContent = "Choisis une activité sur les multiples.";
+
+      content.innerHTML = `
+        <p>Choisis Quiz ou Match card ci-dessous pour commencer.</p>
+      `;
+    }
+
+    // Affiche quiz multiples
+    function showQuiz() {
+      resetSubButtons();
+      btnQuiz.classList.add("active");
+
+      title.textContent = "Multiples - Quiz";
+      description.textContent = "Teste tes connaissances sur les multiples avec notre quiz interactif.";
+      content.innerHTML = `
+        <p>Quiz à venir ici...</p>
+        <!-- Ici tu peux intégrer ton quiz plus tard -->
+      `;
+    }
+
+    // Affiche match card multiples
+    function showMatchCard() {
+      resetSubButtons();
+      btnMatch.classList.add("active");
+
+      title.textContent = "Multiples - Match card";
+      description.textContent = "Amuse-toi à matcher les cartes sur les multiples.";
+      content.innerHTML = `
+        <p>Jeu de cartes à venir ici...</p>
+        <!-- Ici tu peux intégrer ton jeu de cartes plus tard -->
+      `;
+    }
+
+    // Évènements boutons
+    btnMultiples.addEventListener("click", showMultiples);
+    btnPgcd.addEventListener("click", showPgcd);
+
+    btnQuiz.addEventListener("click", showQuiz);
+    btnMatch.addEventListener("click", showMatchCard);
+
+    // Afficher page d'accueil au départ
+    showHome();
   </script>
+
 </body>
 </html>
