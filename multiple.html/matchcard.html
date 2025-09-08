@@ -3,415 +3,235 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Maths Ludiques</title>
+  <title>Match Card - Maths ludiques</title>
   <style>
-    /* Import des polices */
     @import url('https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap');
 
     :root {
-      --primary: #3a86ff;      /* Bleu vif */
-      --secondary: #8338ec;    /* Violet */
-      --bg-light: #f0f4f8;     /* Fond clair doux */
-      --text-primary: #212529; /* Texte principal */
-      --text-secondary: #555;  /* Texte secondaire */
-      --btn-bg: #a8d0ff;       /* Boutons doux */
-      --btn-bg-hover: #7ab3ff; /* Boutons hover */
+      --primary: #3a86ff;
+      --secondary: #8338ec;
+      --bg-light: #f0f4f8;
+      --text-primary: #212529;
+      --btn-bg: #a8d0ff;
+      --btn-bg-hover: #7ab3ff;
       --border-radius: 8px;
       --transition: 0.3s ease;
     }
 
-    /* Reset & base */
-    * {
-      box-sizing: border-box;
-    }
     body {
-      margin: 0;
       font-family: 'Mabry Pro', sans-serif;
+      margin: 0; padding: 2rem;
       background-color: var(--bg-light);
       color: var(--text-primary);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      padding: 2rem;
       user-select: none;
     }
 
     h1, h2, h3 {
       font-family: 'Androgy Demo', sans-serif;
-      text-transform: capitalize; /* Première lettre maj */
-      margin: 0 0 0.5rem 0;
+      text-transform: capitalize;
+      margin-bottom: 0.5rem;
       color: var(--primary);
     }
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 400;
-    }
-    h2 {
-      font-size: 1.8rem;
-      font-weight: 400;
-    }
-    h3 {
-      font-size: 1.25rem;
-      font-weight: 500;
-    }
 
-    p {
-      font-size: 1rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      margin-top: 0;
+    a {
+      display: inline-block;
       margin-bottom: 1.5rem;
-    }
-
-    /* Navigation principale */
-    nav#main-nav {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    nav#main-nav button {
-      background: var(--btn-bg);
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: var(--border-radius);
-      cursor: pointer;
+      text-decoration: none;
+      color: var(--primary);
       font-weight: 600;
       font-family: 'Mabry Pro', sans-serif;
-      transition: background var(--transition);
-      color: var(--primary);
-      box-shadow: 0 2px 6px rgba(58, 134, 255, 0.4);
-    }
-    nav#main-nav button.active,
-    nav#main-nav button:hover {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 6px 15px rgba(58, 134, 255, 0.7);
-    }
-
-    /* Sous-menu */
-    nav#sub-nav {
-      display: none;
-      margin-bottom: 1.5rem;
-      gap: 1rem;
-    }
-    nav#sub-nav button {
-      background: var(--btn-bg);
-      border: none;
-      padding: 0.5rem 1.25rem;
+      border: 2px solid var(--primary);
+      padding: 0.5rem 1rem;
       border-radius: var(--border-radius);
-      cursor: pointer;
-      font-weight: 600;
-      font-family: 'Mabry Pro', sans-serif;
-      transition: background var(--transition);
-      color: var(--primary);
-      box-shadow: 0 2px 6px rgba(131, 56, 236, 0.4);
-      font-size: 0.9rem;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
-    nav#sub-nav button.active,
-    nav#sub-nav button:hover {
-      background: var(--secondary);
+    a:hover {
+      background-color: var(--primary);
       color: white;
-      box-shadow: 0 6px 15px rgba(131, 56, 236, 0.7);
     }
 
-    /* Contenu principal */
-    section#content {
-      flex-grow: 1;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    /* Jeu Match card */
     #game {
       display: flex;
-      justify-content: space-between;
-      max-width: 700px;
-      margin: auto;
       gap: 2rem;
-      user-select: none;
+      justify-content: center;
+      margin-top: 1rem;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .cards-column {
+    .column {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
     }
-    .card {
-      padding: 1rem 1.25rem;
-      background: var(--primary);
-      color: white;
-      border-radius: var(--border-radius);
-      cursor: grab;
-      user-select: none;
-      font-weight: 600;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      transition: box-shadow 0.2s ease;
-    }
-    .card.dragging {
-      opacity: 0.5;
-      cursor: grabbing;
+    .column h3 {
+      text-align: center;
+      margin-bottom: 1rem;
     }
     .dropzone {
       min-height: 50px;
       border: 2px dashed var(--primary);
       border-radius: var(--border-radius);
       background: #f0f4f8;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 0.5rem;
       font-style: italic;
       color: #333;
-      margin-bottom: 1rem;
-      user-select: none;
       transition: background-color 0.3s ease, border-color 0.3s ease;
     }
     .dropzone.filled {
       border-style: solid;
       background: #d0e2ff;
-      cursor: default;
       color: #000;
       font-style: normal;
     }
-    #check-btn {
-      margin-top: 1rem;
-      padding: 0.75rem 2rem;
+    .card {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      border-radius: var(--border-radius);
+      cursor: grab;
       font-weight: 600;
-      font-size: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      user-select: none;
+    }
+    .card.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+    #check-btn {
+      display: block;
+      margin: 1rem auto;
+      padding: 0.75rem 2rem;
       background: var(--secondary);
       color: white;
       border: none;
       border-radius: var(--border-radius);
+      font-weight: 600;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(131, 56, 236, 0.5);
       transition: background 0.3s ease;
-      user-select: none;
     }
     #check-btn:hover {
       background: #6829b0;
     }
     #result {
-      margin-top: 1rem;
+      text-align: center;
       font-weight: 700;
+      margin-top: 1rem;
       min-height: 1.5em;
     }
   </style>
 </head>
 <body>
 
-  <h1 id="page-title">Maths ludiques</h1>
-  <p id="page-description">Choisis une activité pour commencer à apprendre les mathématiques de manière ludique.</p>
+  <h1>Match card</h1>
+  <a href="index.html">← Retour à la page principale</a>
 
-  <nav id="main-nav">
-    <button id="btn-multiples">Multiples</button>
-    <button id="btn-pgcd">Pgcd</button>
-  </nav>
+  <p>Associe chaque nombre à sa condition de divisibilité en faisant glisser les cartes.</p>
 
-  <nav id="sub-nav">
-    <button id="btn-quiz">Quiz</button>
-    <button id="btn-match">Match card</button>
-  </nav>
+  <div id="game">
+    <div class="column" id="numbers-col">
+      <h3>Nombres</h3>
+      <div class="dropzone" data-num="1">1) Un nombre est divisible par 2</div>
+      <div class="dropzone" data-num="2">2) Un nombre entier est divisible par 3</div>
+      <div class="dropzone" data-num="3">3) Un nombre entier est divisible par 4</div>
+      <div class="dropzone" data-num="4">4) Un nombre entier est divisible par 5</div>
+      <div class="dropzone" data-num="5">5) Un nombre entier est divisible par 9</div>
+      <div class="dropzone" data-num="6">6) Un nombre entier est divisible par 10</div>
+    </div>
+    <div class="column" id="conditions-col">
+      <h3>Conditions</h3>
+      <div class="card" draggable="true" data-cond="A">A) Si son chiffre des unités est pair (0, 2, 4, 6 ou 8)</div>
+      <div class="card" draggable="true" data-cond="B">B) Si la somme de ses chiffres est divisible par 3</div>
+      <div class="card" draggable="true" data-cond="C">C) Si le nombre formé par son chiffre des dizaines et son chiffre des unités est divisible par 4</div>
+      <div class="card" draggable="true" data-cond="D">D) Si son chiffre des unités est 0 ou 5</div>
+      <div class="card" draggable="true" data-cond="E">E) Si la somme de ses chiffres est divisible par 9</div>
+      <div class="card" draggable="true" data-cond="F">F) Si son chiffre des unités est 0</div>
+    </div>
+  </div>
 
-  <section id="content"></section>
+  <button id="check-btn">Vérifier les réponses</button>
+  <div id="result"></div>
 
-  <script>
-    const title = document.getElementById("page-title");
-    const description = document.getElementById("page-description");
-    const content = document.getElementById("content");
+<script>
+  const cards = document.querySelectorAll('.card');
+  const dropzones = document.querySelectorAll('.dropzone');
+  const checkBtn = document.getElementById('check-btn');
+  const result = document.getElementById('result');
 
-    const btnMultiples = document.getElementById("btn-multiples");
-    const btnPgcd = document.getElementById("btn-pgcd");
+  let dragged = null;
 
-    const subNav = document.getElementById("sub-nav");
-    const btnQuiz = document.getElementById("btn-quiz");
-    const btnMatch = document.getElementById("btn-match");
+  cards.forEach(card => {
+    card.addEventListener('dragstart', () => {
+      dragged = card;
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', () => {
+      dragged = null;
+      card.classList.remove('dragging');
+    });
+  });
 
-    function resetMainButtons() {
-      btnMultiples.classList.remove("active");
-      btnPgcd.classList.remove("active");
+  dropzones.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.style.backgroundColor = '#a8d0ff';
+    });
+    zone.addEventListener('dragleave', e => {
+      zone.style.backgroundColor = '';
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.style.backgroundColor = '';
+      if (!dragged) return;
+
+      // Si une carte est déjà là, la remet dans conditions-col
+      const existing = zone.querySelector('.card');
+      if (existing) {
+        document.getElementById('conditions-col').appendChild(existing);
+      }
+      zone.appendChild(dragged);
+    });
+  });
+
+  const correct = {
+    1: 'A',
+    2: 'B',
+    3: 'C',
+    4: 'D',
+    5: 'E',
+    6: 'F'
+  };
+
+  checkBtn.addEventListener('click', () => {
+    let score = 0;
+    const total = Object.keys(correct).length;
+
+    dropzones.forEach(zone => {
+      const num = zone.getAttribute('data-num');
+      const card = zone.querySelector('.card');
+      if (card && card.getAttribute('data-cond') === correct[num]) {
+        zone.style.borderColor = 'green';
+        zone.style.backgroundColor = '#d4f8d4';
+        score++;
+      } else {
+        zone.style.borderColor = 'red';
+        zone.style.backgroundColor = '#f8d4d4';
+      }
+    });
+
+    if (score === total) {
+      result.style.color = 'green';
+      result.textContent = 'Bravo ! Toutes les paires sont correctes 🎉';
+    } else {
+      result.style.color = 'red';
+      result.textContent = `Il y a ${total - score} erreur(s). Essaie encore.`;
     }
-
-    function resetSubButtons() {
-      btnQuiz.classList.remove("active");
-      btnMatch.classList.remove("active");
-    }
-
-    function showHome() {
-      resetMainButtons();
-      resetSubButtons();
-      subNav.style.display = "none";
-      title.textContent = "Maths ludiques";
-      description.textContent = "Choisis une activité pour commencer à apprendre les mathématiques de manière ludique.";
-      content.innerHTML = "";
-    }
-
-    function showPgcd() {
-      resetMainButtons();
-      resetSubButtons();
-      subNav.style.display = "none";
-      btnPgcd.classList.add("active");
-      title.textContent = "Pgcd";
-      description.textContent = "Découvre des exercices pour maîtriser le PGCD.";
-      content.innerHTML = `
-        <p>Entraîne-toi à calculer le plus grand commun diviseur de plusieurs nombres avec nos activités.</p>
-      `;
-    }
-
-    function showMultiples() {
-      resetMainButtons();
-      btnMultiples.classList.add("active");
-      subNav.style.display = "flex";
-      resetSubButtons();
-
-      title.textContent = "Multiples";
-      description.textContent = "Choisis une activité sur les multiples.";
-
-      content.innerHTML = `
-        <p>Choisis Quiz ou Match card ci-dessous pour commencer.</p>
-      `;
-    }
-
-    function showQuiz() {
-      resetSubButtons();
-      btnQuiz.classList.add("active");
-
-      title.textContent = "Multiples - Quiz";
-      description.textContent = "Teste tes connaissances sur les multiples avec notre quiz interactif.";
-      content.innerHTML = `
-        <p>Quiz à venir ici...</p>
-      `;
-    }
-
-    function showMatchCard() {
-      resetSubButtons();
-      btnMatch.classList.add("active");
-
-      title.textContent = "Multiples - Match card";
-      description.textContent = "Associe chaque nombre à sa condition de divisibilité en faisant glisser les cartes.";
-
-      content.innerHTML = `
-        <div id="game">
-          <div class="cards-column" id="numbers-column">
-            <h3>Nombres</h3>
-            <div class="dropzone" data-number="1">1) Un nombre est divisible par 2</div>
-            <div class="dropzone" data-number="2">2) Un nombre entier est divisible par 3</div>
-            <div class="dropzone" data-number="3">3) Un nombre entier est divisible par 4</div>
-            <div class="dropzone" data-number="4">4) Un nombre entier est divisible par 5</div>
-            <div class="dropzone" data-number="5">5) Un nombre entier est divisible par 9</div>
-            <div class="dropzone" data-number="6">6) Un nombre entier est divisible par 10</div>
-          </div>
-          <div class="cards-column" id="conditions-column">
-            <h3>Conditions</h3>
-            <div class="card" draggable="true" data-condition="A">A) Si son chiffre des unités est pair (0, 2, 4, 6 ou 8)</div>
-            <div class="card" draggable="true" data-condition="B">B) Si la somme de ses chiffres est divisible par 3</div>
-            <div class="card" draggable="true" data-condition="C">C) Si le nombre formé par son chiffre des dizaines et son chiffre des unités est divisible par 4</div>
-            <div class="card" draggable="true" data-condition="D">D) Si son chiffre des unités est 0 ou 5</div>
-            <div class="card" draggable="true" data-condition="E">E) Si la somme de ses chiffres est divisible par 9</div>
-            <div class="card" draggable="true" data-condition="F">F) Si son chiffre des unités est 0</div>
-          </div>
-        </div>
-
-        <button id="check-btn">Vérifier les réponses</button>
-        <div id="result"></div>
-      `;
-
-      const cards = content.querySelectorAll('.card');
-      const dropzones = content.querySelectorAll('.dropzone');
-      const checkBtn = content.querySelector('#check-btn');
-      const result = content.querySelector('#result');
-
-      let draggedCard = null;
-
-      cards.forEach(card => {
-        card.addEventListener('dragstart', () => {
-          draggedCard = card;
-          card.classList.add('dragging');
-        });
-        card.addEventListener('dragend', () => {
-          draggedCard = null;
-          card.classList.remove('dragging');
-        });
-      });
-
-      dropzones.forEach(zone => {
-        zone.addEventListener('dragover', e => {
-          e.preventDefault();
-          zone.style.backgroundColor = '#a8d0ff';
-        });
-
-        zone.addEventListener('dragleave', e => {
-          zone.style.backgroundColor = '';
-        });
-
-        zone.addEventListener('drop', e => {
-          e.preventDefault();
-          zone.style.backgroundColor = '';
-
-          if (!draggedCard) return;
-
-          // Si la zone a déjà une carte, la remettre dans conditions
-          if (zone.querySelector('.card')) {
-            const prevCard = zone.querySelector('.card');
-            document.getElementById('conditions-column').appendChild(prevCard);
-          }
-
-          zone.appendChild(draggedCard);
-          draggedCard.style.cursor = 'default';
-        });
-      });
-
-      const correctPairs = {
-        1: 'A',
-        2: 'B',
-        3: 'C',
-        4: 'D',
-        5: 'E',
-        6: 'F'
-      };
-
-      checkBtn.addEventListener('click', () => {
-        let correctCount = 0;
-        let total = Object.keys(correctPairs).length;
-
-        dropzones.forEach(zone => {
-          const number = zone.getAttribute('data-number');
-          const card = zone.querySelector('.card');
-          if (card) {
-            const condition = card.getAttribute('data-condition');
-            if (correctPairs[number] === condition) {
-              correctCount++;
-              zone.style.borderColor = 'green';
-              zone.style.backgroundColor = '#d4f8d4';
-            } else {
-              zone.style.borderColor = 'red';
-              zone.style.backgroundColor = '#f8d4d4';
-            }
-          } else {
-            zone.style.borderColor = 'red';
-            zone.style.backgroundColor = '#f8d4d4';
-          }
-        });
-
-        if (correctCount === total) {
-          result.textContent = "Bravo ! Toutes les paires sont correctes 🎉";
-          result.style.color = 'green';
-        } else {
-          result.textContent = `Il y a ${total - correctCount} erreur(s). Essaie encore.`;
-          result.style.color = 'red';
-        }
-      });
-    }
-
-    // Évènements boutons
-    btnMultiples.addEventListener("click", showMultiples);
-    btnPgcd.addEventListener("click", showPgcd);
-    btnQuiz.addEventListener("click", showQuiz);
-    btnMatch.addEventListener("click", showMatchCard);
-
-    // Affichage initial
-    showHome();
-  </script>
+  });
+</script>
 
 </body>
 </html>
