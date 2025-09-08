@@ -1,1 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Géométrie</title>
 
+  <!-- Polices -->
+  <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary-color: #5b6dfa;
+      --secondary-color: #00bfa6;
+      --accent-color: #ff6b6b;
+      --background-color: #f9f9f9;
+      --grid-color: #dcdcdc;
+      --text-color: #222;
+      --border-radius: 10px;
+      --transition: 0.3s ease;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Mabry Pro', sans-serif;
+      background: var(--background-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-family: 'Androgy Demo', sans-serif;
+      font-size: 2.5rem;
+      text-transform: lowercase;
+      color: var(--primary-color);
+    }
+
+    h1::first-letter {
+      text-transform: uppercase;
+    }
+
+    .question-box {
+      font-size: 1.2rem;
+      text-align: center;
+      margin: 1.5rem 0;
+      max-width: 600px;
+    }
+
+    #grid {
+      margin-top: 2rem;
+      background-color: white;
+      border: 2px solid var(--grid-color);
+      border-radius: var(--border-radius);
+      width: 600px;
+      height: 600px;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .btn {
+      margin-top: 2rem;
+      padding: 0.7rem 1.4rem;
+      font-size: 1rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-family: 'Mabry Pro', sans-serif;
+      transition: background-color var(--transition);
+    }
+
+    .btn:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .point {
+      fill: var(--accent-color);
+      stroke: black;
+      stroke-width: 1;
+      cursor: pointer;
+    }
+
+    a.back {
+      display: inline-block;
+      margin-top: 2rem;
+      text-decoration: none;
+      font-weight: 600;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    a.back:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Géométrie</h1>
+
+  <div class="question-box" id="question">
+    Tracer l’image du triangle par la rotation de centre O d’angle 90°
+  </div>
+
+  <div id="grid">
+    <svg id="svgGrid"></svg>
+  </div>
+
+  <button class="btn" onclick="nextQuestion()">Question suivante</button>
+
+  <a href="index.html" class="back">← Retour à l'accueil</a>
+
+  <script>
+    const questions = [
+      "Tracer l’image du triangle par la rotation de centre O d’angle 90°",
+      "Tracer l’image du triangle par la rotation de centre O d’angle 180°",
+      "Construire l’image du triangle par l’homothétie de centre O et de rapport 2",
+      "Construire l’image du triangle par l’homothétie de centre O et de rapport 4"
+    ];
+    let currentQuestion = 0;
+
+    function nextQuestion() {
+      if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        document.getElementById('question').textContent = questions[currentQuestion];
+        clearPoints();
+      } else {
+        alert("Toutes les questions sont terminées !");
+      }
+    }
+
+    const svg = document.getElementById('svgGrid');
+    const gridSize = 20;
+    const cols = 30;
+    const rows = 30;
+
+    // Draw grid
+    function drawGrid() {
+      for (let i = 0; i <= cols; i++) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", i * gridSize);
+        line.setAttribute("y1", 0);
+        line.setAttribute("x2", i * gridSize);
+        line.setAttribute("y2", rows * gridSize);
+        line.setAttribute("stroke", "#e0e0e0");
+        svg.appendChild(line);
+      }
+
+      for (let j = 0; j <= rows; j++) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", 0);
+        line.setAttribute("y1", j * gridSize);
+        line.setAttribute("x2", cols * gridSize);
+        line.setAttribute("y2", j * gridSize);
+        line.setAttribute("stroke", "#e0e0e0");
+        svg.appendChild(line);
+      }
+    }
+
+    // Draw point on click
+    svg.addEventListener('click', function (e) {
+      const rect = svg.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const snappedX = Math.round(x / gridSize) * gridSize;
+      const snappedY = Math.round(y / gridSize) * gridSize;
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", snappedX);
+      circle.setAttribute("cy", snappedY);
+      circle.setAttribute("r", 5);
+      circle.setAttribute("class", "point");
+
+      svg.appendChild(circle);
+    });
+
+    function clearPoints() {
+      const points = svg.querySelectorAll('.point');
+      points.forEach(p => p.remove());
+    }
+
+    drawGrid();
+  </script>
+
+</body>
+</html>
