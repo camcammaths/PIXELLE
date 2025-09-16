@@ -94,6 +94,7 @@
   <div id="grid"><svg id="svgGrid"></svg></div>
 
   <div>
+    <button class="btn" onclick="goHome()">Retour à l’accueil</button>
     <button class="btn" onclick="resetPoints()">Réinitialiser</button>
     <button class="btn" onclick="nextQuestion()">Question suivante</button>
   </div>
@@ -214,13 +215,12 @@
       }
     });
 
+    function goHome() {
+  // Mets ici l'adresse de ta page d'accueil
+  window.location.href = "index.html"; 
+}
     render(current);
   </script>
-<div>
-  <button class="btn" onclick="goHome()">🏠 Retour à l’accueil</button>
-  <button class="btn" onclick="resetPoints()">Réinitialiser</button>
-  <button class="btn" onclick="nextQuestion()">Question suivante</button>
-</div>
   
 </body>
 </html>
