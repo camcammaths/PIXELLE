@@ -17,8 +17,8 @@
       --accent-color-2: #fb5607;
       --accent-color-3: #ffbe0b;
       --background-color: #f0f4f8;
-      --cube-veil: rgba(58, 134, 255, 0.08);
-      --border-radius: 8px;
+      --pyramid-veil: rgba(58, 134, 255, 0.08);
+      --border-radius: 6px;
       --transition: 0.3s ease;
     }
 
@@ -43,7 +43,7 @@
       margin-bottom: 2rem;
     }
 
-    /* Container pour la pyramide */
+    /* Pyramide Container */
     .pyramid-container {
       width: 200px;
       height: 200px;
@@ -51,11 +51,62 @@
     }
 
     .pyramid {
-      width: 100%;
-      height: 100%;
       position: relative;
+      width: 200px;
+      height: 200px;
       transform-style: preserve-3d;
       animation: rotatePyramid 20s linear infinite;
+    }
+
+    /* Faces */
+    .face {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      background: var(--pyramid-veil);
+      backdrop-filter: blur(2px);
+    }
+
+    /* Base carrée */
+    .base {
+      width: 140px;
+      height: 140px;
+      background: var(--pyramid-veil);
+      border: 2px solid var(--primary-color);
+      border-radius: var(--border-radius);
+      position: absolute;
+      transform: rotateX(90deg) translateZ(-70px);
+    }
+
+    /* Faces triangulaires */
+    .front {
+      border-width: 0 70px 140px 70px;
+      border-color: transparent transparent var(--secondary-color) transparent;
+      transform: rotateY(0deg) translateZ(70px) translateY(-35px);
+    }
+
+    .back {
+      border-width: 140px 70px 0 70px;
+      border-color: var(--accent-color-1) transparent transparent transparent;
+      transform: rotateY(180deg) translateZ(70px) translateY(35px);
+    }
+
+    .left {
+      border-width: 0 70px 140px 70px;
+      border-color: transparent transparent var(--accent-color-2) transparent;
+      transform: rotateY(-90deg) translateZ(70px) translateY(-35px);
+    }
+
+    .right {
+      border-width: 0 70px 140px 70px;
+      border-color: transparent transparent var(--accent-color-3) transparent;
+      transform: rotateY(90deg) translateZ(70px) translateY(-35px);
+    }
+
+    @keyframes rotatePyramid {
+      0%   { transform: rotateX(0deg) rotateY(0deg); }
+      100% { transform: rotateX(360deg) rotateY(360deg); }
     }
 
     .pyramid:hover {
@@ -63,45 +114,6 @@
       cursor: grab;
     }
 
-    /* Base (carrée) */
-    .base {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: var(--cube-veil);
-      border-radius: var(--border-radius);
-      border: 2px solid var(--primary-color);
-      backdrop-filter: blur(2px);
-      transform: rotateX(90deg) translateZ(-100px);
-      box-sizing: border-box;
-    }
-
-    /* Faces triangulaires */
-    .side {
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 0 100px 173px 100px; /* triangle approximativement équilatéral */
-      border-bottom-color: var(--cube-veil);
-      border-left-color: transparent;
-      border-right-color: transparent;
-      border-top-color: transparent;
-      backdrop-filter: blur(2px);
-    }
-
-    .side1 { border-bottom-color: var(--primary-color); transform: rotateY(0deg) translateZ(100px) rotateX(60deg); }
-    .side2 { border-bottom-color: var(--secondary-color); transform: rotateY(90deg) translateZ(100px) rotateX(60deg); }
-    .side3 { border-bottom-color: var(--accent-color-1); transform: rotateY(180deg) translateZ(100px) rotateX(60deg); }
-    .side4 { border-bottom-color: var(--accent-color-2); transform: rotateY(-90deg) translateZ(100px) rotateX(60deg); }
-
-    /* Animation identique au cube */
-    @keyframes rotatePyramid {
-      0%   { transform: rotateX(-20deg) rotateY(0deg); }
-      100% { transform: rotateX(-20deg) rotateY(360deg); }
-    }
-
-    /* Responsive */
     @media (max-width: 600px) {
       .pyramid-container {
         width: 150px;
@@ -116,11 +128,11 @@
 
   <div class="pyramid-container">
     <div class="pyramid">
-      <div class="base"></div>
-      <div class="side side1"></div>
-      <div class="side side2"></div>
-      <div class="side side3"></div>
-      <div class="side side4"></div>
+      <div class="face base"></div>
+      <div class="face front"></div>
+      <div class="face back"></div>
+      <div class="face left"></div>
+      <div class="face right"></div>
     </div>
   </div>
 
