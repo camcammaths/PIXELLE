@@ -1,140 +1,100 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pyramide 3D Transparente</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pyramide 3D Rotative</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: sans-serif;
+  }
 
-  <!-- Polices -->
-  <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+  .pyramid-container {
+    width: 250px;
+    height: 250px;
+    perspective: 800px;
+  }
 
-  <style>
-    :root {
-      --primary-color: #3a86ff;
-      --secondary-color: #8338ec;
-      --accent-color-1: #ff006e;
-      --accent-color-2: #fb5607;
-      --accent-color-3: #ffbe0b;
-      --background-color: #f0f4f8;
-      --pyramid-veil: rgba(58, 134, 255, 0.08);
-      --border-radius: 6px;
-      --transition: 0.3s ease;
-    }
+  .pyramid {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(-20deg) rotateY(0deg);
+    animation: rotatePyramid 15s linear infinite;
+  }
 
-    body {
-      font-family: 'Mabry Pro', sans-serif;
-      background: var(--background-color);
-      margin: 0;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      text-align: center;
-      color: #212529;
-    }
+  /* Base carrée */
+  .face.base {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(58, 134, 255, 0.1);
+    border: 2px solid #3a86ff;
+    transform: rotateX(90deg) translateZ(125px);
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
 
-    h1 {
-      font-family: 'Androgy Demo', sans-serif;
-      font-size: 2.5rem;
-      color: var(--primary-color);
-      margin-bottom: 2rem;
-    }
+  /* Faces triangulaires */
+  .face.front,
+  .face.back,
+  .face.left,
+  .face.right {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 125px solid transparent;
+    border-right: 125px solid transparent;
+    border-bottom: 150px solid rgba(58,134,255,0.2);
+    transform-origin: bottom center;
+  }
 
-    /* Pyramide Container */
-    .pyramid-container {
-      width: 200px;
-      height: 200px;
-      perspective: 800px;
-    }
+  /* Orientation des faces */
+  .face.front  { transform: rotateY(0deg) translateZ(125px); border-bottom-color: #3a86ff33; }
+  .face.back   { transform: rotateY(180deg) translateZ(125px); border-bottom-color: #8338ec33; }
+  .face.left   { transform: rotateY(-90deg) translateZ(125px); border-bottom-color: #ff006e33; }
+  .face.right  { transform: rotateY(90deg) translateZ(125px); border-bottom-color: #fb560733; }
 
-    .pyramid {
-      position: relative;
-      width: 200px;
-      height: 200px;
-      transform-style: preserve-3d;
-      animation: rotatePyramid 20s linear infinite;
-    }
+  @keyframes rotatePyramid {
+    0%   { transform: rotateX(-20deg) rotateY(0deg); }
+    100% { transform: rotateX(-20deg) rotateY(360deg); }
+  }
 
-    /* Faces */
-    .face {
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      background: var(--pyramid-veil);
-      backdrop-filter: blur(2px);
-    }
+  /* Optionnel : pause au survol */
+  .pyramid:hover {
+    animation-play-state: paused;
+    cursor: grab;
+  }
 
-    /* Base carrée */
-    .base {
-      width: 140px;
-      height: 140px;
-      background: var(--pyramid-veil);
-      border: 2px solid var(--primary-color);
-      border-radius: var(--border-radius);
-      position: absolute;
-      transform: rotateX(90deg) translateZ(-70px);
-    }
-
-    /* Faces triangulaires */
-    .front {
-      border-width: 0 70px 140px 70px;
-      border-color: transparent transparent var(--secondary-color) transparent;
-      transform: rotateY(0deg) translateZ(70px) translateY(-35px);
-    }
-
-    .back {
-      border-width: 140px 70px 0 70px;
-      border-color: var(--accent-color-1) transparent transparent transparent;
-      transform: rotateY(180deg) translateZ(70px) translateY(35px);
-    }
-
-    .left {
-      border-width: 0 70px 140px 70px;
-      border-color: transparent transparent var(--accent-color-2) transparent;
-      transform: rotateY(-90deg) translateZ(70px) translateY(-35px);
-    }
-
-    .right {
-      border-width: 0 70px 140px 70px;
-      border-color: transparent transparent var(--accent-color-3) transparent;
-      transform: rotateY(90deg) translateZ(70px) translateY(-35px);
-    }
-
-    @keyframes rotatePyramid {
-      0%   { transform: rotateX(0deg) rotateY(0deg); }
-      100% { transform: rotateX(360deg) rotateY(360deg); }
-    }
-
-    .pyramid:hover {
-      animation-play-state: paused;
-      cursor: grab;
-    }
-
-    @media (max-width: 600px) {
-      .pyramid-container {
-        width: 150px;
-        height: 150px;
-      }
-    }
-  </style>
+  h1 {
+    position: absolute;
+    top: 20px;
+    color: #3a86ff;
+    font-family: 'Androgy Demo', sans-serif;
+  }
+</style>
 </head>
 <body>
 
-  <h1>Pyramide 3D Transparente</h1>
+<h1>Pyramide 3D</h1>
 
-  <div class="pyramid-container">
-    <div class="pyramid">
-      <div class="face base"></div>
-      <div class="face front"></div>
-      <div class="face back"></div>
-      <div class="face left"></div>
-      <div class="face right"></div>
-    </div>
+<div class="pyramid-container">
+  <div class="pyramid">
+    <div class="face base"></div>
+    <div class="face front"></div>
+    <div class="face back"></div>
+    <div class="face left"></div>
+    <div class="face right"></div>
   </div>
+</div>
 
 </body>
 </html>
