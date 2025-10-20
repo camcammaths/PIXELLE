@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pyramide 3D Artistique Fixe</title>
+<title>Pyramide 3D Style Cube</title>
 <style>
-  body { margin: 0; background: #f0f4f8; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
-  canvas { display: block; }
+  body { margin:0; background:#f0f4f8; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; }
+  canvas { display:block; }
 </style>
 </head>
 <body>
@@ -16,52 +16,57 @@
   // Scene
   const scene = new THREE.Scene();
 
-  // Camera
+  // Camera (perspective proche de ton CSS)
   const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(3, 3, 5); // fixe position comme l’angle du cube
-  camera.lookAt(0, 0, 0);
+  camera.position.set(3, 3, 5);
+  camera.lookAt(0,0,0);
 
   // Renderer
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
   // Lumières
   const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-  dirLight.position.set(5, 10, 5);
+  dirLight.position.set(5,10,5);
   scene.add(dirLight);
   scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-  // Sol pour ombre (optionnel)
-  const planeGeo = new THREE.PlaneGeometry(20, 20);
-  const planeMat = new THREE.ShadowMaterial({ opacity: 0.2 });
+  // Sol (ombre subtile)
+  const planeGeo = new THREE.PlaneGeometry(20,20);
+  const planeMat = new THREE.ShadowMaterial({opacity:0.1});
   const plane = new THREE.Mesh(planeGeo, planeMat);
   plane.rotation.x = -Math.PI/2;
   plane.position.y = -1;
   plane.receiveShadow = true;
   scene.add(plane);
 
-  // Couleurs faces pyramide (style cube)
-  const faceColors = [0x3a86ff, 0x8338ec, 0xff006e, 0xfb5607];
+  // Couleurs faces style cube
+  const colors = [0x3a86ff, 0x8338ec, 0xff006e, 0xfb5607];
 
-  // Pyramide
-  const geometry = new THREE.ConeGeometry(1.5, 2, 4);
-  const materials = faceColors.map(c => new THREE.MeshPhongMaterial({ color: c, transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
+  // Pyramide (base carrée, 4 faces)
+  const geometry = new THREE.ConeGeometry(1.5,2,4);
+  const materials = colors.map(c=>new THREE.MeshPhongMaterial({
+    color:c,
+    transparent:true,
+    opacity:0.4,
+    side:THREE.DoubleSide
+  }));
   const pyramid = new THREE.Mesh(geometry, materials[0]);
-  pyramid.rotation.x = -0.35; // inclinaison style cube
-  pyramid.rotation.y = 0.35;
+  pyramid.rotation.x = THREE.MathUtils.degToRad(-20); // angle identique au cube CSS
+  pyramid.rotation.y = THREE.MathUtils.degToRad(20);
   pyramid.castShadow = true;
   scene.add(pyramid);
 
-  // Renderer (fixe, pas d’animation)
+  // Render fixe
   renderer.render(scene, camera);
 
   // Responsive
-  window.addEventListener('resize', () => {
+  window.addEventListener('resize',()=>{
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.render(scene, camera);
+    renderer.render(scene,camera);
   });
 </script>
 
