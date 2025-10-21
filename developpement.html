@@ -3,265 +3,217 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Developpement</title>
+<title>Développement — Poser les briques</title>
 
 <!-- Polices -->
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
 
 <style>
-  :root {
-    --primary: #3a86ff;
-    --secondary: #8338ec;
-    --background: #f0f4f8;
-    --text: #212529;
-    --btn-bg: #a8d0ff;
-    --btn-hover: #7ab3ff;
-    --border-radius: 8px;
-    --transition: 0.3s ease;
-    --correct: #4CAF50;
-    --incorrect: #e74c3c;
-  }
+:root {
+  --primary: #3a86ff;
+  --secondary: #8338ec;
+  --background: #f0f4f8;
+  --text: #212529;
+  --btn-bg: #a8d0ff;
+  --btn-hover: #7ab3ff;
+  --border-radius: 8px;
+  --transition: 0.3s ease;
+}
 
-  body {
-    font-family: 'Mabry Pro', sans-serif;
-    background: var(--background);
-    color: var(--text);
-    margin: 2rem;
-    user-select: none;
-  }
+body {
+  font-family: 'Mabry Pro', sans-serif;
+  background: var(--background);
+  color: var(--text);
+  margin: 2rem;
+  user-select: none;
+  text-align: center;
+}
 
-  h1 {
-    font-family: 'Androgy Demo', sans-serif;
-    text-transform: capitalize;
-    color: var(--primary);
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
+h1 {
+  font-family: 'Androgy Demo', sans-serif;
+  text-transform: capitalize;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
 
-  a.back {
-    display: inline-block;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-    color: var(--primary);
-    text-decoration: none;
-    font-family: 'Mabry Pro', sans-serif;
-    border: 2px solid var(--primary);
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
-    transition: background-color var(--transition), color var(--transition);
-  }
-  a.back:hover {
-    background-color: var(--primary);
-    color: white;
-  }
+a.back {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  border: 2px solid var(--primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition), color var(--transition);
+}
+a.back:hover {
+  background-color: var(--primary);
+  color: white;
+}
 
-  #expression {
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 1.5rem;
-  }
+#expression {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
 
-  #game {
-    max-width: 900px;
-    margin: 0 auto;
-    display: flex;
-    gap: 3rem;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+#slots, #palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
 
-  .column {
-    flex: 1;
-    min-width: 280px;
-  }
+.slot, .brick {
+  padding: 0.75rem 1rem;
+  min-width: 80px;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+  text-align: center;
+  cursor: grab;
+  transition: all var(--transition);
+  user-select: none;
+}
 
-  .column h2 {
-    font-family: 'Androgy Demo', sans-serif;
-    color: var(--secondary);
-    text-align: center;
-    margin-bottom: 1rem;
-  }
+.slot {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--primary);
+  background: white;
+  font-style: italic;
+}
 
-  .dropzone {
-    background: white;
-    min-height: 60px;
-    margin-bottom: 1rem;
-    border: 2px dashed var(--primary);
-    border-radius: var(--border-radius);
-    padding: 0.75rem 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: default;
-    font-weight: bold;
-    transition: background-color var(--transition), border-color var(--transition);
-  }
+.slot.filled { 
+  border-style: solid; 
+  background-color: #d0e2ff; 
+  font-style: normal; 
+}
 
-  .dropzone.filled { 
-    border-style: solid;
-    background-color: #d0e2ff;
-  }
+.brick {
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: grab;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.brick.dragging { opacity: 0.5; cursor: grabbing; }
+.brick:hover { transform: scale(1.05); }
 
-  .card {
-    background: var(--primary);
-    color: white;
-    padding: 1rem 1.25rem;
-    border-radius: var(--border-radius);
-    margin-bottom: 1rem;
-    cursor: grab;
-    font-weight: 600;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    user-select: none;
-    transition: opacity 0.3s, transform 0.3s;
-  }
+.btn {
+  font-size: 1rem;
+  padding: 0.6rem 1.2rem;
+  margin: 0.3rem;
+  background-color: var(--btn-bg);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+.btn:hover { background-color: var(--btn-hover); color: white; }
 
-  .card.dragging {
-    opacity: 0.5;
-    cursor: grabbing;
-    transform: scale(0.98);
-  }
-
-  #check-btn, #next-btn {
-    margin: 1.5rem auto;
-    display: block;
-    padding: 0.75rem 2rem;
-    font-weight: 600;
-    font-size: 1.1rem;
-    background-color: var(--secondary);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(131, 56, 236, 0.6);
-    transition: background-color var(--transition);
-    user-select: none;
-  }
-
-  #check-btn:hover, #next-btn:hover {
-    background-color: #6829b0;
-  }
-
-  #result {
-    text-align: center;
-    font-weight: 700;
-    font-size: 1.2rem;
-    min-height: 1.5em;
-  }
-
+#feedback {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
 </style>
 </head>
 <body>
 
-<h1>Developpe/h1>
+<h1>Développement — Pose les briques</h1>
 <a href="index.html" class="back">← Retour à la page principale</a>
 
 <div id="expression">a(x + b)</div>
 
-<div id="game">
-  <div class="column" id="slots-col">
-    <h2>Résultat</h2>
-  </div>
-  <div class="column" id="palette-col">
-    <h2>Termes</h2>
-  </div>
-</div>
+<div id="slots"></div>
+<div id="palette"></div>
 
-<button id="check-btn">Vérifier</button>
-<button id="next-btn">Nouvelle expression</button>
-<div id="result"></div>
+<div id="feedback"></div>
+
+<button class="btn" onclick="checkAnswer()">Vérifier</button>
+<button class="btn" onclick="nextQuestion()">Nouvelle expression</button>
 
 <script>
-  const expressionEl = document.getElementById('expression');
-  const slotsCol = document.getElementById('slots-col');
-  const paletteCol = document.getElementById('palette-col');
-  const resultEl = document.getElementById('result');
+const expressionEl = document.getElementById('expression');
+const slotsEl = document.getElementById('slots');
+const paletteEl = document.getElementById('palette');
+const feedbackEl = document.getElementById('feedback');
 
-  let currentTerms = [];
-  let dragged = null;
+let currentTerms = [];
+let dragged = null;
 
-  function generateQuestion() {
-    const a = Math.floor(Math.random()*5)+2;
-    const b = Math.floor(Math.random()*5)+1;
-    const sign = Math.random()<0.5?'+':'-';
-    const expr = `${a}(x ${sign} ${b})`;
-    const constTerm = sign==='+' ? a*b : -a*b;
-    const terms = [`${a}x`, `${constTerm}`];
-    return {expr, terms};
-  }
+function generateQuestion() {
+  const a = Math.floor(Math.random()*5)+2;
+  const b = Math.floor(Math.random()*5)+1;
+  const sign = Math.random()<0.5?'+':'-';
+  const expr = `${a}(x ${sign} ${b})`;
+  const constTerm = sign==='+' ? a*b : -a*b;
+  const terms = [`${a}x`, `${constTerm}`];
+  return {expr, terms};
+}
 
-  function renderQuestion() {
-    const q = generateQuestion();
-    currentTerms = q.terms;
-    expressionEl.textContent = q.expr;
+function renderQuestion() {
+  const q = generateQuestion();
+  currentTerms = q.terms;
+  expressionEl.textContent = q.expr;
+  slotsEl.innerHTML = '';
+  paletteEl.innerHTML = '';
 
-    slotsCol.innerHTML = '<h2>Résultat</h2>';
-    paletteCol.innerHTML = '<h2>Termes</h2>';
-
-    q.terms.forEach(term => {
-      const slot = document.createElement('div');
-      slot.className = 'dropzone';
-      slot.dataset.expect = term;
-      slotsCol.appendChild(slot);
-    });
-
-    const bricks = [...q.terms, `${Math.floor(Math.random()*10)+1}`].sort(()=>Math.random()-0.5);
-    bricks.forEach(t => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.textContent = t;
-      card.draggable = true;
-      card.addEventListener('dragstart', () => { dragged = card; card.classList.add('dragging'); });
-      card.addEventListener('dragend', () => { dragged = null; card.classList.remove('dragging'); });
-      paletteCol.appendChild(card);
-    });
-
-    resultEl.textContent = '';
-  }
-
-  function addDropLogic() {
-    const dropzones = document.querySelectorAll('.dropzone');
-    dropzones.forEach(zone => {
-      zone.addEventListener('dragover', e => e.preventDefault());
-      zone.addEventListener('drop', e => {
-        e.preventDefault();
-        if(!dragged) return;
-
-        const existing = zone.querySelector('.card');
-        if(existing) paletteCol.appendChild(existing);
-
-        zone.appendChild(dragged);
-        zone.classList.add('filled');
-      });
-    });
-  }
-
-  document.getElementById('check-btn').addEventListener('click', () => {
-    let correct = true;
-    document.querySelectorAll('.dropzone').forEach(zone => {
-      const actual = zone.querySelector('.card')?.textContent || '';
-      if(actual === zone.dataset.expect){
-        zone.style.borderColor = 'green';
-        zone.style.backgroundColor = '#d4f8d4';
-      } else {
-        zone.style.borderColor = 'red';
-        zone.style.backgroundColor = '#f8d4d4';
-        correct = false;
-      }
-    });
-    resultEl.style.color = correct ? 'green' : 'red';
-    resultEl.textContent = correct ? 'Bravo ✅' : 'Des erreurs ❌';
+  q.terms.forEach(term=>{
+    const slot = document.createElement('div');
+    slot.className='slot';
+    slot.dataset.expect = term;
+    slot.addEventListener('dragover', e=>e.preventDefault());
+    slot.addEventListener('drop', onDrop);
+    slotsEl.appendChild(slot);
   });
 
-  document.getElementById('next-btn').addEventListener('click', () => {
-    renderQuestion();
-    addDropLogic();
+  const bricks = [...q.terms, `${Math.floor(Math.random()*10)+1}`];
+  bricks.sort(()=>Math.random()-0.5);
+
+  bricks.forEach(t=>{
+    const brick = document.createElement('div');
+    brick.className='brick';
+    brick.textContent = t;
+    brick.draggable = true;
+    brick.addEventListener('dragstart', e=>{dragged=e.target; e.target.classList.add('dragging');});
+    brick.addEventListener('dragend', e=>e.target.classList.remove('dragging'));
+    paletteEl.appendChild(brick);
   });
 
-  renderQuestion();
-  addDropLogic();
+  feedbackEl.textContent = '';
+}
+
+function onDrop(e){
+  e.preventDefault();
+  const slot = e.currentTarget;
+  if(slot.firstChild){ paletteEl.appendChild(slot.firstChild); }
+  slot.appendChild(dragged);
+  slot.classList.add('filled');
+}
+
+function checkAnswer(){
+  let correct = true;
+  Array.from(slotsEl.children).forEach(slot=>{
+    const expected = slot.dataset.expect;
+    const actual = slot.firstChild ? slot.firstChild.textContent : null;
+    if(actual===expected){
+      slot.style.borderColor='green';
+    } else {
+      slot.style.borderColor='red';
+      correct=false;
+    }
+  });
+  feedbackEl.textContent = correct ? 'Bravo ✅' : 'Des erreurs ❌';
+}
+
+function nextQuestion(){ renderQuestion(); }
+
+nextQuestion();
 </script>
 
 </body>
