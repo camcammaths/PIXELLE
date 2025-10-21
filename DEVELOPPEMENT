@@ -1,1 +1,547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Développe — Poser les briques</title>
 
+  <!-- Polices (mêmes que ton jeu) -->
+  <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+
+  <style>
+    :root{
+      --primary-color:#3a86ff;
+      --secondary-color:#8338ec;
+      --background-color:#f0f4f8;
+      --button-bg:#a8d0ff;
+      --button-bg-hover:#7ab3ff;
+      --correct:#4CAF50;
+      --incorrect:#e74c3c;
+      --text-color:#212529;
+      --border-radius:8px;
+      --transition:0.25s ease;
+      --card-padding:0.65rem;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:'Mabry Pro',sans-serif;
+      margin:0;
+      padding:2rem;
+      background:var(--background-color);
+      color:var(--text-color);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:1rem;
+    }
+    h1{
+      font-family:'Androgy Demo',sans-serif;
+      color:var(--primary-color);
+      margin:0 0 .5rem 0;
+      font-size:2rem;
+    }
+
+    .controls{
+      display:flex;
+      gap:.5rem;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    .btn{
+      padding:.5rem .9rem;
+      border-radius:var(--border-radius);
+      border:none;
+      cursor:pointer;
+      background:var(--button-bg);
+      transition:background var(--transition);
+      font-weight:600;
+    }
+    .btn:hover{background:var(--button-bg-hover); color:white}
+    .small{padding:.35rem .6rem; font-size:.9rem}
+
+    .panel{
+      width:100%;
+      max-width:920px;
+      background:white;
+      border-radius:12px;
+      padding:1rem;
+      box-shadow:0 6px 18px rgba(40,40,80,.06);
+      border:2px solid rgba(58,134,255,.08);
+    }
+
+    .row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+    #instruction{font-weight:700; margin-bottom:.5rem; font-size:1.05rem}
+
+    /* expression card */
+    .expression {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:.5rem;
+      padding:1rem;
+      border-radius:10px;
+      background:linear-gradient(180deg,#fff,#fbfdff);
+      border:2px solid rgba(131,56,236,.06);
+      margin-bottom: .8rem;
+      font-size:1.35rem;
+      min-height:56px;
+    }
+
+    /* slots where bricks are dropped */
+    .slots {
+      display:flex;
+      gap:.5rem;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin: .75rem 0 1rem 0;
+    }
+    .slot {
+      min-width:80px;
+      min-height:44px;
+      border:2px dashed rgba(58,134,255,.18);
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:.35rem;
+      background:#fff;
+      transition:background var(--transition), border-color var(--transition);
+    }
+    .slot.filled{border-style:solid; background: #fbfffb}
+    .slot.correct{background:var(--correct); color:white; border-color:var(--correct)}
+    .slot.incorrect{background:var(--incorrect); color:white; border-color:var(--incorrect)}
+
+    /* bricks palette */
+    .palette{
+      display:flex;
+      gap:.5rem;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:.5rem;
+    }
+    .brick{
+      cursor:grab;
+      user-select:none;
+      padding:var(--card-padding) .9rem;
+      border-radius:10px;
+      background:white;
+      border:2px solid var(--primary-color);
+      min-width:64px;
+      text-align:center;
+      font-weight:700;
+      box-shadow:0 6px 14px rgba(58,134,255,.04);
+      transition:transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+    }
+    .brick:active{cursor:grabbing}
+    .brick.dragging{opacity:.55; transform:scale(.98)}
+
+    .info {
+      display:flex;
+      gap:1rem;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:.6rem;
+      flex-wrap:wrap;
+    }
+
+    .hint{color:var(--secondary-color); font-weight:700; cursor:pointer; border:none; background:transparent}
+    .progress{font-weight:600}
+
+    .feedback{
+      margin-top:.8rem;
+      text-align:center;
+      font-weight:700;
+    }
+
+    footer{margin-top:.5rem; text-align:center}
+    a.back{
+      text-decoration:none;
+      color:var(--primary-color);
+      border:2px solid var(--primary-color);
+      padding:.4rem .8rem;
+      border-radius:var(--border-radius);
+      display:inline-block;
+    }
+
+    @media (max-width:560px){
+      .slot{min-width:60px}
+      .brick{min-width:56px; padding:.45rem .6rem}
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Développe — Pose les briques</h1>
+
+  <div class="panel" id="app">
+    <div class="controls">
+      <button class="btn small" onclick="setMode('simple')">Distributivité simple</button>
+      <button class="btn small" onclick="setMode('double')">Double distributivité</button>
+      <button class="btn small" onclick="setMode('mix')">Mix</button>
+      <button class="btn small" onclick="nextQuestion()">Nouvelle expression</button>
+      <button class="btn small" onclick="checkAnswer()">Vérifier</button>
+      <button class="btn small" onclick="showHint()">Indice</button>
+    </div>
+
+    <div id="instruction">Place les briques (termes) pour construire la forme développée.</div>
+
+    <div class="expression" id="expressionArea">
+      <!-- expression affichée ici -->
+    </div>
+
+    <div style="text-align:center; font-size:.95rem; color:rgba(0,0,0,.6)" id="contextText">
+      Astuce : pour \( a(x+b)\) pose les briques dans l'ordre : termes en x puis nombres.
+    </div>
+
+    <div class="slots" id="slotsArea" aria-live="polite"></div>
+
+    <div class="palette" id="paletteArea" aria-live="polite"></div>
+
+    <div class="info">
+      <div class="progress" id="progress">Question 0 / 0</div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  </div>
+
+  <footer>
+    <a class="back" href="#">← Retour</a>
+  </footer>
+
+<script>
+/* =========================
+   LOGIQUE DU JEU
+   - Génère expressions (simple/double/mix)
+   - Calcule développement correct (liste de termes)
+   - Crée briques (vraies + distracteurs)
+   - Gère drag & drop HTML5
+   - Vérification et feedback + indice
+   ========================= */
+
+let mode = 'simple';          // 'simple' | 'double' | 'mix'
+let current = null;           // objet question
+let questionCount = 0;
+let correctCount = 0;
+let totalQuestions = 10;
+
+const expressionArea = document.getElementById('expressionArea');
+const slotsArea = document.getElementById('slotsArea');
+const paletteArea = document.getElementById('paletteArea');
+const feedbackEl = document.getElementById('feedback');
+const progressEl = document.getElementById('progress');
+
+function setMode(m){
+  mode = m;
+  nextQuestion();
+}
+
+/* Utility : random int */
+function rnd(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+/* Générer une expression selon le niveau choisi */
+function makeQuestion(){
+  let type = mode;
+  if(mode === 'mix'){
+    type = Math.random() < 0.5 ? 'simple' : 'double';
+  }
+
+  if(type === 'simple'){
+    // a(x + b) ou a(x - b)
+    const a = rnd(2,9);
+    const b = rnd(1,9);
+    const sign = Math.random() < 0.5 ? '+' : '-';
+    const exprText = `${a}(x ${sign} ${b})`;
+    // développement : [ax, a*b (avec signe)]
+    const ax = `${a}x`;
+    const constTerm = `${a * (sign === '+' ? b : -b)}`;
+    // normaliser pour afficher e.g. -6 as "-6" and 6 as "6"
+    return { kind:'simple', text: exprText, terms: normalizeTerms([ax, constTerm]) };
+  } else {
+    // double distributivité (paires simples)
+    // (ux + v)(wx + z) où u,w dans [-3..5] sauf zéro, v,z dans [-6..6]
+    const u = rnd(-3,5) || 1; // éviter 0
+    const w = rnd(-3,5) || 1;
+    const v = rnd(-6,6);
+    const z = rnd(-6,6);
+    // construire les strings correctement (gérer signes)
+    const left = `${fmtCoeff(u)}x ${v>=0?'+':'-'} ${Math.abs(v)}`;
+    const right = `${fmtCoeff(w)}x ${z>=0?'+':'-'} ${Math.abs(z)}`;
+    const exprText = `(${left})(${right})`;
+    // développer : u*w x^2 + (u*z + v*w) x + v*z
+    const ax2 = `${u*w}x^2`;
+    const ax = `${u*z + v*w}x`;
+    const c = `${v*z}`;
+    return { kind:'double', text: exprText, terms: normalizeTerms([ax2, ax, c]) };
+  }
+}
+
+/* Format coefficient (gère 1x, -1x) */
+function fmtCoeff(n){
+  if(n === 1) return '';
+  if(n === -1) return '-';
+  return `${n}`;
+}
+
+/* Normaliser termes : retirer + devant positif, garder "-" pour négatifs ; retourner strings */
+function normalizeTerms(arr){
+  return arr.map(t => {
+    // t peut être like "3x" or "-6" or "0x" etc.
+    // remove "+", normalize 0 (filter later)
+    if(typeof t === 'number') t = String(t);
+    // remove + sign if present
+    t = t.replace(/^\+/, '');
+    // transform "1x" to "x", "-1x" to "-x"
+    t = t.replace(/^1x\b/,'x').replace(/^-1x\b/,'-x');
+    // remove "+-" weirdness
+    t = t.replace(/\+\-/,'-');
+    // remove "+0" or "0x" terms: keep zeros to show as "0" if all zero? We'll filter zeros out
+    return t;
+  }).filter(x => {
+    // filter out zero terms like "0" "0x" "0x^2"
+    const cleaned = x.replace(/\s+/g,'');
+    return !/^0($|x)/.test(cleaned);
+  });
+}
+
+/* Crée fausses propositions (distracteurs) en modifiant légèrement les termes corrects */
+function makeBricks(correctTerms){
+  // correctTerms: array order (for double: [ax2, ax, c], simple: [ax, c])
+  const bricks = [];
+  // push correct bricks
+  correctTerms.forEach(t => bricks.push({text: t, correct: true}));
+
+  // create distractors: alter sign or coefficient of existing terms, or swap order
+  const distractors = new Set();
+  while(distractors.size < Math.max(2, correctTerms.length)) {
+    const idx = rnd(0, correctTerms.length-1);
+    let t = correctTerms[idx];
+    // attempt small mutation:
+    let mutated = mutateTerm(t);
+    if(mutated !== t) distractors.add(mutated);
+  }
+  distractors.forEach(d => bricks.push({text:d, correct:false}));
+
+  // shuffle bricks
+  return shuffleArray(bricks);
+}
+
+/* Mutate a term: flip sign, add 1 to coeff, remove x etc. */
+function mutateTerm(term){
+  // handle patterns: ax^2, ax, c
+  let t = term.trim();
+  // if constant
+  if(/^[+-]?\d+$/.test(t)){
+    const n = parseInt(t,10);
+    const delta = rnd(1,4) * (Math.random()<0.5?1:-1);
+    return String(n + delta);
+  }
+  // if x^2 or x
+  // find coefficient
+  let m = t.match(/^([+-]?\d*)x(\^2)?$/);
+  if(m){
+    let coeffStr = m[1];
+    let pow = m[2] || '';
+    if(coeffStr === '' ) coeffStr = '1';
+    if(coeffStr === '+' ) coeffStr = '1';
+    if(coeffStr === '-' ) coeffStr = '-1';
+    let coeff = parseInt(coeffStr,10);
+    // mutate coefficient
+    const change = (Math.random()<0.5?1:-1) * rnd(1,2);
+    coeff += change;
+    // avoid zero
+    if(coeff === 0) coeff = coeff + (change > 0 ? 1 : -1);
+    // format back
+    let coeffOut = coeff === 1 ? '' : coeff === -1 ? '-' : String(coeff);
+    return `${coeffOut}x${pow}`;
+  }
+  // fallback: flip sign
+  if(t.startsWith('-')) return t.slice(1);
+  return '-' + t;
+}
+
+/* Fisher-Yates shuffle */
+function shuffleArray(a){ 
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+/* RENDU : afficher expression, slots et palette */
+function renderQuestion(q){
+  expressionArea.textContent = q.text;
+  // slots equal to number of correct terms (order matters)
+  slotsArea.innerHTML = '';
+  q.terms.forEach((t, i) => {
+    const s = document.createElement('div');
+    s.className = 'slot';
+    s.dataset.index = i;
+    s.dataset.expect = t; // expected text
+    s.addEventListener('dragover', onDragOver);
+    s.addEventListener('drop', onDrop);
+    slotsArea.appendChild(s);
+  });
+
+  // bricks
+  paletteArea.innerHTML = '';
+  const bricks = makeBricks(q.terms);
+  bricks.forEach((b, i) => {
+    const el = document.createElement('div');
+    el.className = 'brick';
+    el.draggable = true;
+    el.textContent = b.text;
+    el.dataset.correct = b.correct ? '1' : '0';
+    el.id = 'brick-'+i;
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragend', onDragEnd);
+    paletteArea.appendChild(el);
+  });
+
+  feedbackEl.textContent = '';
+  updateProgress();
+}
+
+/* Drag & Drop handlers */
+let dragged = null;
+
+function onDragStart(e){
+  dragged = e.target;
+  e.dataTransfer.setData('text/plain', e.target.id);
+  setTimeout(()=> e.target.classList.add('dragging'), 5);
+}
+function onDragEnd(e){
+  if(e.target) e.target.classList.remove('dragging');
+  dragged = null;
+}
+function onDragOver(e){
+  e.preventDefault();
+}
+function onDrop(e){
+  e.preventDefault();
+  const id = e.dataTransfer.getData('text/plain');
+  const brick = document.getElementById(id);
+  if(!brick) return;
+
+  // If slot already has a child, return it to palette
+  const slot = e.currentTarget;
+  if(slot.firstElementChild){
+    // move existing back to palette
+    paletteArea.appendChild(slot.firstElementChild);
+    slot.classList.remove('filled');
+  }
+  slot.appendChild(brick);
+  slot.classList.add('filled');
+}
+
+/* Vérifier la réponse */
+function checkAnswer(){
+  const slots = Array.from(slotsArea.children);
+  if(slots.length === 0) return;
+  let allFilled = true;
+  let allCorrect = true;
+  slots.forEach(s => {
+    const child = s.firstElementChild;
+    if(!child) allFilled = false;
+  });
+  if(!allFilled){
+    feedbackEl.style.color = 'rgba(0,0,0,.7)';
+    feedbackEl.textContent = 'Place toutes les briques avant de vérifier.';
+    return;
+  }
+
+  // check per slot (order sensitive)
+  slots.forEach(s => {
+    const expected = s.dataset.expect.replace(/\s+/g,'');
+    const actual = (s.firstElementChild?.textContent || '').replace(/\s+/g,'');
+    if(expected === actual){
+      s.classList.remove('incorrect');
+      s.classList.add('correct');
+    } else {
+      s.classList.remove('correct');
+      s.classList.add('incorrect');
+      allCorrect = false;
+    }
+  });
+
+  if(allCorrect){
+    feedbackEl.style.color = 'var(--correct)';
+    feedbackEl.textContent = 'Bravo ✅ — développement correct !';
+    correctCount++;
+    questionCount++;
+    // auto next after short delay
+    setTimeout(nextQuestion, 1200);
+  } else {
+    feedbackEl.style.color = 'var(--incorrect)';
+    feedbackEl.textContent = 'Il y a des erreurs. Regarde les briques en rouge.';
+    // do not advance, let student rearrange
+  }
+}
+
+/* Indice : met en surbrillance la première brique correcte qui n'est pas encore placée */
+function showHint(){
+  const slots = Array.from(slotsArea.children);
+  for(const s of slots){
+    const expected = s.dataset.expect.replace(/\s+/g,'');
+    const child = s.firstElementChild;
+    if(child && child.textContent.replace(/\s+/g,'') === expected) continue;
+    // find a brick in palette that matches
+    const bricks = Array.from(paletteArea.children).concat(Array.from(document.querySelectorAll('.brick')));
+    for(const b of bricks){
+      if(b.textContent.replace(/\s+/g,'') === expected){
+        // animate hint
+        b.style.transition = 'transform .15s ease';
+        b.style.transform = 'scale(1.08)';
+        setTimeout(()=> b.style.transform = '', 600);
+        feedbackEl.style.color = 'var(--secondary-color)';
+        feedbackEl.textContent = `Indice : place la brique "${b.textContent}" dans la case manquante.`;
+        return;
+      }
+    }
+    // if not found (maybe it's in wrong slot), highlight any brick with same value
+    for(const b of bricks){
+      if(b.textContent.replace(/\s+/g,'').includes(expected.replace(/[0-9\-x\^]/g,''))){
+        b.style.transform = 'scale(1.08)';
+        setTimeout(()=> b.style.transform = '', 600);
+        feedbackEl.textContent = `Indice : vérifie le signe/coefficients.`;
+        return;
+      }
+    }
+  }
+  feedbackEl.textContent = 'Aucun indice disponible.';
+}
+
+/* Avancer à la prochaine question */
+function nextQuestion(){
+  if(questionCount >= totalQuestions){
+    // session finished — afficher score et recommencer
+    alert(`Session terminée — score : ${correctCount} / ${totalQuestions}. Recommencer ?`);
+    correctCount = 0;
+    questionCount = 0;
+  }
+
+  current = makeQuestion();
+  renderQuestion(current);
+  // increment question counter for progress (showing upcoming number)
+  questionCount = Math.min(questionCount, totalQuestions-1); // keep within bounds
+  questionCount++; // we are now on next question
+  updateProgress();
+}
+
+/* Mise à jour progress text */
+function updateProgress(){
+  progressEl.textContent = `Question ${questionCount} / ${totalQuestions}`;
+}
+
+/* Initialisation */
+totalQuestions = 10;
+questionCount = 0;
+correctCount = 0;
+setMode('simple'); // démarre en mode simple
+
+</script>
+
+</body>
+</html>
