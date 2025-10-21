@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Développe — Poser les briques</title>
+<style>
+  :root{
+    --primary-color:#3a86ff;
+    --secondary-color:#8338ec;
+    --background-color:#f0f4f8;
+    --button-bg:#a8d0ff;
+    --button-bg-hover:#7ab3ff;
+    --correct:#4CAF50;
+    --incorrect:#e74c3c;
+    --text-color:#212529;
+    --border-radius:8px;
+    --transition:.25s ease;
+  }
+  body{
+    font-family:'Mabry Pro',sans-serif;
+    margin:0; padding:2rem;
+    text-align:center;
+    background:var(--background-color);
+    color:var(--text-color);
+  }
+  .btn{
+    display:inline-block;
+    margin:.5rem;
+    padding:.5rem 1rem;
+    background:var(--button-bg);
+    color:var(--text-color);
+    text-decoration:none;
+    border-radius:var(--border-radius);
+    transition:background var(--transition);
+  }
+  .btn:hover{background:var(--button-bg-hover); color:white}
+  h1{color:var(--primary-color);}
+  .expression{
+    font-size:1.5rem; font-weight:bold;
+    margin:1rem 0; padding:0.5rem;
+    background:white;
+    border-radius:var(--border-radius);
+    border:2px solid rgba(58,134,255,.2);
+  }
+  .slots, .palette{
+    display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap; margin:.5rem 0;
+  }
+  .slot{
+    min-width:80px; min-height:40px;
+    border:2px dashed var(--primary-color);
+    border-radius:var(--border-radius);
+    display:flex; align-items:center; justify-content:center;
+    background:white;
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .slot.correct{background:var(--correct); color:white; border-color:var(--correct);}
+  .slot.incorrect{background:var(--incorrect); color:white; border-color:var(--incorrect);}
+  .brick{
+    padding:.4rem .8rem;
+    border-radius:var(--border-radius);
+    border:2px solid var(--primary-color);
+    background:white;
+    cursor:grab;
+    font-weight:700;
+    transition:transform var(--transition), box-shadow var(--transition);
+  }
+  .brick.dragging{opacity:.5;}
+  #feedback{margin-top:.5rem; font-weight:700;}
+</style>
+</head>
+<body>
+
+<a href="index.html" class="btn">← Retour à l'accueil</a>
+<h1>Développe — Pose les briques</h1>
+
+<div class="expression" id="expressionArea"></div>
+<div class="slots" id="slotsArea"></div>
+<div class="palette" id="paletteArea"></div>
+<div id="feedback"></div>
+
+<button class="btn" onclick="checkAnswer()">Vérifier</button>
+<button class="btn" onclick="nextQuestion()">Nouvelle expression</button>
+
+<script>
+const expressionArea = document.getElementById('expressionArea');
+const slotsArea = document.getElementById('slotsArea');
+const paletteArea = document.getElementById('paletteArea');
+const feedbackEl = document.getElementById('feedback');
+
+let currentTerms = [];
+let dragged = null;
+
+function generateQuestion(){
+  const a = Math.floor(Math.random()*5)+2;
+  const b = Math.floor(Math.random()*5)+1;
+  const sign = Math.random()<0.5?'+':'-';
+  const expr = `${a}(x ${sign} ${b})`;
+  const constTerm = sign==='+' ? a*b : -a*b;
+  const terms = [`${a}x`, `${constTerm}`];
+  return {expr, terms};
+}
+
+function renderQuestion(){
+  const q = generateQuestion();
+  currentTerms = q.terms;
+  expressionArea.textContent = q.expr;
+  slotsArea.innerHTML = '';
+  paletteArea.innerHTML = '';
+
+  q.terms.forEach(term=>{
+    const slot = document.createElement('div');
+    slot.className='slot';
+    slot.dataset.expect = term;
+    slot.addEventListener('dragover', e=>e.preventDefault());
+    slot.addEventListener('drop', onDrop);
+    slotsArea.appendChild(slot);
+  });
+
+  const bricks = [...q.terms, `${Math.floor(Math.random()*10)+1}`];
+  bricks.sort(()=>Math.random()-0.5);
+
+  bricks.forEach((t,i)=>{
+    const brick = document.createElement('div');
+    brick.className='brick';
+    brick.textContent = t;
+    brick.draggable = true;
+    brick.addEventListener('dragstart', e=>{dragged=e.target; e.target.classList.add('dragging');});
+    brick.addEventListener('dragend', e=>e.target.classList.remove('dragging'));
+    paletteArea.appendChild(brick);
+  });
+}
+
+function onDrop(e){
+  e.preventDefault();
+  const slot = e.currentTarget;
+  if(slot.firstChild){ paletteArea.appendChild(slot.firstChild); }
+  slot.appendChild(dragged);
+}
+
+function checkAnswer(){
+  let correct = true;
+  Array.from(slotsArea.children).forEach(slot=>{
+    const expected = slot.dataset.expect;
+    const actual = slot.firstChild ? slot.firstChild.textContent : null;
+    if(actual===expected){
+      slot.classList.add('correct'); slot.classList.remove('incorrect');
+    } else {slot.classList.add('incorrect'); slot.classList.remove('correct'); correct=false;}
+  });
+  feedbackEl.textContent = correct ? 'Bravo ✅' : 'Des erreurs ❌';
+}
+
+function nextQuestion(){feedbackEl.textContent=''; renderQuestion();}
+
+nextQuestion();
+</script>
+
+</body>
+</html>
