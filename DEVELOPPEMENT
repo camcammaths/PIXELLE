@@ -1,242 +1,109 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Développe — Poser les briques</title>
-
-  <!-- Polices -->
-  <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
-
-  <style>
-    :root{
-      --primary-color:#3a86ff;
-      --secondary-color:#8338ec;
-      --background-color:#f0f4f8;
-      --button-bg:#a8d0ff;
-      --button-bg-hover:#7ab3ff;
-      --correct:#4CAF50;
-      --incorrect:#e74c3c;
-      --text-color:#212529;
-      --border-radius:8px;
-      --transition:0.25s ease;
-      --card-padding:0.65rem;
-    }
-    *{box-sizing:border-box}
-    body{
-      font-family:'Mabry Pro',sans-serif;
-      margin:0;
-      padding:2rem;
-      background:var(--background-color);
-      color:var(--text-color);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:1rem;
-    }
-    h1{
-      font-family:'Androgy Demo',sans-serif;
-      color:var(--primary-color);
-      margin:0 0 .5rem 0;
-      font-size:2rem;
-    }
-    .btn{
-      padding:.5rem .9rem;
-      border-radius:var(--border-radius);
-      border:none;
-      cursor:pointer;
-      background:var(--button-bg);
-      transition:background var(--transition);
-      font-weight:600;
-      text-decoration:none;
-      color:var(--text-color);
-      display:inline-block;
-    }
-    .btn:hover{background:var(--button-bg-hover); color:white}
-    .panel{
-      width:100%;
-      max-width:920px;
-      background:white;
-      border-radius:12px;
-      padding:1rem;
-      box-shadow:0 6px 18px rgba(40,40,80,.06);
-      border:2px solid rgba(58,134,255,.08);
-    }
-    .row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
-    #instruction{font-weight:700; margin-bottom:.5rem; font-size:1.05rem}
-    .expression {
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:.5rem;
-      padding:1rem;
-      border-radius:10px;
-      background:linear-gradient(180deg,#fff,#fbfdff);
-      border:2px solid rgba(131,56,236,.06);
-      margin-bottom: .8rem;
-      font-size:1.35rem;
-      min-height:56px;
-    }
-    .slots {
-      display:flex;
-      gap:.5rem;
-      flex-wrap:wrap;
-      justify-content:center;
-      margin: .75rem 0 1rem 0;
-    }
-    .slot {
-      min-width:80px;
-      min-height:44px;
-      border:2px dashed rgba(58,134,255,.18);
-      border-radius:10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:.35rem;
-      background:#fff;
-      transition:background var(--transition), border-color var(--transition);
-    }
-    .slot.filled{border-style:solid; background: #fbfffb}
-    .slot.correct{background:var(--correct); color:white; border-color:var(--correct)}
-    .slot.incorrect{background:var(--incorrect); color:white; border-color:var(--incorrect)}
-    .palette{
-      display:flex;
-      gap:.5rem;
-      flex-wrap:wrap;
-      justify-content:center;
-      margin-top:.5rem;
-    }
-    .brick{
-      cursor:grab;
-      user-select:none;
-      padding:var(--card-padding) .9rem;
-      border-radius:10px;
-      background:white;
-      border:2px solid var(--primary-color);
-      min-width:64px;
-      text-align:center;
-      font-weight:700;
-      box-shadow:0 6px 14px rgba(58,134,255,.04);
-      transition:transform var(--transition), box-shadow var(--transition), opacity var(--transition);
-    }
-    .brick:active{cursor:grabbing}
-    .brick.dragging{opacity:.55; transform:scale(.98)}
-    .info {
-      display:flex;
-      gap:1rem;
-      align-items:center;
-      justify-content:space-between;
-      margin-top:.6rem;
-      flex-wrap:wrap;
-    }
-    .hint{color:var(--secondary-color); font-weight:700; cursor:pointer; border:none; background:transparent}
-    .progress{font-weight:600}
-    .feedback{
-      margin-top:.8rem;
-      text-align:center;
-      font-weight:700;
-    }
-    footer{margin-top:.5rem; text-align:center}
-    @media (max-width:560px){
-      .slot{min-width:60px}
-      .brick{min-width:56px; padding:.45rem .6rem}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Développement - Poser les briques</title>
+<style>
+  body{font-family:sans-serif;background:#f0f4f8;margin:2rem;text-align:center;}
+  .btn{display:inline-block;margin:.5rem;padding:.5rem 1rem;background:#3a86ff;color:white;text-decoration:none;border-radius:8px;}
+  .expression{margin:1rem 0;font-size:1.5rem;font-weight:bold;}
+  .slots,.palette{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:.5rem 0;}
+  .slot{min-width:80px;min-height:40px;border:2px dashed #3a86ff;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+  .brick{padding:.4rem .8rem;border:2px solid #3a86ff;border-radius:8px;background:white;cursor:grab;}
+  .brick.dragging{opacity:.5;}
+  .slot.correct{background:#4CAF50;color:white;border-color:#4CAF50;}
+  .slot.incorrect{background:#e74c3c;color:white;border-color:#e74c3c;}
+  #feedback{margin-top:.5rem;font-weight:bold;}
+</style>
 </head>
 <body>
 
-  <!-- Bouton retour -->
-  <a href="index.html" class="btn">← Retour à l'accueil</a>
+<a href="index.html" class="btn">← Retour à l'accueil</a>
+<h1>Développe — Pose les briques</h1>
 
-  <h1>Développe — Pose les briques</h1>
-
-  <div class="panel" id="app">
-    <div class="controls">
-      <button class="btn small" onclick="setMode('simple')">Distributivité simple</button>
-      <button class="btn small" onclick="setMode('double')">Double distributivité</button>
-      <button class="btn small" onclick="setMode('mix')">Mix</button>
-      <button class="btn small" onclick="nextQuestion()">Nouvelle expression</button>
-      <button class="btn small" onclick="checkAnswer()">Vérifier</button>
-      <button class="btn small" onclick="showHint()">Indice</button>
-    </div>
-
-    <div id="instruction">Place les briques (termes) pour construire la forme développée.</div>
-
-    <div class="expression" id="expressionArea"></div>
-
-    <div style="text-align:center; font-size:.95rem; color:rgba(0,0,0,.6)" id="contextText">
-      Astuce : pour a(x+b) pose les briques dans l'ordre : termes en x puis nombres.
-    </div>
-
-    <div class="slots" id="slotsArea" aria-live="polite"></div>
-
-    <div class="palette" id="paletteArea" aria-live="polite"></div>
-
-    <div class="info">
-      <div class="progress" id="progress">Question 0 / 0</div>
-      <div class="feedback" id="feedback"></div>
-    </div>
-  </div>
+<div class="expression" id="expressionArea"></div>
+<div class="slots" id="slotsArea"></div>
+<div class="palette" id="paletteArea"></div>
+<div id="feedback"></div>
+<button class="btn" onclick="checkAnswer()">Vérifier</button>
+<button class="btn" onclick="nextQuestion()">Nouvelle expression</button>
 
 <script>
-/* Script identique à celui du prototype glisser-déposer que je t'ai fourni */
-let mode = 'simple';
-let current = null;
-let questionCount = 0;
-let correctCount = 0;
-let totalQuestions = 10;
-
 const expressionArea = document.getElementById('expressionArea');
 const slotsArea = document.getElementById('slotsArea');
 const paletteArea = document.getElementById('paletteArea');
 const feedbackEl = document.getElementById('feedback');
-const progressEl = document.getElementById('progress');
 
-function setMode(m){ mode = m; nextQuestion(); }
-function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+let currentTerms = [];
+let dragged = null;
 
-function makeQuestion(){
-  let type = mode==='mix'? (Math.random()<0.5?'simple':'double') : mode;
-  if(type==='simple'){
-    const a = rnd(2,9); const b = rnd(1,9);
-    const sign = Math.random()<0.5?'+':'-';
-    const exprText = `${a}(x ${sign} ${b})`;
-    const ax = `${a}x`;
-    const constTerm = `${a*(sign==='+'?b:-b)}`;
-    return {kind:'simple', text:exprText, terms:normalizeTerms([ax,constTerm])};
-  } else {
-    const u=rnd(-3,5)||1, w=rnd(-3,5)||1, v=rnd(-6,6), z=rnd(-6,6);
-    const left = `${fmtCoeff(u)}x ${v>=0?'+':'-'} ${Math.abs(v)}`;
-    const right = `${fmtCoeff(w)}x ${z>=0?'+':'-'} ${Math.abs(z)}`;
-    const exprText = `(${left})(${right})`;
-    const ax2 = `${u*w}x^2`;
-    const ax = `${u*z + v*w}x`;
-    const c = `${v*z}`;
-    return {kind:'double', text:exprText, terms:normalizeTerms([ax2,ax,c])};
+function generateQuestion(){
+  const a = Math.floor(Math.random()*5)+2;
+  const b = Math.floor(Math.random()*5)+1;
+  const sign = Math.random()<0.5?'+':'-';
+  const expr = `${a}(x ${sign} ${b})`;
+  const constTerm = sign==='+' ? a*b : -a*b;
+  const terms = [`${a}x`, `${constTerm}`];
+  return {expr, terms};
+}
+
+function renderQuestion(){
+  const q = generateQuestion();
+  currentTerms = q.terms;
+  expressionArea.textContent = q.expr;
+  slotsArea.innerHTML = '';
+  paletteArea.innerHTML = '';
+
+  q.terms.forEach(term=>{
+    const slot = document.createElement('div');
+    slot.className='slot';
+    slot.dataset.expect = term;
+    slot.addEventListener('dragover', e=>e.preventDefault());
+    slot.addEventListener('drop', onDrop);
+    slotsArea.appendChild(slot);
+  });
+
+  // Mélange termes + distractor
+  const bricks = [...q.terms, `${Math.floor(Math.random()*10)+1}`];
+  bricks.sort(()=>Math.random()-0.5);
+
+  bricks.forEach((t,i)=>{
+    const brick = document.createElement('div');
+    brick.className='brick';
+    brick.textContent = t;
+    brick.draggable = true;
+    brick.addEventListener('dragstart', e=>{dragged=e.target; e.target.classList.add('dragging');});
+    brick.addEventListener('dragend', e=>e.target.classList.remove('dragging'));
+    paletteArea.appendChild(brick);
+  });
+}
+
+function onDrop(e){
+  e.preventDefault();
+  const slot = e.currentTarget;
+  if(slot.firstChild){
+    paletteArea.appendChild(slot.firstChild);
   }
+  slot.appendChild(dragged);
 }
-function fmtCoeff(n){ return n===1?'':n===-1?'-':String(n);}
-function normalizeTerms(arr){return arr.map(t=>{if(typeof t==='number') t=String(t); t=t.replace(/^\+/,''); t=t.replace(/^1x\b/,'x').replace(/^-1x\b/,'-x'); t=t.replace(/\+\-/,'-'); return t;}).filter(x=>!/^0($|x)/.test(x));}
-function makeBricks(correctTerms){const bricks=[];correctTerms.forEach(t=>bricks.push({text:t,correct:true})); const distractors=new Set(); while(distractors.size<Math.max(2,correctTerms.length)){const idx=rnd(0,correctTerms.length-1); let t=correctTerms[idx]; let mutated=mutateTerm(t); if(mutated!==t)distractors.add(mutated);} distractors.forEach(d=>bricks.push({text:d,correct:false})); return shuffleArray(bricks);}
-function mutateTerm(term){let t=term.trim(); if(/^[+-]?\d+$/.test(t)){const n=parseInt(t,10); const delta=rnd(1,4)*(Math.random()<0.5?1:-1); return String(n+delta);} let m=t.match(/^([+-]?\d*)x(\^2)?$/); if(m){let coeffStr=m[1]; let pow=m[2]||''; if(coeffStr==='') coeffStr='1'; if(coeffStr==='+' ) coeffStr='1'; if(coeffStr==='-') coeffStr='-1'; let coeff=parseInt(coeffStr,10); const change=(Math.random()<0.5?1:-1)*rnd(1,2); coeff+=change; if(coeff===0) coeff+=change>0?1:-1; let coeffOut=coeff===1?'':coeff===-1?'-':String(coeff); return `${coeffOut}x${pow}`;} if(t.startsWith('-')) return t.slice(1); return '-'+t;}
-function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
-function renderQuestion(q){
-  expressionArea.textContent=q.text;
-  slotsArea.innerHTML=''; q.terms.forEach((t,i)=>{const s=document.createElement('div'); s.className='slot'; s.dataset.index=i; s.dataset.expect=t; s.addEventListener('dragover',onDragOver); s.addEventListener('drop',onDrop); slotsArea.appendChild(s);});
-  paletteArea.innerHTML=''; const bricks=makeBricks(q.terms); bricks.forEach((b,i)=>{const el=document.createElement('div'); el.className='brick'; el.draggable=true; el.textContent=b.text; el.dataset.correct=b.correct?'1':'0'; el.id='brick-'+i; el.addEventListener('dragstart',onDragStart); el.addEventListener('dragend',onDragEnd); paletteArea.appendChild(el);});
-  feedbackEl.textContent=''; updateProgress();
+
+function checkAnswer(){
+  let correct = true;
+  Array.from(slotsArea.children).forEach(slot=>{
+    const expected = slot.dataset.expect;
+    const actual = slot.firstChild ? slot.firstChild.textContent : null;
+    if(actual===expected){
+      slot.classList.add('correct'); slot.classList.remove('incorrect');
+    } else {slot.classList.add('incorrect'); slot.classList.remove('correct'); correct=false;}
+  });
+  feedbackEl.textContent = correct ? 'Bravo ✅' : 'Des erreurs ❌';
 }
-let dragged=null;
-function onDragStart(e){dragged=e.target; e.dataTransfer.setData('text/plain',e.target.id); setTimeout(()=>e.target.classList.add('dragging'),5);}
-function onDragEnd(e){if(e.target)e.target.classList.remove('dragging'); dragged=null;}
-function onDragOver(e){e.preventDefault();}
-function onDrop(e){e.preventDefault(); const id=e.dataTransfer.getData('text/plain'); const brick=document.getElementById(id); if(!brick)return; const slot=e.currentTarget; if(slot.firstElementChild){paletteArea.appendChild(slot.firstElementChild); slot.classList.remove('filled');} slot.appendChild(brick); slot.classList.add('filled');}
-function checkAnswer(){const slots=Array.from(slotsArea.children); if(slots.length===0)return; let allFilled=true,allCorrect=true; slots.forEach(s=>{const child=s.firstElementChild;if(!child)allFilled=false;}); if(!allFilled){feedbackEl.style.color='rgba(0,0,0,.7)'; feedbackEl.textContent='Place toutes les briques avant de vérifier.'; return;} slots.forEach(s=>{const expected=s.dataset.expect.replace(/\s+/g,''); const actual=(s.firstElementChild?.textContent||'').replace(/\s+/g,''); if(expected===actual){s.classList.remove('incorrect'); s.classList.add('correct');}else{s.classList.remove('correct'); s.classList.add('incorrect'); allCorrect=false;}}); if(allCorrect){feedbackEl.style.color='var(--correct)'; feedbackEl.textContent='Bravo ✅ — développement correct !'; correctCount++; questionCount++; setTimeout(nextQuestion,1200);} else{feedbackEl.style.color='var(--incorrect)'; feedbackEl.textContent='Il y a des erreurs. Regarde les briques en rouge.';}}
-function showHint(){const slots=Array.from(slotsArea.children); for(const s of slots){const expected=s.dataset.expect.replace(/\s+/g,''); const child=s.firstElementChild; if(child&&child.textContent.replace(/\s+/g,'')===expected) continue; const bricks=Array.from(paletteArea.children).concat(Array.from(document.querySelectorAll('.brick'))); for(const b of bricks){if(b.textContent.replace(/\s+/g,'')===expected){b.style.transition='transform .15s ease'; b.style.transform='scale(1.08)'; setTimeout(()=>b.style.transform='',600); feedbackEl.style.color='var(--secondary-color)'; feedbackEl.textContent=`Indice : place la brique "${b.textContent}" dans la case manquante.`; return;}} for(const b of bricks){if(b.textContent.replace(/\s+/g,'').includes(expected.replace(/[0-9\-x\^]/g,''))){b.style.transform='scale(1.08)'; setTimeout(()=>b.style.transform='',600); feedbackEl.textContent='Indice : vérifie le signe/coefficients.'; return;}}} feedbackEl.textContent='Aucun indice disponible.';}
-function nextQuestion(){if(questionCount>=totalQuestions){alert(`Session terminée — score : ${correctCount} / ${totalQuestions}. Recommencer ?`); correctCount=0; questionCount=0;} current=makeQuestion(); renderQuestion(current); questionCount=Math.min(questionCount,totalQuestions-1); questionCount++; updateProgress();}
-function updateProgress(){progressEl.textContent=`Question ${questionCount} / ${totalQuestions}`;}
-totalQuestions=10; questionCount=0; correctCount=0; setMode('simple');
+
+function nextQuestion(){feedbackEl.textContent=''; renderQuestion();}
+
+// Initialisation
+nextQuestion();
 </script>
 
 </body>
