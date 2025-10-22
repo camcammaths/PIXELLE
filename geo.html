@@ -1,1 +1,79 @@
+import React, { useState, useRef, useEffect } from "react";
+<div className="flex flex-col items-center">
+<div className="border-2 border-slate-400" style={{ width: s.w * 6, height: s.w * 6 }} />
+<div className="text-xs mt-1">{s.w} u</div>
+</div>
+);
+case "rectangle":
+return (
+<div className="flex flex-col items-center">
+<div className="border-2 border-slate-400" style={{ width: s.w * 6, height: s.h * 6 }} />
+<div className="text-xs mt-1">{s.w}×{s.h}</div>
+</div>
+);
+case "circle":
+return (
+<div className="flex flex-col items-center">
+<div className="rounded-full border-2 border-slate-400" style={{ width: s.r * 12, height: s.r * 12 }} />
+<div className="text-xs mt-1">r={s.r}</div>
+</div>
+);
+case "halfcircle":
+return (
+<div className="flex flex-col items-center">
+<svg width={s.r * 12} height={s.r * 6} viewBox={`0 0 ${s.r * 12} ${s.r * 6}`}>
+<path d={`M0 ${s.r * 6} A ${s.r * 6} ${s.r * 6} 0 0 1 ${s.r * 12} ${s.r * 6} L ${s.r * 12} ${s.r * 6} Z`} fill="none" stroke="#334155" strokeWidth="2" />
+</svg>
+<div className="text-xs mt-1">½ circle r={s.r}</div>
+</div>
+);
+case "triangle":
+return (
+<div className="flex flex-col items-center">
+<svg width={Math.max(s.a, s.b) * 6} height={Math.max(s.a, s.b) * 6} viewBox={`0 0 ${Math.max(s.a, s.b) * 6} ${Math.max(s.a, s.b) * 6}`}>
+<polygon points={`0,${Math.max(s.a, s.b) * 6} ${s.a * 6},${Math.max(s.a, s.b) * 6} 0,${Math.max(s.b, s.a) * 6}`} fill="none" stroke="#334155" strokeWidth="2" />
+</svg>
+<div className="text-xs mt-1">{s.a} × {s.b}</div>
+</div>
+);
+default:
+return null;
+}
+}
 
+
+function displayShapeMeasures(it) {
+switch (it.kind) {
+case "square":
+return `${it.w} × ${it.w} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
+case "rectangle":
+return `${it.w} × ${it.h} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
+case "circle":
+return `r=${it.r} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
+case "halfcircle":
+return `r=${it.r} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
+case "triangle":
+return `${it.a} × ${it.b} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
+default:
+return '';
+}
+}
+
+
+function areaOfLocal(s) {
+if (!s) return 0;
+switch (s.kind) {
+case "square":
+return s.w * s.w;
+case "rectangle":
+return s.w * s.h;
+case "circle":
+return Math.PI * s.r * s.r;
+case "halfcircle":
+return 0.5 * Math.PI * s.r * s.r;
+case "triangle":
+return 0.5 * s.a * s.b;
+default:
+return 0;
+}
+}
