@@ -1,79 +1,198 @@
-import React, { useState, useRef, useEffect } from "react";
-<div className="flex flex-col items-center">
-<div className="border-2 border-slate-400" style={{ width: s.w * 6, height: s.w * 6 }} />
-<div className="text-xs mt-1">{s.w} u</div>
-</div>
-);
-case "rectangle":
-return (
-<div className="flex flex-col items-center">
-<div className="border-2 border-slate-400" style={{ width: s.w * 6, height: s.h * 6 }} />
-<div className="text-xs mt-1">{s.w}×{s.h}</div>
-</div>
-);
-case "circle":
-return (
-<div className="flex flex-col items-center">
-<div className="rounded-full border-2 border-slate-400" style={{ width: s.r * 12, height: s.r * 12 }} />
-<div className="text-xs mt-1">r={s.r}</div>
-</div>
-);
-case "halfcircle":
-return (
-<div className="flex flex-col items-center">
-<svg width={s.r * 12} height={s.r * 6} viewBox={`0 0 ${s.r * 12} ${s.r * 6}`}>
-<path d={`M0 ${s.r * 6} A ${s.r * 6} ${s.r * 6} 0 0 1 ${s.r * 12} ${s.r * 6} L ${s.r * 12} ${s.r * 6} Z`} fill="none" stroke="#334155" strokeWidth="2" />
-</svg>
-<div className="text-xs mt-1">½ circle r={s.r}</div>
-</div>
-);
-case "triangle":
-return (
-<div className="flex flex-col items-center">
-<svg width={Math.max(s.a, s.b) * 6} height={Math.max(s.a, s.b) * 6} viewBox={`0 0 ${Math.max(s.a, s.b) * 6} ${Math.max(s.a, s.b) * 6}`}>
-<polygon points={`0,${Math.max(s.a, s.b) * 6} ${s.a * 6},${Math.max(s.a, s.b) * 6} 0,${Math.max(s.b, s.a) * 6}`} fill="none" stroke="#334155" strokeWidth="2" />
-</svg>
-<div className="text-xs mt-1">{s.a} × {s.b}</div>
-</div>
-);
-default:
-return null;
-}
-}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeu de Géométrie</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    nav.menu {
+      background-color: #2d6cdf;
+      padding: 10px 20px;
+      display: flex;
+      gap: 10px;
+    }
+    nav.menu a.btn {
+      color: white;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      background-color: #1e4bb8;
+      transition: background-color 0.3s;
+    }
+    nav.menu a.btn:hover {
+      background-color: #173b8a;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+    .palette, .workspace, .panel {
+      background-color: white;
+      border-radius: 5px;
+      padding: 10px;
+      flex: 1;
+      min-height: 300px;
+    }
+    .shape {
+      width: 60px;
+      height: 60px;
+      margin: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      cursor: grab;
+      user-select: none;
+    }
+    .square { background-color: #f87171; }
+    .rectangle { background-color: #34d399; width: 90px; }
+    .circle { background-color: #60a5fa; border-radius: 50%; }
+    .triangle { width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 60px solid #fbbf24; background: none; color: black; }
+    .workspace {
+      position: relative;
+      border: 2px dashed #ccc;
+      min-height: 400px;
+    }
+    .workspace .shape {
+      position: absolute;
+    }
+    input[type="number"] {
+      width: 80px;
+      padding: 5px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 5px 10px;
+      margin-top: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
 
+<nav class="menu">
+  <a href="index.html" class="btn">Accueil</a>
+  <a href="geo.html" class="btn">Geo</a>
+</nav>
 
-function displayShapeMeasures(it) {
-switch (it.kind) {
-case "square":
-return `${it.w} × ${it.w} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
-case "rectangle":
-return `${it.w} × ${it.h} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
-case "circle":
-return `r=${it.r} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
-case "halfcircle":
-return `r=${it.r} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
-case "triangle":
-return `${it.a} × ${it.b} (aire ${Math.round(areaOfLocal(it) * 100) / 100})`;
-default:
-return '';
-}
-}
+<h2 style="padding:20px;">Activité : Aires et Périmètres</h2>
 
+<div class="container">
+  <!-- Palette de formes -->
+  <div class="palette">
+    <h3>Palette</h3>
+    <div class="shape square" draggable="true" data-type="square" data-size="50">Carré</div>
+    <div class="shape rectangle" draggable="true" data-type="rectangle" data-width="80" data-height="50">Rect</div>
+    <div class="shape circle" draggable="true" data-type="circle" data-radius="30">Cercle</div>
+    <div class="shape triangle" draggable="true" data-type="triangle" data-base="60" data-height="60"></div>
+  </div>
 
-function areaOfLocal(s) {
-if (!s) return 0;
-switch (s.kind) {
-case "square":
-return s.w * s.w;
-case "rectangle":
-return s.w * s.h;
-case "circle":
-return Math.PI * s.r * s.r;
-case "halfcircle":
-return 0.5 * Math.PI * s.r * s.r;
-case "triangle":
-return 0.5 * s.a * s.b;
-default:
-return 0;
-}
-}
+  <!-- Workspace -->
+  <div class="workspace" id="workspace">
+    <p style="position:absolute; top:5px; left:5px; font-size:12px; color:#666;">Dépose les formes ici</p>
+  </div>
+
+  <!-- Panel réponse -->
+  <div class="panel">
+    <h3>Calcul</h3>
+    <label>Aire totale :</label>
+    <input type="number" id="aireInput" placeholder="0">
+    <br>
+    <label>Périmètre total :</label>
+    <input type="number" id="periInput" placeholder="0">
+    <br>
+    <button onclick="verifier()">Vérifier</button>
+    <p id="result" style="margin-top:10px;"></p>
+  </div>
+</div>
+
+<script>
+  // Drag & Drop simple
+  const shapes = document.querySelectorAll('.palette .shape');
+  const workspace = document.getElementById('workspace');
+
+  shapes.forEach(shape => {
+    shape.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        type: shape.dataset.type,
+        size: shape.dataset.size,
+        width: shape.dataset.width,
+        height: shape.dataset.height,
+        radius: shape.dataset.radius,
+        base: shape.dataset.base,
+        heightT: shape.dataset.height
+      }));
+    });
+  });
+
+  workspace.addEventListener('dragover', e => e.preventDefault());
+  workspace.addEventListener('drop', e => {
+    e.preventDefault();
+    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    const newShape = document.createElement('div');
+    newShape.classList.add('shape', data.type);
+    if(data.type === 'rectangle') newShape.style.width = data.width+'px';
+    if(data.type === 'rectangle') newShape.style.height = data.height+'px';
+    if(data.type === 'circle') newShape.style.width = data.radius*2+'px';
+    if(data.type === 'circle') newShape.style.height = data.radius*2+'px';
+    newShape.style.left = e.offsetX + 'px';
+    newShape.style.top = e.offsetY + 'px';
+    newShape.setAttribute('data-type', data.type);
+    if(data.type==='square') newShape.setAttribute('data-size', data.size);
+    if(data.type==='triangle') { newShape.dataset.base = data.base; newShape.dataset.height = data.heightT;}
+    workspace.appendChild(newShape);
+  });
+
+  // Calculs
+  function verifier() {
+    let aire = 0, peri = 0;
+    const placedShapes = workspace.querySelectorAll('.shape');
+    placedShapes.forEach(s => {
+      const type = s.dataset.type;
+      switch(type) {
+        case 'square':
+          let side = Number(s.dataset.size);
+          aire += side*side;
+          peri += 4*side;
+          break;
+        case 'rectangle':
+          let w = Number(s.style.width.replace('px',''));
+          let h = Number(s.style.height.replace('px',''));
+          aire += w*h;
+          peri += 2*(w+h);
+          break;
+        case 'circle':
+          let r = Number(s.style.width.replace('px',''))/2;
+          aire += Math.PI*r*r;
+          peri += 2*Math.PI*r;
+          break;
+        case 'triangle':
+          let b = Number(s.dataset.base);
+          let ht = Number(s.dataset.height);
+          aire += 0.5*b*ht;
+          peri += b + ht + Math.sqrt(b*b + ht*ht);
+          break;
+      }
+    });
+    const userAire = Number(document.getElementById('aireInput').value);
+    const userPeri = Number(document.getElementById('periInput').value);
+    const res = document.getElementById('result');
+    let message = '';
+    if(Math.abs(userAire-aire)<1) message += 'Aire correcte! ';
+    else message += 'Aire incorrecte. ';
+    if(Math.abs(userPeri-peri)<1) message += 'Périmètre correct!';
+    else message += 'Périmètre incorrect.';
+    res.textContent = message + ` (Réel: aire=${Math.round(aire)}, périmètre=${Math.round(peri)})`;
+  }
+</script>
+
+</body>
+</html>
