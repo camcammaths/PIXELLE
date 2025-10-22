@@ -1,232 +1,163 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Géométrie ludique</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Géométrie ludique</title>
 
-  <!-- Polices -->
-  <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+<!-- Polices -->
+<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
 
-  <style>
-    :root {
-      --primary: #3a86ff;
-      --secondary: #8338ec;
-      --background: #f0f4f8;
-      --text: #212529;
-      --btn-bg: #a8d0ff;
-      --btn-hover: #7ab3ff;
-      --border-radius: 8px;
-      --transition: 0.3s ease;
-    }
+<style>
+  :root {
+    --primary: #3a86ff;
+    --secondary: #8338ec;
+    --background: #f0f4f8;
+    --text: #212529;
+    --border-radius: 8px;
+    --transition: 0.3s ease;
+  }
 
-    body {
-      font-family: 'Mabry Pro', sans-serif;
-      background: var(--background);
-      color: var(--text);
-      margin: 2rem;
-      user-select: none;
-    }
+  body {
+    font-family: 'Mabry Pro', sans-serif;
+    background: var(--background);
+    color: var(--text);
+    margin: 2rem;
+    user-select: none;
+  }
 
-    h1 {
-      font-family: 'Androgy Demo', sans-serif;
-      text-transform: capitalize;
-      color: var(--primary);
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
+  h1 {
+    font-family: 'Androgy Demo', sans-serif;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
 
-    a.back {
-      display: inline-block;
-      margin-bottom: 1.5rem;
-      font-weight: 600;
-      color: var(--primary);
-      text-decoration: none;
-      font-family: 'Mabry Pro', sans-serif;
-      border: 2px solid var(--primary);
-      padding: 0.5rem 1rem;
-      border-radius: var(--border-radius);
-      transition: background-color var(--transition), color var(--transition);
-    }
-    a.back:hover {
-      background-color: var(--primary);
-      color: white;
-    }
+  a.back {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    border: 2px solid var(--primary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    transition: background-color var(--transition), color var(--transition);
+  }
+  a.back:hover {
+    background-color: var(--primary);
+    color: white;
+  }
 
-    #game {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      gap: 3rem;
-      justify-content: center;
-    }
+  #workspace {
+    position: relative;
+    width: 90%;
+    max-width: 900px;
+    height: 500px;
+    margin: 0 auto;
+    border: 2px dashed var(--primary);
+    border-radius: var(--border-radius);
+    background: white;
+  }
 
-    .column {
-      flex: 1;
-      min-width: 280px;
-    }
+  .shape {
+    position: absolute;
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.1s;
+  }
 
-    .column h2 {
-      font-family: 'Androgy Demo', sans-serif;
-      text-transform: capitalize;
-      color: var(--secondary);
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    .dropzone {
-      background: white;
-      min-height: 60px;
-      margin-bottom: 1rem;
-      border: 2px dashed var(--primary);
-      border-radius: var(--border-radius);
-      padding: 0.75rem 1rem;
-      font-style: italic;
-      display: flex;
-      align-items: center;
-      color: #555;
-      transition: background-color var(--transition), border-color var(--transition);
-    }
-
-    .dropzone.filled {
-      border-style: solid;
-      background-color: #d0e2ff;
-      color: black;
-      font-style: normal;
-    }
-
-    .shape {
-      background: var(--primary);
-      color: white;
-      padding: 0.5rem 0.75rem;
-      border-radius: var(--border-radius);
-      margin-bottom: 0.5rem;
-      cursor: grab;
-      font-weight: 600;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      user-select: none;
-      transition: opacity 0.3s;
-    }
-
-    .shape.dragging {
-      opacity: 0.5;
-      cursor: grabbing;
-    }
-
-    #check-btn {
-      margin: 2rem auto 1rem;
-      display: block;
-      padding: 0.75rem 2rem;
-      font-weight: 600;
-      font-size: 1.1rem;
-      background-color: var(--secondary);
-      color: white;
-      border: none;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(131, 56, 236, 0.6);
-      transition: background-color var(--transition);
-      user-select: none;
-    }
-
-    #check-btn:hover {
-      background-color: #6829b0;
-    }
-
-    #result {
-      text-align: center;
-      font-weight: 700;
-      font-size: 1.2rem;
-      min-height: 1.5em;
-    }
-  </style>
+  .shape.dragging {
+    opacity: 0.7;
+    cursor: grabbing;
+  }
+</style>
 </head>
 <body>
 
-  <h1>Géométrie ludique</h1>
-  <a href="index.html" class="back">← Retour à la page principale</a>
+<h1>Géométrie ludique</h1>
+<a href="index.html" class="back">← Retour à la page principale</a>
 
-  <p>Glisse chaque forme dans la zone correspondante et estime son aire et périmètre.</p>
+<p style="text-align:center;">Déplace les formes dans le canevas et amuse-toi à les organiser.</p>
 
-  <div id="game">
-    <div class="column" id="shapes-col">
-      <h2>Formes</h2>
-      <div class="shape" draggable="true" data-type="square" data-size="50">Carré</div>
-      <div class="shape" draggable="true" data-type="rectangle" data-width="80" data-height="50">Rectangle</div>
-      <div class="shape" draggable="true" data-type="circle" data-radius="30">Cercle</div>
-      <div class="shape" draggable="true" data-type="triangle" data-base="60" data-height="60">Triangle</div>
-    </div>
+<div id="workspace"></div>
 
-    <div class="column" id="dropzones-col">
-      <h2>Dropzones</h2>
-      <div class="dropzone" data-id="1">Zone 1</div>
-      <div class="dropzone" data-id="2">Zone 2</div>
-      <div class="dropzone" data-id="3">Zone 3</div>
-      <div class="dropzone" data-id="4">Zone 4</div>
-    </div>
-  </div>
+<script>
+  const workspace = document.getElementById('workspace');
 
-  <button id="check-btn">Vérifier les réponses</button>
-  <div id="result"></div>
+  // Définition des formes à créer
+  const shapesData = [
+    { type: 'square', size: 80, color: '#f87171' },
+    { type: 'rectangle', width: 120, height: 60, color: '#34d399' },
+    { type: 'circle', radius: 40, color: '#60a5fa' },
+    { type: 'triangle', base: 80, height: 70, color: '#fbbf24' }
+  ];
 
-  <script>
-    const shapes = document.querySelectorAll('.shape');
-    const dropzones = document.querySelectorAll('.dropzone');
-    const checkBtn = document.getElementById('check-btn');
-    const result = document.getElementById('result');
+  function createShape(data, x, y) {
+    const div = document.createElement('div');
+    div.classList.add('shape');
 
-    let dragged = null;
+    // Style de base selon type
+    if(data.type === 'square') {
+      div.style.width = data.size + 'px';
+      div.style.height = data.size + 'px';
+      div.style.backgroundColor = data.color;
+    } else if(data.type === 'rectangle') {
+      div.style.width = data.width + 'px';
+      div.style.height = data.height + 'px';
+      div.style.backgroundColor = data.color;
+    } else if(data.type === 'circle') {
+      div.style.width = data.radius*2 + 'px';
+      div.style.height = data.radius*2 + 'px';
+      div.style.borderRadius = '50%';
+      div.style.backgroundColor = data.color;
+    } else if(data.type === 'triangle') {
+      div.style.width = 0;
+      div.style.height = 0;
+      div.style.borderLeft = data.base/2 + 'px solid transparent';
+      div.style.borderRight = data.base/2 + 'px solid transparent';
+      div.style.borderBottom = data.height + 'px solid ' + data.color;
+      div.style.background = 'none';
+    }
 
-    shapes.forEach(shape => {
-      shape.addEventListener('dragstart', () => {
-        dragged = shape;
-        shape.classList.add('dragging');
-      });
-      shape.addEventListener('dragend', () => {
-        dragged = null;
-        shape.classList.remove('dragging');
-      });
-    });
+    div.style.left = x + 'px';
+    div.style.top = y + 'px';
 
-    dropzones.forEach(zone => {
-      zone.addEventListener('dragover', e => {
-        e.preventDefault();
-        zone.style.backgroundColor = '#a8d0ff';
-      });
-      zone.addEventListener('dragleave', e => {
-        zone.style.backgroundColor = '';
-      });
-      zone.addEventListener('drop', e => {
-        e.preventDefault();
-        zone.style.backgroundColor = '';
-        if (!dragged) return;
+    workspace.appendChild(div);
 
-        // Si déjà une forme dans la dropzone, retourne dans la colonne shapes
-        const existing = zone.querySelector('.shape');
-        if (existing) {
-          document.getElementById('shapes-col').appendChild(existing);
-        }
+    makeDraggable(div);
+  }
 
-        zone.appendChild(dragged);
-      });
-    });
+  // Fonction de drag & drop
+  function makeDraggable(el) {
+    let offsetX, offsetY;
+    el.addEventListener('mousedown', e => {
+      el.classList.add('dragging');
+      offsetX = e.clientX - el.offsetLeft;
+      offsetY = e.clientY - el.offsetTop;
 
-    // Vérification : simple calcul fictif (exemple)
-    checkBtn.addEventListener('click', () => {
-      let filled = 0;
-      dropzones.forEach(zone => {
-        if(zone.querySelector('.shape')) filled++;
-      });
-      if(filled === dropzones.length) {
-        result.style.color = 'green';
-        result.textContent = 'Bravo ! Toutes les zones sont remplies 🎉';
-      } else {
-        result.style.color = 'red';
-        result.textContent = `${dropzones.length - filled} zone(s) vide(s), complète-les !`;
+      function move(e) {
+        el.style.left = e.clientX - offsetX + 'px';
+        el.style.top = e.clientY - offsetY + 'px';
       }
+
+      function up() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+        el.classList.remove('dragging');
+      }
+
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
     });
-  </script>
+  }
+
+  // Créer les formes initiales
+  shapesData.forEach((s, i) => {
+    createShape(s, 50 + i*100, 50);
+  });
+</script>
 
 </body>
 </html>
