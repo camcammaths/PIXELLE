@@ -1,204 +1,232 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jeu de Géométrie</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Géométrie ludique</title>
+
+  <!-- Polices -->
+  <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+
   <style>
+    :root {
+      --primary: #3a86ff;
+      --secondary: #8338ec;
+      --background: #f0f4f8;
+      --text: #212529;
+      --btn-bg: #a8d0ff;
+      --btn-hover: #7ab3ff;
+      --border-radius: 8px;
+      --transition: 0.3s ease;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f5f5f5;
-    }
-    nav.menu {
-      background-color: #2d6cdf;
-      padding: 10px 20px;
-      display: flex;
-      gap: 10px;
-    }
-    nav.menu a.btn {
-      color: white;
-      text-decoration: none;
-      padding: 8px 15px;
-      border-radius: 5px;
-      background-color: #1e4bb8;
-      transition: background-color 0.3s;
-    }
-    nav.menu a.btn:hover {
-      background-color: #173b8a;
-    }
-    .container {
-      display: flex;
-      gap: 20px;
-      padding: 20px;
-    }
-    .palette, .workspace, .panel {
-      background-color: white;
-      border-radius: 5px;
-      padding: 10px;
-      flex: 1;
-      min-height: 300px;
-    }
-    .shape {
-      width: 60px;
-      height: 60px;
-      margin: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      cursor: grab;
+      font-family: 'Mabry Pro', sans-serif;
+      background: var(--background);
+      color: var(--text);
+      margin: 2rem;
       user-select: none;
     }
-    .square { background-color: #f87171; }
-    .rectangle { background-color: #34d399; width: 90px; }
-    .circle { background-color: #60a5fa; border-radius: 50%; }
-    .triangle { width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 60px solid #fbbf24; background: none; color: black; }
-    .workspace {
-      position: relative;
-      border: 2px dashed #ccc;
-      min-height: 400px;
+
+    h1 {
+      font-family: 'Androgy Demo', sans-serif;
+      text-transform: capitalize;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 1.5rem;
     }
-    .workspace .shape {
-      position: absolute;
+
+    a.back {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      font-family: 'Mabry Pro', sans-serif;
+      border: 2px solid var(--primary);
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      transition: background-color var(--transition), color var(--transition);
     }
-    input[type="number"] {
-      width: 80px;
-      padding: 5px;
-      margin: 5px 0;
+    a.back:hover {
+      background-color: var(--primary);
+      color: white;
     }
-    button {
-      padding: 5px 10px;
-      margin-top: 5px;
+
+    #game {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      gap: 3rem;
+      justify-content: center;
+    }
+
+    .column {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .column h2 {
+      font-family: 'Androgy Demo', sans-serif;
+      text-transform: capitalize;
+      color: var(--secondary);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .dropzone {
+      background: white;
+      min-height: 60px;
+      margin-bottom: 1rem;
+      border: 2px dashed var(--primary);
+      border-radius: var(--border-radius);
+      padding: 0.75rem 1rem;
+      font-style: italic;
+      display: flex;
+      align-items: center;
+      color: #555;
+      transition: background-color var(--transition), border-color var(--transition);
+    }
+
+    .dropzone.filled {
+      border-style: solid;
+      background-color: #d0e2ff;
+      color: black;
+      font-style: normal;
+    }
+
+    .shape {
+      background: var(--primary);
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--border-radius);
+      margin-bottom: 0.5rem;
+      cursor: grab;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      user-select: none;
+      transition: opacity 0.3s;
+    }
+
+    .shape.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+
+    #check-btn {
+      margin: 2rem auto 1rem;
+      display: block;
+      padding: 0.75rem 2rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      background-color: var(--secondary);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
       cursor: pointer;
+      box-shadow: 0 4px 12px rgba(131, 56, 236, 0.6);
+      transition: background-color var(--transition);
+      user-select: none;
+    }
+
+    #check-btn:hover {
+      background-color: #6829b0;
+    }
+
+    #result {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      min-height: 1.5em;
     }
   </style>
 </head>
 <body>
 
-<nav class="menu">
-  <a href="index.html" class="btn">Accueil</a>
-  <a href="geo.html" class="btn">Geo</a>
-</nav>
+  <h1>Géométrie ludique</h1>
+  <a href="index.html" class="back">← Retour à la page principale</a>
 
-<h2 style="padding:20px;">Activité : Aires et Périmètres</h2>
+  <p>Glisse chaque forme dans la zone correspondante et estime son aire et périmètre.</p>
 
-<div class="container">
-  <!-- Palette de formes -->
-  <div class="palette">
-    <h3>Palette</h3>
-    <div class="shape square" draggable="true" data-type="square" data-size="50">Carré</div>
-    <div class="shape rectangle" draggable="true" data-type="rectangle" data-width="80" data-height="50">Rect</div>
-    <div class="shape circle" draggable="true" data-type="circle" data-radius="30">Cercle</div>
-    <div class="shape triangle" draggable="true" data-type="triangle" data-base="60" data-height="60"></div>
+  <div id="game">
+    <div class="column" id="shapes-col">
+      <h2>Formes</h2>
+      <div class="shape" draggable="true" data-type="square" data-size="50">Carré</div>
+      <div class="shape" draggable="true" data-type="rectangle" data-width="80" data-height="50">Rectangle</div>
+      <div class="shape" draggable="true" data-type="circle" data-radius="30">Cercle</div>
+      <div class="shape" draggable="true" data-type="triangle" data-base="60" data-height="60">Triangle</div>
+    </div>
+
+    <div class="column" id="dropzones-col">
+      <h2>Dropzones</h2>
+      <div class="dropzone" data-id="1">Zone 1</div>
+      <div class="dropzone" data-id="2">Zone 2</div>
+      <div class="dropzone" data-id="3">Zone 3</div>
+      <div class="dropzone" data-id="4">Zone 4</div>
+    </div>
   </div>
 
-  <!-- Workspace -->
-  <div class="workspace" id="workspace">
-    <p style="position:absolute; top:5px; left:5px; font-size:12px; color:#666;">Dépose les formes ici</p>
-  </div>
+  <button id="check-btn">Vérifier les réponses</button>
+  <div id="result"></div>
 
-  <!-- Panel réponse -->
-  <div class="panel">
-    <h3>Calcul</h3>
-    <label>Aire totale :</label>
-    <input type="number" id="aireInput" placeholder="0">
-    <br>
-    <label>Périmètre total :</label>
-    <input type="number" id="periInput" placeholder="0">
-    <br>
-    <button onclick="verifier()">Vérifier</button>
-    <p id="result" style="margin-top:10px;"></p>
-  </div>
-</div>
+  <script>
+    const shapes = document.querySelectorAll('.shape');
+    const dropzones = document.querySelectorAll('.dropzone');
+    const checkBtn = document.getElementById('check-btn');
+    const result = document.getElementById('result');
 
-<script>
-  // Drag & Drop simple
-  const shapes = document.querySelectorAll('.palette .shape');
-  const workspace = document.getElementById('workspace');
+    let dragged = null;
 
-  shapes.forEach(shape => {
-    shape.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('text/plain', JSON.stringify({
-        type: shape.dataset.type,
-        size: shape.dataset.size,
-        width: shape.dataset.width,
-        height: shape.dataset.height,
-        radius: shape.dataset.radius,
-        base: shape.dataset.base,
-        heightT: shape.dataset.height
-      }));
+    shapes.forEach(shape => {
+      shape.addEventListener('dragstart', () => {
+        dragged = shape;
+        shape.classList.add('dragging');
+      });
+      shape.addEventListener('dragend', () => {
+        dragged = null;
+        shape.classList.remove('dragging');
+      });
     });
-  });
 
-  workspace.addEventListener('dragover', e => e.preventDefault());
-  workspace.addEventListener('drop', e => {
-    e.preventDefault();
-    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-    const newShape = document.createElement('div');
-    newShape.classList.add('shape', data.type);
-    if(data.type === 'rectangle') newShape.style.width = data.width+'px';
-    if(data.type === 'rectangle') newShape.style.height = data.height+'px';
-    if(data.type === 'circle') newShape.style.width = data.radius*2+'px';
-    if(data.type === 'circle') newShape.style.height = data.radius*2+'px';
-    newShape.style.left = e.offsetX + 'px';
-    newShape.style.top = e.offsetY + 'px';
-    newShape.setAttribute('data-type', data.type);
-    if(data.type==='square') newShape.setAttribute('data-size', data.size);
-    if(data.type==='triangle') { newShape.dataset.base = data.base; newShape.dataset.height = data.heightT;}
-    workspace.appendChild(newShape);
-  });
+    dropzones.forEach(zone => {
+      zone.addEventListener('dragover', e => {
+        e.preventDefault();
+        zone.style.backgroundColor = '#a8d0ff';
+      });
+      zone.addEventListener('dragleave', e => {
+        zone.style.backgroundColor = '';
+      });
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.style.backgroundColor = '';
+        if (!dragged) return;
 
-  // Calculs
-  function verifier() {
-    let aire = 0, peri = 0;
-    const placedShapes = workspace.querySelectorAll('.shape');
-    placedShapes.forEach(s => {
-      const type = s.dataset.type;
-      switch(type) {
-        case 'square':
-          let side = Number(s.dataset.size);
-          aire += side*side;
-          peri += 4*side;
-          break;
-        case 'rectangle':
-          let w = Number(s.style.width.replace('px',''));
-          let h = Number(s.style.height.replace('px',''));
-          aire += w*h;
-          peri += 2*(w+h);
-          break;
-        case 'circle':
-          let r = Number(s.style.width.replace('px',''))/2;
-          aire += Math.PI*r*r;
-          peri += 2*Math.PI*r;
-          break;
-        case 'triangle':
-          let b = Number(s.dataset.base);
-          let ht = Number(s.dataset.height);
-          aire += 0.5*b*ht;
-          peri += b + ht + Math.sqrt(b*b + ht*ht);
-          break;
+        // Si déjà une forme dans la dropzone, retourne dans la colonne shapes
+        const existing = zone.querySelector('.shape');
+        if (existing) {
+          document.getElementById('shapes-col').appendChild(existing);
+        }
+
+        zone.appendChild(dragged);
+      });
+    });
+
+    // Vérification : simple calcul fictif (exemple)
+    checkBtn.addEventListener('click', () => {
+      let filled = 0;
+      dropzones.forEach(zone => {
+        if(zone.querySelector('.shape')) filled++;
+      });
+      if(filled === dropzones.length) {
+        result.style.color = 'green';
+        result.textContent = 'Bravo ! Toutes les zones sont remplies 🎉';
+      } else {
+        result.style.color = 'red';
+        result.textContent = `${dropzones.length - filled} zone(s) vide(s), complète-les !`;
       }
     });
-    const userAire = Number(document.getElementById('aireInput').value);
-    const userPeri = Number(document.getElementById('periInput').value);
-    const res = document.getElementById('result');
-    let message = '';
-    if(Math.abs(userAire-aire)<1) message += 'Aire correcte! ';
-    else message += 'Aire incorrecte. ';
-    if(Math.abs(userPeri-peri)<1) message += 'Périmètre correct!';
-    else message += 'Périmètre incorrect.';
-    res.textContent = message + ` (Réel: aire=${Math.round(aire)}, périmètre=${Math.round(peri)})`;
- 
-  
-   function goHome() {
-  // Mets ici l'adresse de ta page d'accueil
-  window.location.href = "index.html";   }
-
-  
-</script>
+  </script>
 
 </body>
 </html>
