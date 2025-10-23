@@ -1,454 +1,145 @@
-/* GeoFinal.jsx */
-import React, { useCallback, useState, useMemo } from "react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Activité Géométrique</title>
+  <style>
+    body {
+      font-family: 'Mabry Pro', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Androgy Demo', sans-serif;
+      color: #3a86ff;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    .shapes, .figure {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      min-width: 250px;
+      min-height: 250px;
+    }
+    .shape {
+      margin: 10px;
+      cursor: grab;
+    }
+    .dropzone {
+      border: 2px dashed #a074a3;
+      width: 120px;
+      height: 120px;
+      margin: 10px;
+      display: inline-block;
+      vertical-align: top;
+      position: relative;
+    }
+    .dropzone.filled {
+      border-style: solid;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
 
-/* -------------------------
-   Configuration visuelle
-   ------------------------- */
-const STYLE = {
-  primary: "#3a86ff",
-  secondary: "#8338ec",
-  background: "#f0f4f8",
-  fill: "#dde1f0",       // remplissage demandé
-  stroke: "#a074a3",     // contour demandé
-  strokeWidth: 2
-};
+<h1>Activité Géométrique : Compose la figure</h1>
 
-/* -------------------------
-   Données : formes simples
-   ------------------------- */
-const AVAILABLE_SHAPES = [
-  { id: "square", label: "Carré", kind: "square", size: 80 },
-  { id: "rectangle", label: "Rectangle", kind: "rectangle", width: 120, height: 60 },
-  { id: "circle", label: "Cercle", kind: "circle", radius: 40 },
-  { id: "triangle", label: "Triangle", kind: "triangle", base: 80, height: 70 },
-  { id: "hemicircle", label: "Demi-cercle", kind: "hemicircle", radius: 40 }
-];
-
-/* -------------------------
-   Figures complexes (niveaux)
-   Composition: list of pieces with kind and optional orientation info
-   For demi-cercles we mark 'hemicircle' and orientation 'left'/'right' (or top/bottom)
-   ------------------------- */
-const LEVELS = [
-  {
-    id: 1,
-    name: "Rectangle + 2 demi-cercles",
-    // rectangle centered with two half-circles on left/right
-    targetPieces: [
-      { kind: "rectangle" },
-      { kind: "hemicircle", orientation: "left" },
-      { kind: "hemicircle", orientation: "right" }
-    ],
-    // We'll draw with SVG parameters below
-  },
-  {
-    id: 2,
-    name: "Carré + triangle",
-    targetPieces: [
-      { kind: "square" },
-      { kind: "triangle", orientation: "top" } // triangle on top of square (example)
-    ]
-  },
-  {
-    id: 3,
-    name: "Rectangle + cercle",
-    targetPieces: [
-      { kind: "rectangle" },
-      { kind: "circle" }
-    ]
-  }
-];
-
-/* -------------------------
-   Utilitaires math (aires & périmètres)
-   ------------------------- */
-function areaOfPiece(p) {
-  switch (p.kind) {
-    case "square": return p.size * p.size;
-    case "rectangle": return p.width * p.height;
-    case "circle": return Math.PI * p.radius * p.radius;
-    case "hemicircle": return 0.5 * Math.PI * p.radius * p.radius;
-    case "triangle": return 0.5 * p.base * p.height;
-    default: return 0;
-  }
-}
-function perimOfPiece(p) {
-  switch (p.kind) {
-    case "square": return 4 * p.size;
-    case "rectangle": return 2 * (p.width + p.height);
-    case "circle": return 2 * Math.PI * p.radius;
-    case "hemicircle": return Math.PI * p.radius + 2 * p.radius; // curved + diameter
-    case "triangle": return p.base + p.height + Math.sqrt(p.base*p.base + p.height*p.height); // right triangle approx
-    default: return 0;
-  }
-}
-
-/* -------------------------
-   Draggable item type
-   ------------------------- */
-const ItemTypes = { SHAPE: "shape" };
-
-/* -------------------------
-   Composants Draggables
-   ------------------------- */
-function DraggableShape({ shape }) {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: ItemTypes.SHAPE,
-    item: { kind: shape.kind },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() })
-  }), [shape]);
-
-  const opacity = isDragging ? 0.4 : 1;
-  const style = { opacity, marginBottom: 12, cursor: "grab" };
-
-  // small SVG preview
-  return (
-    <div ref={drag} style={style}>
-      <ShapeSVG shape={shape} interactive={false} />
-      <div style={{ fontSize: 13, marginTop: 6, color: "#333" }}>{shape.label}</div>
+<div class="container">
+  <!-- Zone des formes disponibles -->
+  <div class="shapes">
+    <h2>Formes disponibles</h2>
+    <div class="shape" draggable="true" data-kind="square">
+      <svg viewBox="0 0 100 100">
+        <rect x="10" y="10" width="80" height="80" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Carré</div>
     </div>
-  );
-}
-
-/* -------------------------
-   Drop target: a zone for a piece in the complex figure
-   ------------------------- */
-function PieceDropZone({ index, placed, onDrop, hintLabel }) {
-  // Accept shapes
-  const [{ isOver, canDrop }, dropRef] = useDrop(() => ({
-    accept: ItemTypes.SHAPE,
-    drop: (item) => onDrop(index, item),
-    collect: (m) => ({ isOver: m.isOver(), canDrop: m.canDrop() })
-  }), [index, onDrop]);
-
-  const bg = isOver ? "#e8f0ff" : "white";
-  const borderColor = canDrop ? STYLE.primary : "#ddd";
-
-  return (
-    <div ref={dropRef} style={{
-      minWidth: 110, minHeight: 110, display: "flex", alignItems: "center", justifyContent: "center",
-      border: `2px dashed ${borderColor}`, background: bg, borderRadius: 10, padding: 6
-    }}>
-      {placed ? <ShapeSVG shape={placed} /> : (
-        <div style={{ color: "#666", fontSize: 13, textAlign: "center" }}>{hintLabel || "Dépose ici"}</div>
-      )}
+    <div class="shape" draggable="true" data-kind="rectangle">
+      <svg viewBox="0 0 120 60">
+        <rect x="0" y="0" width="120" height="60" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Rectangle</div>
     </div>
-  );
-}
-
-/* -------------------------
-   SVG Drawer for shapes (re-usable)
-   shape object contains kind and geometric params
-   ------------------------- */
-function ShapeSVG({ shape, interactive = true }) {
-  // default sizes for drawing
-  const W = 120, H = 100;
-  const common = { fill: STYLE.fill, stroke: STYLE.stroke, strokeWidth: STYLE.strokeWidth };
-
-  if (!shape) return null;
-
-  // if shape is provided as "kind" only (from drag item) we map to standard sizes for preview
-  const kind = shape.kind;
-  if (kind === "square") {
-    const size = shape.size ?? 80;
-    return (
-      <svg width={size} height={size}>
-        <rect width={size} height={size} fill={common.fill} stroke={common.stroke} strokeWidth={common.strokeWidth} rx="6" />
+    <div class="shape" draggable="true" data-kind="circle">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
       </svg>
-    );
-  }
-  if (kind === "rectangle") {
-    const w = shape.width ?? 110;
-    const h = shape.height ?? 60;
-    return (
-      <svg width={w} height={h}>
-        <rect width={w} height={h} fill={common.fill} stroke={common.stroke} strokeWidth={common.strokeWidth} rx="6" />
-      </svg>
-    );
-  }
-  if (kind === "circle") {
-    const r = shape.radius ?? 36;
-    return (
-      <svg width={r*2} height={r*2}>
-        <circle cx={r} cy={r} r={r} fill={common.fill} stroke={common.stroke} strokeWidth={common.strokeWidth} />
-      </svg>
-    );
-  }
-  if (kind === "hemicircle") {
-    const r = shape.radius ?? 36;
-    // semicircle to the right by default; also accept orientation 'left'
-    if (shape.orientation === "left") {
-      return (
-        <svg width={r*2} height={r}>
-          <path d={`M${r*2},0 A ${r},${r} 0 0,0 ${r*2},${r} L ${r*2},0 Z`} fill={common.fill} stroke={common.stroke} strokeWidth={common.strokeWidth} />
-        </svg>
-      );
-    } else {
-      return (
-        <svg width={r*2} height={r}>
-          <path d={`M0,0 A ${r},${r} 0 0,1 0,${r} L 0,0 Z`} fill={common.fill} stroke={common.stroke} strokeWidth={common.strokeWidth} />
-        </svg>
-      );
-    }
-  }
-  if (kind === "triangle") {
-    const base = shape.base ?? 80;
-    const height = shape.height ?? 70;
-    const points = `0,${height} ${base/2},0 ${base},${height}`;
-    return (
-      <svg width={base} height={height}>
-        <polygon points={points} fill={common.fill} stroke={common.stroke} strokeWidth={common.strokeWidth} />
-      </svg>
-    );
-  }
-
-  return null;
-}
-
-/* -------------------------
-   Composant principal : figure complexe à compléter
-   ------------------------- */
-function FigureComplex({ level, onSolved }) {
-  // placedPieces: array indexed same as level.targetPieces; when student drops, we store the placed shape (with geometry)
-  const [placedPieces, setPlacedPieces] = useState(Array(level.targetPieces.length).fill(null));
-
-  // When a student drops an item (drag item only carries { kind }), we map to a concrete shape instance
-  const handleDrop = useCallback((index, item) => {
-    // map kind to default geometry for calculations
-    const kind = item.kind;
-    let instance = null;
-    switch (kind) {
-      case "square": instance = { kind: "square", size: 80 }; break;
-      case "rectangle": instance = { kind: "rectangle", width: 120, height: 60 }; break;
-      case "circle": instance = { kind: "circle", radius: 40 }; break;
-      case "triangle": instance = { kind: "triangle", base: 80, height: 70 }; break;
-      case "hemicircle": instance = { kind: "hemicircle", radius: 40 }; break;
-      default: instance = { kind }; break;
-    }
-
-    // If target expects orientation info (ex hemicircle left/right), preserve it
-    const target = level.targetPieces[index];
-    if (target && target.orientation) instance.orientation = target.orientation;
-
-    const copy = [...placedPieces];
-    copy[index] = instance;
-    setPlacedPieces(copy);
-  }, [level, placedPieces]);
-
-  // Validation: check if placedPieces kinds match the target kinds, in any order or exact order?
-  // We'll allow unordered match (student can drop in any slot) but we'll require same multiset.
-  const validate = useCallback(() => {
-    const targetKinds = level.targetPieces.map(p => p.kind);
-    const placedKinds = placedPieces.filter(Boolean).map(p => p.kind);
-    // simple multiset compare
-    const count = (arr) => arr.reduce((acc, k) => (acc[k] = (acc[k]||0)+1, acc), {});
-    const a = count(targetKinds), b = count(placedKinds);
-    const ok = Object.keys(a).every(k => a[k] === b[k]);
-    if (ok) {
-      // compute area & perimeter sums using geometry instances
-      // if some placed are null, treat as incomplete -> not ok
-      const allPlaced = placedPieces.every(Boolean);
-      if (!allPlaced) return { ok: false, message: "Place toutes les pièces." };
-      // need concrete geometry values for target pieces: map each target piece to a geometry instance
-      // we already set placed instances with default dims
-      const area = placedPieces.reduce((s,p) => s + areaOfPiece(p), 0);
-      const peri = placedPieces.reduce((s,p) => s + perimOfPiece(p), 0);
-      return { ok: true, area, peri };
-    } else {
-      return { ok: false, message: "Composition incorrecte — vérifie les pièces." };
-    }
-  }, [level, placedPieces]);
-
-  // helper: clear slot
-  const clearSlot = (index) => {
-    const copy = [...placedPieces];
-    copy[index] = null;
-    setPlacedPieces(copy);
-  };
-
-  // draw the complex figure visually at top (for reference) using SVG based on level id
-  function ComplexPreview() {
-    // We'll draw per level a composed SVG illustration (non-interactive) using declared sizes and colours
-    if (level.id === 1) {
-      // rectangle + two hemicircles left/right
-      const W = 220, H = 120;
-      const rectW = 140, rectH = 100;
-      const rectX = (W-rectW)/2, rectY = (H-rectH)/2;
-      const r = rectH/2;
-      return (
-        <svg width={W} height={H}>
-          <path d={`M${rectX},${rectY} h${rectW} v${rectH} h-${rectW} z`} fill={STYLE.fill} stroke={STYLE.stroke} strokeWidth={STYLE.strokeWidth} rx="6" />
-          {/* left semicircle */}
-          <path d={`M${rectX},${rectY} A ${r},${r} 0 0,0 ${rectX},${rectY+rectH} L ${rectX},${rectY} Z`} fill={STYLE.fill} stroke={STYLE.stroke} strokeWidth={STYLE.strokeWidth} />
-          {/* right semicircle */}
-          <path d={`M${rectX+rectW},${rectY} A ${r},${r} 0 0,1 ${rectX+rectW},${rectY+rectH} L ${rectX+rectW},${rectY} Z`} fill={STYLE.fill} stroke={STYLE.stroke} strokeWidth={STYLE.strokeWidth} />
-        </svg>
-      );
-    }
-    if (level.id === 2) {
-      const size = 110;
-      // square + triangle on top center
-      return (
-        <svg width={200} height={150}>
-          <polygon points={`50,40 100,0 150,40`} fill={STYLE.fill} stroke={STYLE.stroke} strokeWidth={STYLE.strokeWidth} />
-          <rect x={70} y={50} width={80} height={80} fill={STYLE.fill} stroke={STYLE.stroke} strokeWidth={STYLE.strokeWidth} rx="6"/>
-        </svg>
-      );
-    }
-    if (level.id === 3) {
-      // rectangle + circle somewhere
-      return (
-        <svg width={220} height={130}>
-          <rect x={10} y={15} width={140} height={100} fill={STYLE.fill} stroke={STYLE.stroke} strokeWidth={STYLE.strokeWidth} rx="6" />
-          <circle cx={180} cy={65} r={40} fill={STYLE.fill} stroke={STYLE.stroke} strokeWidth={STYLE.strokeWidth} />
-        </svg>
-      );
-    }
-    return null;
-  }
-
-  return (
-    <div style={{ padding: 18, borderRadius: 12, background: "white", boxShadow: "0 6px 18px rgba(20,20,40,0.06)" }}>
-      <div style={{ display: "flex", gap: 18, alignItems: "center", marginBottom: 12 }}>
-        <div style={{ flex: "0 0 260px", textAlign: "center" }}>
-          <div style={{ fontSize: 14, color: STYLE.secondary, marginBottom: 8, fontWeight: 700 }}>{level.name}</div>
-          <div style={{ display: "inline-block", padding: 8, background: "#fbfbfb", borderRadius: 10 }}>
-            <ComplexPreview />
-          </div>
-        </div>
-
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${level.targetPieces.length}, 1fr)`, gap: 12 }}>
-            {level.targetPieces.map((t, idx) => (
-              <div key={idx} style={{ textAlign: "center" }}>
-                <PieceDropZone
-                  index={idx}
-                  placed={placedPieces[idx]}
-                  onDrop={handleDrop}
-                  hintLabel={t.kind === "hemicircle" ? `1/2 cercle (${t.orientation||"?"})` : t.kind}
-                />
-                <div style={{ marginTop: 8 }}>
-                  {placedPieces[idx] ? <button onClick={() => clearSlot(idx)} style={{ fontSize: 12, padding: "6px 10px" }}>Retirer</button> : null}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 14, display: "flex", gap: 10, alignItems: "center" }}>
-            <button onClick={() => {
-              const res = validate();
-              if (res.ok) {
-                onSolved(res.area, res.peri);
-              } else {
-                alert(res.message || "Composition incorrecte.");
-              }
-            }} style={{ padding: "10px 14px", background: STYLE.secondary, color: "white", border: "none", borderRadius: 8, cursor: "pointer" }}>
-              Vérifier composition
-            </button>
-
-            <button onClick={() => setPlacedPieces(Array(level.targetPieces.length).fill(null))}
-                    style={{ padding: "10px 14px", background: "#eee", border: "none", borderRadius: 8, cursor: "pointer" }}>
-              Réinitialiser
-            </button>
-          </div>
-        </div>
-      </div>
+      <div>Cercle</div>
     </div>
-  );
-}
+    <div class="shape" draggable="true" data-kind="triangle">
+      <svg viewBox="0 0 100 100">
+        <polygon points="50,0 0,100 100,100" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Triangle</div>
+    </div>
+    <div class="shape" draggable="true" data-kind="hemicircle-left">
+      <svg viewBox="0 0 100 50">
+        <path d="M100,50 A50,50 0 0,0 0,50 Z" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Demi-cercle gauche</div>
+    </div>
+    <div class="shape" draggable="true" data-kind="hemicircle-right">
+      <svg viewBox="0 0 100 50">
+        <path d="M0,50 A50,50 0 0,1 100,50 Z" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Demi-cercle droit</div>
+    </div>
+  </div>
 
-/* -------------------------
-   Application principale
-   ------------------------- */
-export default function GeoFinal() {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const [message, setMessage] = useState(null);
-  const [computed, setComputed] = useState(null); // { area, peri }
+  <!-- Zone figure à compléter -->
+  <div class="figure" id="figure">
+    <h2>Figure cible</h2>
+    <div class="dropzone" data-expected="rectangle"></div>
+    <div class="dropzone" data-expected="hemicircle-left"></div>
+    <div class="dropzone" data-expected="hemicircle-right"></div>
+  </div>
+</div>
 
-  const currentLevel = LEVELS[levelIndex];
+<script>
+  const shapes = document.querySelectorAll('.shape');
+  const dropzones = document.querySelectorAll('.dropzone');
 
-  const onSolved = (area, peri) => {
-    setComputed({ area, peri });
-    setMessage({ text: `Bravo ! Composition correcte. Aire ≈ ${Math.round(area*100)/100} ; Périmètre ≈ ${Math.round(peri*100)/100}`, type: "success" });
-  };
+  let draggedShape = null;
 
-  const nextLevel = () => {
-    setComputed(null);
-    setMessage(null);
-    setLevelIndex((i) => Math.min(i+1, LEVELS.length-1));
-  };
+  shapes.forEach(shape => {
+    shape.addEventListener('dragstart', e => {
+      draggedShape = shape;
+    });
+  });
 
-  const prevLevel = () => {
-    setComputed(null);
-    setMessage(null);
-    setLevelIndex((i) => Math.max(0, i-1));
-  };
+  dropzones.forEach(zone => {
+    zone.addEventListener('dragover', e => e.preventDefault());
+    zone.addEventListener('drop', e => {
+      if (!draggedShape) return;
+      // Supprimer la précédente si nécessaire
+      if (zone.firstChild) zone.firstChild.remove();
+      // Cloner le SVG de la forme
+      const svgClone = draggedShape.querySelector('svg').cloneNode(true);
+      zone.appendChild(svgClone);
+      zone.classList.add('filled');
+      // Vérification simple
+      if(zone.dataset.expected === draggedShape.dataset.kind){
+        zone.style.backgroundColor = "#d4f8d4"; // correct
+      } else {
+        zone.style.backgroundColor = "#f8d4d4"; // incorrect
+      }
+      draggedShape = null;
+    });
+  });
+</script>
 
-  // memoized list of draggable simple shapes (we include hemicircle too)
-  const simpleShapes = useMemo(() => AVAILABLE_SHAPES, []);
-
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <div style={{ background: STYLE.background, minHeight: "100vh", padding: 28 }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-            <h1 style={{ margin: 0, fontFamily: "Androgy Demo, sans-serif", color: STYLE.primary }}>Géométrie — Décomposition</h1>
-            <div>
-              <button onClick={prevLevel} style={{ marginRight: 8 }} disabled={levelIndex===0}>Préc.</button>
-              <button onClick={() => { setLevelIndex(0); setComputed(null); setMessage(null); }}>Accueil</button>
-              <button onClick={nextLevel} style={{ marginLeft: 8 }} disabled={levelIndex===LEVELS.length-1}>Suiv.</button>
-            </div>
-          </header>
-
-          <main style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 18 }}>
-            {/* palette */}
-            <aside style={{ background: "white", padding: 16, borderRadius: 12, boxShadow: "0 6px 18px rgba(20,20,40,0.06)" }}>
-              <div style={{ fontWeight: 800, color: STYLE.secondary, marginBottom: 12 }}>Boîte à formes</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {simpleShapes.map(s => (
-                  <div key={s.id} style={{ textAlign: "center", padding: 8, background: "#fbfbfb", borderRadius: 10 }}>
-                    <DraggableShape shape={s} />
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>Après validation</div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => {
-                    if (!computed) { alert("Valide d'abord la composition."); return; }
-                    alert(`Aire totale ≈ ${Math.round(computed.area*100)/100}`);
-                  }} style={{ padding: "8px 10px", borderRadius: 8 }}>Voir aire</button>
-                  <button onClick={() => {
-                    if (!computed) { alert("Valide d'abord la composition."); return; }
-                    alert(`Périmètre total ≈ ${Math.round(computed.peri*100)/100}`);
-                  }} style={{ padding: "8px 10px", borderRadius: 8 }}>Voir périmètre</button>
-                </div>
-              </div>
-            </aside>
-
-            {/* level panel */}
-            <section>
-              <FigureComplex level={currentLevel} onSolved={onSolved} />
-
-              {message ? (
-                <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: message.type === "success" ? "#e6ffef" : "#fff2f2", color: message.type === "success" ? "#0b7a3a" : "#a00" }}>
-                  {message.text}
-                </div>
-              ) : (
-                <div style={{ marginTop: 14, color: "#666" }}>Glisse les formes de la boîte sur les zones pour reconstituer la figure.</div>
-              )}
-            </section>
-          </main>
-
-          <footer style={{ marginTop: 24, textAlign: "center", color: "#666" }}>
-            <small>Direction artistique harmonisée — remplissage <code>#dde1f0</code>, contour <code>#a074a3</code>, épaisseur 2px.</small>
-          </footer>
-        </div>
-      </div>
-    </DndProvider>
-  );
-}
-
+</body>
+</html>
