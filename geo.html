@@ -20,7 +20,7 @@
       --correct: #4CAF50;
       --incorrect: #e74c3c;
       --accent-square: #3a86ff; /* couleur unique pour les carrés */
-      --grid-gap: 6px;
+      --grid-gap: 0px;
       --cell-size: 36px; /* taille d'un carré 1x1 (affichage) */
       --border-radius: 8px;
       --transition: 0.25s ease;
@@ -75,15 +75,11 @@
 <body>
 
   <h1>Aire — Puzzle des carrés unité</h1>
-  <p class="lead">Une figure est créée à partir de carrés 1×1. Trouve son aire (en unités²).</p>
+  
 
   <main class="card" role="main">
 
-    <div class="toolbar">
-      <button class="btn" id="newBtn">Nouvelle figure</button>
-      <button class="btn" id="showSolutionBtn">Afficher l'aire</button>
-      <button class="btn" id="highlightBtn">Montrer frontière</button>
-    </div>
+    
 
     <div id="gridWrap">
       <div id="grid" aria-hidden="false"></div>
@@ -102,7 +98,7 @@
       <div class="small">(Chaque carré = 1 unité²)</div>
     </div>
 
-    <a href="index.html" class="back">← Retour à l'accueil</a>
+    
   </main>
 
   <script>
@@ -115,8 +111,6 @@
     const answerEl = document.getElementById('answer');
     const feedbackEl = document.getElementById('feedback');
     const countEl = document.getElementById('count');
-    const showSolutionBtn = document.getElementById('showSolutionBtn');
-    const highlightBtn = document.getElementById('highlightBtn');
 
     let coords = new Set(); // ensemble de coordonnées 'x,y'
     let cellsCount = 0;
