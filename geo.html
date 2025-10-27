@@ -3,25 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aire — Jeu des carrés unité</title>
+  <title>Aire — Puzzle des carrés unité</title>
 
-  <!-- Polices (les mêmes que ton projet) -->
   <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
 
   <style>
     :root{
       --primary-color: #3a86ff;
-      --secondary-color: #8338ec;
       --background-color: #f0f4f8;
-      --card-bg: #ffffff;
-      --button-bg: #a8d0ff;
-      --button-bg-hover: #7ab3ff;
-      --correct: #4CAF50;
-      --incorrect: #e74c3c;
-      --accent-square: #3a86ff; /* couleur unique pour les carrés */
-      --grid-gap: 0px;
-      --cell-size: 36px; /* taille d'un carré 1x1 (affichage) */
+      --accent-square: #3a86ff;
+      --cell-size: 36px;
       --border-radius: 8px;
       --transition: 0.25s ease;
       --text-color: #212529;
@@ -38,81 +30,43 @@
       font-family:'Androgy Demo',sans-serif;font-size:2.4rem;color:var(--primary-color);margin:0 0 1rem;
     }
 
-    .lead{font-weight:700;margin-bottom:1.25rem}
-
-    .toolbar{margin-bottom:1rem}
-    .btn{display:inline-block;padding:0.6rem 1.1rem;margin:0.25rem;border-radius:var(--border-radius);border:none;background:var(--button-bg);cursor:pointer;transition:background var(--transition);font-family:inherit}
-    .btn:hover{background:var(--button-bg-hover);color:white}
-
-    main.card{
-      background:var(--card-bg);max-width:980px;margin:0 auto;padding:1.25rem;border-radius:14px;box-shadow:0 6px 20px rgba(50,50,93,0.06);
-    }
+    #gridWrap{display:flex;justify-content:center;align-items:center;padding:1rem}
+    #grid{display:grid;gap:0px;padding:0}
+    .cell{width:var(--cell-size);height:var(--cell-size);border-radius:0}
+    .cell.filled{background:var(--accent-square)}
 
     .controls{display:flex;gap:0.75rem;justify-content:center;align-items:center;margin:1rem 0}
     input[type=number]{padding:0.5rem 0.6rem;border-radius:8px;border:2px solid rgba(0,0,0,0.08);width:120px;font-size:1rem}
-
-    #gridWrap{display:flex;justify-content:center;align-items:center;padding:1rem}
-    #grid{display:grid;gap:var(--grid-gap);background:transparent;padding:0.75rem;border-radius:10px}
-
-    /* cellule vide pour garder la structure */
-    .cell{width:var(--cell-size);height:var(--cell-size);border-radius:6px}
-    .cell.filled{background:var(--accent-square);box-shadow:0 2px 0 rgba(0,0,0,0.12);}
+    .btn{padding:0.6rem 1.1rem;border-radius:var(--border-radius);border:none;background:var(--primary-color);color:white;cursor:pointer;transition:background var(--transition);font-family:inherit}
+    .btn:hover{background:#8338ec}
 
     .feedback{height:1.4rem;margin-top:0.5rem;font-weight:700}
-    .feedback.ok{color:var(--correct)}
-    .feedback.bad{color:var(--incorrect)}
-
-    .meta{display:flex;gap:1rem;justify-content:center;align-items:center;margin-top:0.75rem}
-    .small{font-size:0.92rem;color:#5b6b72}
-
-    a.back{display:inline-block;margin-top:1rem;text-decoration:none;font-weight:600;color:var(--primary-color);border:2px solid var(--primary-color);padding:0.5rem 1rem;border-radius:var(--border-radius);transition:background var(--transition)}
-    a.back:hover{background:var(--primary-color);color:white}
-
-    /* responsive: réduire la taille des cases sur petits écrans */
-    @media (max-width:520px){:root{--cell-size:28px}}
+    .feedback.ok{color:green}
+    .feedback.bad{color:red}
   </style>
 </head>
 <body>
 
   <h1>Aire — Puzzle des carrés unité</h1>
-  
 
-  <main class="card" role="main">
+  <div id="gridWrap">
+    <div id="grid"></div>
+  </div>
 
-    
+  <div class="controls">
+    <input id="answer" type="number" min="0" inputmode="numeric" placeholder="Ton aire" />
+    <button class="btn" id="checkBtn">Valider</button>
+  </div>
 
-    <div id="gridWrap">
-      <div id="grid" aria-hidden="false"></div>
-    </div>
-
-    <div class="controls">
-      <label for="answer" class="small">Ton réponse :</label>
-      <input id="answer" type="number" min="0" inputmode="numeric" />
-      <button class="btn" id="checkBtn">Valider</button>
-    </div>
-
-    <div class="feedback" id="feedback" aria-live="polite"></div>
-
-    <div class="meta">
-      <div class="small">Carrés : <span id="count">0</span></div>
-      <div class="small">(Chaque carré = 1 unité²)</div>
-    </div>
-
-    
-  </main>
+  <div class="feedback" id="feedback" aria-live="polite"></div>
 
   <script>
-    // Génération d'une figure tuilée à partir d'un carré initial
-    // principe : random walk / ajout de voisins adjacents
-
     const gridEl = document.getElementById('grid');
-    const newBtn = document.getElementById('newBtn');
     const checkBtn = document.getElementById('checkBtn');
     const answerEl = document.getElementById('answer');
     const feedbackEl = document.getElementById('feedback');
-    const countEl = document.getElementById('count');
 
-    let coords = new Set(); // ensemble de coordonnées 'x,y'
+    let coords = new Set();
     let cellsCount = 0;
 
     function coordKey(x,y){return x+','+y}
@@ -121,21 +75,14 @@
     function generateShape(minCells=5,maxCells=12){
       coords.clear();
       const target = Math.floor(Math.random()*(maxCells-minCells+1))+minCells;
-
-      // commencer au 0,0
       coords.add(coordKey(0,0));
       const frontier = [coordKey(0,0)];
 
       while(coords.size < target){
-        // choisir une cellule existante au hasard
         const base = frontier[Math.floor(Math.random()*frontier.length)];
         const {x,y} = parseKey(base);
-
-        // voisins possibles
         const neigh = [ [x+1,y],[x-1,y],[x,y+1],[x,y-1] ];
-        // mélanger
         for(let i=neigh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[neigh[i],neigh[j]]=[neigh[j],neigh[i]]}
-
         let added = false;
         for(const [nx,ny] of neigh){
           const k = coordKey(nx,ny);
@@ -143,68 +90,43 @@
             coords.add(k);
             frontier.push(k);
             added = true;
-            break; // une seule cellule à la fois pour garder la forme connectée
+            break;
           }
         }
-
         if(!added){
-          // si aucun voisin disponible (rare), retirer base de frontier pour éviter boucle infinie
           const idx = frontier.indexOf(base);
           if(idx>-1) frontier.splice(idx,1);
-          if(frontier.length===0){
-            // improbable, reinit
-            coords.clear(); coords.add(coordKey(0,0)); frontier.push(coordKey(0,0));
-          }
+          if(frontier.length===0){ coords.clear(); coords.add(coordKey(0,0)); frontier.push(coordKey(0,0)); }
         }
       }
-
-      // coords prêt
       renderGrid();
     }
 
     function renderGrid(){
-      // calcul des bornes
       const all = Array.from(coords).map(parseKey);
       const xs = all.map(o=>o.x); const ys = all.map(o=>o.y);
       const minX=Math.min(...xs), maxX=Math.max(...xs);
       const minY=Math.min(...ys), maxY=Math.max(...ys);
-
       const width = maxX - minX + 1;
       const height = maxY - minY + 1;
-
       gridEl.style.gridTemplateColumns = `repeat(${width}, var(--cell-size))`;
       gridEl.style.gridTemplateRows = `repeat(${height}, var(--cell-size))`;
-
-      // vider
       gridEl.innerHTML = '';
-
-      // pour l'accessibilité, on décrira la forme via aria-label
       const positions = new Set(coords);
-
       for(let y=minY;y<=maxY;y++){
         for(let x=minX;x<=maxX;x++){
           const k = coordKey(x,y);
           const div = document.createElement('div');
           div.className = 'cell';
           if(positions.has(k)) div.classList.add('filled');
-          // pour garder la structure, ajouter un attribut data
-          if(positions.has(k)) div.setAttribute('data-filled','1');
-          else div.setAttribute('aria-hidden','true');
           gridEl.appendChild(div);
         }
       }
-
       cellsCount = coords.size;
-      countEl.textContent = cellsCount;
-
-      // reset feedback & input
       feedbackEl.textContent = '';
       feedbackEl.className = 'feedback';
       answerEl.value = '';
       answerEl.focus();
-
-      // aria description
-      gridEl.setAttribute('aria-label', `Figure composée de ${cellsCount} carrés unité disposés en pixel art`);
     }
 
     function checkAnswer(){
@@ -212,38 +134,18 @@
       if(!Number.isFinite(val) || val<0){
         feedbackEl.textContent = 'Entrez un nombre valide.'; feedbackEl.className='feedback bad'; return;
       }
-      if(Math.round(val)!==cellsCount){
-        feedbackEl.textContent = 'Essaie encore.'; feedbackEl.className='feedback bad';
+      if(Math.round(val)===cellsCount){
+        feedbackEl.textContent='Correct !'; feedbackEl.className='feedback ok';
       } else {
-        feedbackEl.textContent = 'Correct ! 🎉'; feedbackEl.className='feedback ok';
+        feedbackEl.textContent='Incorrect'; feedbackEl.className='feedback bad';
       }
+      setTimeout(()=>generateShape(),1000);
     }
 
-    newBtn.addEventListener('click', ()=>generateShape());
-    checkBtn.addEventListener('click', checkAnswer);
-
+    checkBtn.addEventListener('click',checkAnswer);
     answerEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') checkAnswer(); });
 
-    // Affiche la solution pour l'enseignant / vérification
-    showSolutionBtn.addEventListener('click', ()=>{
-      feedbackEl.textContent = 'Aire = ' + cellsCount + ' unités²';
-      feedbackEl.className='feedback ok';
-    });
-
-    // Effet optionnel : montrer la frontière (ajoute une fine bordure)
-    let bordered=false;
-    highlightBtn.addEventListener('click', ()=>{
-      bordered = !bordered;
-      const filled = gridEl.querySelectorAll('.cell.filled');
-      filled.forEach(el=> el.style.outline = bordered? '2px solid rgba(0,0,0,0.08)':'');
-      highlightBtn.textContent = bordered? 'Masquer frontière' : 'Montrer frontière';
-    });
-
-    // Générer initialement
     generateShape();
-
-    // Exposer quelques fonctions pour debug depuis console (optionnel)
-    window.__shape = { regenerate: ()=>generateShape(), coords:set => coords };
   </script>
 </body>
 </html>
