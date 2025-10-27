@@ -1,45 +1,18 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Exercice Aire — Figures composées</title>
 <style>
-  body {
-    font-family: sans-serif;
-    text-align: center;
-    background: #f0f4f8;
-    margin: 2rem;
-  }
-  canvas {
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-  }
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    border: none;
-    background: #3a86ff;
-    color: white;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  .btn:hover { background: #8338ec; }
-  .feedback {
-    font-weight: bold;
-    height: 1.5rem;
-  }
-  .feedback.ok { color: green; }
-  .feedback.bad { color: red; }
+body { font-family: sans-serif; text-align: center; background: #f0f4f8; margin: 2rem; }
+canvas { background: white; border:1px solid #ccc; border-radius:8px; margin-bottom:1rem; }
+.controls { display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; margin-bottom:1rem; }
+.btn { padding:0.5rem 1rem; border-radius:6px; border:none; background:#3a86ff; color:white; cursor:pointer; font-size:1rem; }
+.btn:hover { background:#8338ec; }
+.feedback { font-weight:bold; height:1.5rem; }
+.feedback.ok { color:green; }
+.feedback.bad { color:red; }
 </style>
 </head>
 <body>
@@ -48,10 +21,11 @@
 <canvas id="canvas" width="400" height="400"></canvas>
 
 <div class="controls">
-  <button class="btn" data-shape="square">Aire carré +</button>
-  <button class="btn" data-shape="rectangle">Aire rectangle +</button>
-  <button class="btn" data-shape="triangle">Aire triangle +</button>
-  <button class="btn" data-shape="circle">Aire cercle +</button>
+  <button class="btn" data-shape="square">aire carré</button>
+  <button class="btn" data-shape="triangle">aire triangle</button>
+  <button class="btn" data-shape="rectangle">aire rectangle</button>
+  <button class="btn" data-shape="circle">aire cercle</button>
+  <button class="btn" data-shape="plus">+</button>
   <button class="btn" data-shape="minus">-</button>
   <button class="btn" id="checkBtn">Valider</button>
 </div>
@@ -93,28 +67,20 @@ function drawFigure(){
     ctx.strokeStyle='black';
     ctx.lineWidth=1;
     switch(s.type){
-      case 'square':
-        ctx.fillRect(s.x,s.y,s.w,s.w);
-        ctx.strokeRect(s.x,s.y,s.w,s.w);
-        break;
-      case 'rectangle':
-        ctx.fillRect(s.x,s.y,s.w,s.h);
-        ctx.strokeRect(s.x,s.y,s.w,s.h);
-        break;
+      case 'square': ctx.fillRect(s.x,s.y,s.w,s.w); ctx.strokeRect(s.x,s.y,s.w,s.w); break;
+      case 'rectangle': ctx.fillRect(s.x,s.y,s.w,s.h); ctx.strokeRect(s.x,s.y,s.w,s.h); break;
       case 'triangle':
         ctx.beginPath();
         ctx.moveTo(s.x,s.y+s.h);
         ctx.lineTo(s.x+s.w/2,s.y);
         ctx.lineTo(s.x+s.w,s.y+s.h);
         ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+        ctx.fill(); ctx.stroke();
         break;
       case 'circle':
         ctx.beginPath();
         ctx.arc(s.x+s.w/2,s.y+s.w/2,s.w/2,0,Math.PI*2);
-        ctx.fill();
-        ctx.stroke();
+        ctx.fill(); ctx.stroke();
         break;
     }
   });
@@ -125,20 +91,20 @@ function correctAnswer(){
   return figure.map(s=>s.type);
 }
 
-// Initialisation
+// Nouvelle question
 function newQuestion(){
   generateFigure();
   drawFigure();
   studentAnswer = [];
-  feedbackEl.textContent = '';
+  feedbackEl.textContent='';
+  feedbackEl.className='feedback';
 }
 
 // Gestion clics boutons
 document.querySelectorAll('.btn[data-shape]').forEach(btn=>{
   btn.addEventListener('click',e=>{
     const type = e.target.dataset.shape;
-    if(type==='minus') studentAnswer.push('-');
-    else studentAnswer.push(type);
+    studentAnswer.push(type);
     feedbackEl.textContent = 'Réponse en cours : '+studentAnswer.join(' ');
   });
 });
@@ -146,7 +112,7 @@ document.querySelectorAll('.btn[data-shape]').forEach(btn=>{
 // Validation
 checkBtn.addEventListener('click',()=>{
   const correct = correctAnswer();
-  const answerFiltered = studentAnswer.filter(a=>a!=='-');
+  const answerFiltered = studentAnswer.filter(a=>shapesTypes.includes(a));
   const ok = correct.length === answerFiltered.length &&
              correct.every(v=>answerFiltered.includes(v));
   feedbackEl.textContent = ok?'Bravo ! ✅':'Essaye encore ❌';
