@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Exercice Aire — Figures composées</title>
+<title>Figures composées</title>
 <style>
-body { font-family: sans-serif; text-align: center; background: #f0f4f8; margin: 2rem; }
-canvas { background: white; border:1px solid #ccc; border-radius:8px; margin-bottom:1rem; }
+body { font-family: sans-serif; text-align:center; background:#f0f4f8; margin:2rem; }
+canvas { background:white; border:1px solid #ccc; border-radius:8px; margin-bottom:1rem; }
 .controls { display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; margin-bottom:1rem; }
 .btn { padding:0.5rem 1rem; border-radius:6px; border:none; background:#3a86ff; color:white; cursor:pointer; font-size:1rem; }
 .btn:hover { background:#8338ec; }
@@ -42,20 +42,26 @@ const shapesTypes = ['square','rectangle','triangle','circle'];
 let figure = [];
 let studentAnswer = [];
 
-// Utilitaires
+// Utilitaire
 function randomInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-// Générer une figure aléatoire
+// Générer figure aléatoire avec formes collées/extrudées
 function generateFigure(){
   figure = [];
-  const numShapes = randomInt(3,5);
+  const numShapes = randomInt(3,6);
+  let baseX = randomInt(50, 250);
+  let baseY = randomInt(50, 250);
+
   for(let i=0;i<numShapes;i++){
     const type = shapesTypes[randomInt(0,shapesTypes.length-1)];
     const w = randomInt(30,80);
     const h = randomInt(30,80);
-    const x = randomInt(50, 300);
-    const y = randomInt(50, 300);
+    // Position proche de la figure précédente pour “coller” ou extruder
+    const x = baseX + randomInt(-20,20);
+    const y = baseY + randomInt(-20,20);
     figure.push({type,x,y,w,h});
+    // Mise à jour base pour forme suivante
+    baseX = x; baseY = y;
   }
 }
 
@@ -86,7 +92,7 @@ function drawFigure(){
   });
 }
 
-// Calculer la réponse correcte
+// Réponse correcte
 function correctAnswer(){
   return figure.map(s=>s.type);
 }
@@ -100,7 +106,7 @@ function newQuestion(){
   feedbackEl.className='feedback';
 }
 
-// Gestion clics boutons
+// Gestion clic boutons
 document.querySelectorAll('.btn[data-shape]').forEach(btn=>{
   btn.addEventListener('click',e=>{
     const type = e.target.dataset.shape;
