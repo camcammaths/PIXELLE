@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Figures composées</title>
+<title>Exercice Aire — Calcul numérique</title>
 <style>
 body { font-family: sans-serif; text-align:center; background:#f0f4f8; margin:2rem; }
 canvas { background:white; border:1px solid #ccc; border-radius:8px; margin-bottom:1rem; }
@@ -17,7 +17,7 @@ canvas { background:white; border:1px solid #ccc; border-radius:8px; margin-bott
 </head>
 <body>
 
-<h1>Devine les formes de la figure</h1>
+<h1>Calculer l’aire totale</h1>
 <canvas id="canvas" width="400" height="400"></canvas>
 
 <div class="controls">
@@ -25,8 +25,8 @@ canvas { background:white; border:1px solid #ccc; border-radius:8px; margin-bott
   <button class="btn" data-shape="triangle">aire triangle</button>
   <button class="btn" data-shape="rectangle">aire rectangle</button>
   <button class="btn" data-shape="circle">aire cercle</button>
-  <button class="btn" data-shape="plus">+</button>
-  <button class="btn" data-shape="minus">-</button>
+  <button class="btn" data-op="plus">+</button>
+  <button class="btn" data-op="minus">-</button>
   <button class="btn" id="checkBtn">Valider</button>
 </div>
 
@@ -40,32 +40,29 @@ const checkBtn = document.getElementById('checkBtn');
 
 const shapesTypes = ['square','rectangle','triangle','circle'];
 let figure = [];
-let studentAnswer = [];
+let studentExpr = [];
 
 // Utilitaire
 function randomInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-// Générer figure aléatoire avec formes collées/extrudées
+// Générer figure collée/extrudée
 function generateFigure(){
   figure = [];
-  const numShapes = randomInt(3,6);
   let baseX = randomInt(50, 250);
   let baseY = randomInt(50, 250);
-
+  const numShapes = randomInt(3,6);
   for(let i=0;i<numShapes;i++){
     const type = shapesTypes[randomInt(0,shapesTypes.length-1)];
     const w = randomInt(30,80);
     const h = randomInt(30,80);
-    // Position proche de la figure précédente pour “coller” ou extruder
     const x = baseX + randomInt(-20,20);
     const y = baseY + randomInt(-20,20);
     figure.push({type,x,y,w,h});
-    // Mise à jour base pour forme suivante
     baseX = x; baseY = y;
   }
 }
 
-// Dessiner la figure
+// Dessiner figure
 function drawFigure(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   figure.forEach(s=>{
@@ -92,38 +89,61 @@ function drawFigure(){
   });
 }
 
-// Réponse correcte
-function correctAnswer(){
-  return figure.map(s=>s.type);
+// Calculer l’aire d’une forme
+function areaShape(s){
+  switch(s.type){
+    case 'square': return s.w*s.w;
+    case 'rectangle': return s.w*s.h;
+    case 'triangle': return (s.w*s.h)/2;
+    case 'circle': return Math.PI*(s.w/2)**2;
+  }
 }
+
+// Aire totale
+function totalArea(){ return figure.reduce((acc,s)=>acc+areaShape(s),0); }
 
 // Nouvelle question
 function newQuestion(){
   generateFigure();
   drawFigure();
-  studentAnswer = [];
+  studentExpr=[];
   feedbackEl.textContent='';
   feedbackEl.className='feedback';
 }
 
-// Gestion clic boutons
+// Gestion boutons
 document.querySelectorAll('.btn[data-shape]').forEach(btn=>{
   btn.addEventListener('click',e=>{
     const type = e.target.dataset.shape;
-    studentAnswer.push(type);
-    feedbackEl.textContent = 'Réponse en cours : '+studentAnswer.join(' ');
+    const s = figure.find(f=>f.type===type);
+    if(s) studentExpr.push(areaShape(s));
+    feedbackEl.textContent = 'Expression : '+studentExpr.join(' ');
   });
 });
 
-// Validation
+document.querySelectorAll('.btn[data-op]').forEach(btn=>{
+  btn.addEventListener('click',e=>{
+    const op = e.target.dataset.op==='plus'?'+':'-';
+    studentExpr.push(op);
+    feedbackEl.textContent = 'Expression : '+studentExpr.join(' ');
+  });
+});
+
+// Valider
 checkBtn.addEventListener('click',()=>{
-  const correct = correctAnswer();
-  const answerFiltered = studentAnswer.filter(a=>shapesTypes.includes(a));
-  const ok = correct.length === answerFiltered.length &&
-             correct.every(v=>answerFiltered.includes(v));
-  feedbackEl.textContent = ok?'Bravo ! ✅':'Essaye encore ❌';
-  feedbackEl.className = ok?'feedback ok':'feedback bad';
-  setTimeout(newQuestion, 1500);
+  try{
+    const expr = studentExpr.join(' ');
+    const studentTotal = eval(expr);
+    const realTotal = totalArea();
+    const diff = Math.abs(studentTotal-realTotal);
+    const ok = diff<0.1; // tolérance pour π
+    feedbackEl.textContent = ok?'Bravo ! ✅':'Essaye encore ❌ (Aire réelle: '+realTotal.toFixed(1)+')';
+    feedbackEl.className = ok?'feedback ok':'feedback bad';
+  }catch(e){
+    feedbackEl.textContent='Erreur dans l’expression';
+    feedbackEl.className='feedback bad';
+  }
+  setTimeout(newQuestion,1500);
 });
 
 // Première question
@@ -132,4 +152,3 @@ newQuestion();
 
 </body>
 </html>
-
