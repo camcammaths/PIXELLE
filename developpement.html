@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Developpe</title>
+<title>Developpement</title>
 
 <!-- Polices -->
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
@@ -15,8 +15,6 @@
   --secondary: #8338ec;
   --background: #f0f4f8;
   --text: #212529;
-  --btn-bg: #a8d0ff;
-  --btn-hover: #7ab3ff;
   --border-radius: 8px;
   --transition: 0.3s ease;
 }
@@ -35,22 +33,6 @@ h1 {
   text-transform: capitalize;
   color: var(--primary);
   margin-bottom: 1.5rem;
-}
-
-a.back {
-  display: inline-block;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-  color: var(--primary);
-  text-decoration: none;
-  border: 2px solid var(--primary);
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
-  transition: background-color var(--transition), color var(--transition);
-}
-a.back:hover {
-  background-color: var(--primary);
-  color: white;
 }
 
 #expression {
@@ -104,38 +86,21 @@ a.back:hover {
 .brick.dragging { opacity: 0.5; cursor: grabbing; }
 .brick:hover { transform: scale(1.05); }
 
-.btn {
-  font-size: 1rem;
-  padding: 0.6rem 1.2rem;
-  margin: 0.3rem;
-  background-color: var(--btn-bg);
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: background-color var(--transition);
-}
-.btn:hover { background-color: var(--btn-hover); color: white; }
-
 #feedback {
   font-weight: bold;
   margin-bottom: 1rem;
+  font-size: 1.2rem;
 }
 </style>
 </head>
 <body>
 
 <h1>Developpement</h1>
-<a href="index.html" class="back">← Retour à la page principale</a>
 
 <div id="expression">a(x + b)</div>
-
 <div id="slots"></div>
 <div id="palette"></div>
-
 <div id="feedback"></div>
-
-<button class="btn" onclick="checkAnswer()">Vérifier</button>
-<button class="btn" onclick="nextQuestion()">Nouvelle expression</button>
 
 <script>
 const expressionEl = document.getElementById('expression');
@@ -152,8 +117,20 @@ function generateQuestion() {
   const sign = Math.random()<0.5?'+':'-';
   const expr = `${a}(x ${sign} ${b})`;
   const constTerm = sign==='+' ? a*b : -a*b;
-  const terms = [`${a}x`, `${constTerm}`];
-  return {expr, terms};
+  const terms = [`${a}x`, `${sign}${Math.abs(constTerm)}`];
+
+  // Générer 5 propositions avec pièges sur les signes
+  const choices = new Set();
+  choices.add(`${a}x`);
+  choices.add(`${sign}${Math.abs(constTerm)}`);
+  while(choices.size < 5){
+    const wrongSign = Math.random()<0.5 ? '+' : '-';
+    const wrongVal = wrongSign==='+' ? a*b : -a*b;
+    const text = `${wrongSign}${Math.abs(wrongVal)}`;
+    choices.add(text);
+  }
+
+  return {expr, terms, choices:[...choices].sort(()=>Math.random()-0.5)};
 }
 
 function renderQuestion() {
@@ -172,10 +149,7 @@ function renderQuestion() {
     slotsEl.appendChild(slot);
   });
 
-  const bricks = [...q.terms, `${Math.floor(Math.random()*10)+1}`];
-  bricks.sort(()=>Math.random()-0.5);
-
-  bricks.forEach(t=>{
+  q.choices.forEach(t=>{
     const brick = document.createElement('div');
     brick.className='brick';
     brick.textContent = t;
@@ -194,26 +168,20 @@ function onDrop(e){
   if(slot.firstChild){ paletteEl.appendChild(slot.firstChild); }
   slot.appendChild(dragged);
   slot.classList.add('filled');
+
+  // Vérification immédiate après placement
+  const expected = slot.dataset.expect;
+  const actual = slot.firstChild ? slot.firstChild.textContent : null;
+  if(actual===expected){
+    slot.style.borderColor='green';
+    feedbackEl.textContent = 'Correct ✅';
+  } else {
+    slot.style.borderColor='red';
+    feedbackEl.textContent = 'Vérifie le signe ❌';
+  }
 }
 
-function checkAnswer(){
-  let correct = true;
-  Array.from(slotsEl.children).forEach(slot=>{
-    const expected = slot.dataset.expect;
-    const actual = slot.firstChild ? slot.firstChild.textContent : null;
-    if(actual===expected){
-      slot.style.borderColor='green';
-    } else {
-      slot.style.borderColor='red';
-      correct=false;
-    }
-  });
-  feedbackEl.textContent = correct ? 'Bravo ✅' : 'Des erreurs ❌';
-}
-
-function nextQuestion(){ renderQuestion(); }
-
-nextQuestion();
+renderQuestion();
 </script>
 
 </body>
