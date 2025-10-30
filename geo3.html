@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pythagore — Corriger les rédactions</title>
+
+<style>
+  @font-face {
+    font-family: 'Androgy Demo';
+    src: url('https://fonts.cdnfonts.com/s/96247/AndrogyDemo.woff') format('woff');
+  }
+
+  :root{
+    --primary-color:#3a86ff;
+    --bg:#f6f9fc;
+    --card:#ffffff;
+    --text:#1f2933;
+    --muted:#5b6b75;
+    --accent:#8338ec;
+    --radius:12px;
+    --gap:18px;
+  }
+
+  body{
+    margin:26px;
+    background:linear-gradient(180deg,var(--bg),#eef4fb 120%);
+    color:var(--text);
+    font-family: "Mabry Pro", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+
+  header{display:flex;align-items:center;gap:24px;margin-bottom:18px}
+  h1{
+    font-family:'Androgy Demo',sans-serif;
+    font-size:2.5rem;
+    color:var(--primary-color);
+    margin:0;
+    line-height:1;
+  }
+  p.lead{margin:0;color:var(--muted)}
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:var(--gap);
+    margin-top:22px;
+  }
+
+  /* Card for each exercise */
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 8px 24px rgba(18,38,73,0.06);
+    padding:18px;
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+  }
+
+  .left{
+    flex:1 1 520px;
+    min-width:280px;
+  }
+
+  .right{
+    width:320px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .statement{
+    font-weight:700;
+    margin-bottom:10px;
+    color:var(--accent);
+  }
+
+  .rédaction{
+    background:#fbfdff;
+    border-radius:10px;
+    padding:12px;
+    border:1px solid #eef6ff;
+    color:var(--text);
+    font-size:0.98rem;
+  }
+
+  .rline{margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .rlabel{min-width:90px;color:var(--muted);font-weight:600}
+  .numInput{
+    width:120px;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid #d7e9ff;
+    font-weight:700;
+    text-align:center;
+    background:white;
+  }
+
+  button.verify{
+    margin-top:10px;
+    background:var(--primary-color);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  button.verify:hover{filter:brightness(.96)}
+  .feedback{margin-top:10px;font-weight:800;min-height:1.1rem}
+
+  .correct{
+    color:green;
+  }
+  .wrong{
+    color:#c62828;
+  }
+
+  /* svg figure */
+  .figure{
+    width:300px;
+    height:220px;
+  }
+  .figure svg{max-width:100%;height:auto}
+
+  footer{margin-top:18px;display:flex;gap:10px;align-items:center}
+  button.regen{
+    background:transparent;border:2px solid var(--primary-color);color:var(--primary-color);
+    padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pythagore — Corriger la rédaction</h1>
+  <div class="lead">Pour chaque rédaction à gauche : corrige les nombres erronés. La figure à droite représente le triangle.</div>
+</header>
+
+<main class="grid" id="exercises"></main>
+
+<footer>
+  <button class="regen" id="regenBtn">Nouvelle série</button>
+</footer>
+
+<script>
+(() => {
+  // Utilitaire math (arrondi)
+  function round2(n){ return Math.round(n*100)/100; }
+
+  // Génère un exercice avec deux côtés entiers (cathetus) et hyp calculé
+  function genExercise() {
+    // garder les valeurs raisonnables pour dessin
+    const a = Math.floor(Math.random()*8)+3; // 3..10
+    const b = Math.floor(Math.random()*8)+3; // 3..10
+    const c = Math.sqrt(a*a + b*b);
+    // créer erreurs volontaires
+    // types: erreur carré d'un côté, erreur somme, erreur racine, inversion hypothèse
+    const errorVariants = [
+      {type:'sqA', desc:`${a}² est écrit incorrectement`},
+      {type:'sqB', desc:`${b}² est écrit incorrectement`},
+      {type:'sum', desc:`la somme des carrés est fausse`},
+      {type:'root', desc:`la racine carrée est mal calculée`},
+      {type:'swap', desc:`les rôles des côtés sont inversés dans la conclusion`}
+    ];
+    // choisir 1 or 2 erreurs
+    const errors = [];
+    // always include one main error
+    errors.push(errorVariants[Math.floor(Math.random()*errorVariants.length)].type);
+    // parfois ajouter un 2e
+    if(Math.random()<0.45){
+      let second;
+      do { second = errorVariants[Math.floor(Math.random()*errorVariants.length)].type } while(second === errors[0]);
+      errors.push(second);
+    }
+
+    // Construire rédaction texte avec champs modifiables (valeurs possiblement erronées)
+    // Calculs corrects:
+    const a2 = a*a;
+    const b2 = b*b;
+    const sum = a2 + b2;
+    const cVal = round2(c);
+
+    // Créer valeurs erronées en fonction des erreurs sélectionnées
+    // start from correct then modify
+    let shownA2 = a2, shownB2 = b2, shownSum = sum, shownRoot = cVal, conclusion = `Oui, ${a}, ${b} et ${cVal} vérifient Pythagore.`;
+
+    errors.forEach(err=>{
+      if(err === 'sqA'){
+        shownA2 = a2 + (Math.random() < 0.6 ? a : Math.ceil(a/2)); // add small mistake
+      } else if(err === 'sqB'){
+        shownB2 = b2 + (Math.random() < 0.6 ? b : Math.ceil(b/2));
+      } else if(err === 'sum'){
+        // change sum (often off by small amount)
+        shownSum = sum + (Math.random()<0.5 ? 2 : Math.floor(Math.random()*5)+1);
+      } else if(err === 'root'){
+        shownRoot = round2(cVal + (Math.random()<0.5?0.5:1)); // slightly off
+      } else if(err === 'swap'){
+        conclusion = `Non, ce sont ${a} et ${cVal} qui devraient être comparés. Conclusion incorrecte.`; // wrong statement
+      }
+    });
+
+    // If both sqA and sqB were changed but sum left unchanged -> keep inconsistency possible
+    // produce an id
+    const id = 'ex-' + Math.random().toString(36).slice(2,8);
+    return {
+      id, a,b, cVal,
+      a2, b2, sum,
+      shownA2, shownB2, shownSum, shownRoot,
+      conclusion,
+      errors
+    };
+  }
+
+  // Create SVG triangle scaled to fit
+  function makeTriangleSVG(a,b,cVal, id) {
+    // build right triangle with legs a (vertical) and b (horizontal)
+    // scale to max width/height ~160
+    const max = Math.max(a,b);
+    const scale = 140 / max;
+    const W = Math.round(b*scale);
+    const H = Math.round(a*scale);
+    const padding = 20;
+    const width = W + padding*2;
+    const height = H + padding*2;
+
+    // triangle points: (padding, padding+H) bottom-left; (padding+W, padding+H) bottom-right; (padding+W, padding+H-H)= (padding+W, padding) top-right ??? Wait: ensure right angle at bottom-left
+    // We want right angle at bottom-left with legs along right (b) and up (a):
+    // points: A bottom-left (px, py), B bottom-right(px + W, py), C top-left(px, py - H)
+    const px = padding;
+    const py = padding + H;
+    const Ax = px, Ay = py;
+    const Bx = px + W, By = py;
+    const Cx = px, Cy = py - H;
+
+    // Label positions (midpoints)
+    const midABx = (Ax + Bx)/2, midABy = (Ay + By)/2; // bottom leg b
+    const midACx = (Ax + Cx)/2, midACy = (Ay + Cy)/2; // vertical leg a
+    const midBCx = (Bx + Cx)/2, midBCy = (By + Cy)/2; // hypotenuse approx
+
+    // svg string
+    const svg = `
+      <svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="figure-svg">
+        <defs>
+          <style>
+            .tri { fill: rgba(58,134,255,0.06); stroke: var(--primary-color); stroke-width:2; }
+            .dash { stroke: rgba(0,0,0,0.12); stroke-width:1; stroke-dasharray:4 4; }
+            .lab { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; font-size:12px; fill: #123; font-weight:700; }
+            .small { font-size:11px; fill:#456; }
+          </style>
+        </defs>
+        <polygon class="tri" points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}"/>
+        <line x1="${Ax}" y1="${Ay}" x2="${Bx}" y2="${By}" stroke="rgba(58,134,255,0.2)" stroke-width="1"/>
+        <line x1="${Ax}" y1="${Ay}" x2="${Cx}" y2="${Cy}" stroke="rgba(58,134,255,0.2)" stroke-width="1"/>
+        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" stroke="rgba(58,134,255,0.2)" stroke-width="1"/>
+
+        <!-- labels -->
+        <text x="${midABx}" y="${midABy + 16}" class="lab">${b} cm</text>
+        <text x="${midACx - 28}" y="${midACy}" class="lab">${a} cm</text>
+        <text x="${midBCx + 6}" y="${midBCy - 6}" class="lab">≈ ${cVal} cm</text>
+
+        <!-- right angle marker at A -->
+        <path d="M ${Ax+18} ${Ay} L ${Ax+18} ${Ay-18} L ${Ax} ${Ay-18}" stroke="rgba(0,0,0,0.35)" stroke-width="2" fill="none"/>
+      </svg>
+    `;
+    return svg;
+  }
+
+  // render single exercise card
+  function renderCard(ex, container) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = ex.id;
+
+    const left = document.createElement('div');
+    left.className = 'left';
+
+    const right = document.createElement('div');
+    right.className = 'right';
+
+    // statement header
+    const statement = document.createElement('div');
+    statement.className = 'statement';
+    statement.textContent = `Exercice : démontrer si les longueurs ${ex.a} cm, ${ex.b} cm et ${ex.cVal} cm vérifient Pythagore.`;
+
+    // rédaction with editable fields (numbers prefilled with shown values, possibly wrong)
+    const réd = document.createElement('div');
+    réd.className = 'rédaction';
+    réd.innerHTML = `
+      <div class="rline"><span class="rlabel">Calcul :</span> On calcule les carrés :</div>
+      <div class="rline"><span class="rlabel">&nbsp;&nbsp;${ex.a}² =</span>
+        <input class="numInput" data-key="a2" value="${ex.shownA2}" />
+      </div>
+      <div class="rline"><span class="rlabel">&nbsp;&nbsp;${ex.b}² =</span>
+        <input class="numInput" data-key="b2" value="${ex.shownB2}" />
+      </div>
+      <div class="rline"><span class="rlabel">Somme :</span>
+        <input class="numInput" data-key="sum" value="${ex.shownSum}" />
+      </div>
+      <div class="rline"><span class="rlabel">Hypoténuse :</span>
+        √(<span style="font-weight:800">${ex.shownSum}</span>) = 
+        <input class="numInput" data-key="root" value="${ex.shownRoot}" />
+      </div>
+      <div class="rline"><span class="rlabel">Conclusion :</span>
+        <span class="small">${ex.conclusion}</span>
+      </div>
+    `;
+
+    const verifyBtn = document.createElement('button');
+    verifyBtn.className = 'verify';
+    verifyBtn.textContent = 'Vérifier';
+    const feedback = document.createElement('div');
+    feedback.className = 'feedback';
+
+    // attach listeners
+    verifyBtn.addEventListener('click', () => {
+      // read input values
+      const a2_in = Number(réd.querySelector('[data-key="a2"]').value);
+      const b2_in = Number(réd.querySelector('[data-key="b2"]').value);
+      const sum_in = Number(réd.querySelector('[data-key="sum"]').value);
+      const root_in = Number(réd.querySelector('[data-key="root"]').value);
+
+      // compute correct ones
+      const correctA2 = ex.a2;
+      const correctB2 = ex.b2;
+      const correctSum = ex.sum;
+      const correctRoot = ex.cVal;
+
+      let ok = true;
+      const msgs = [];
+
+      if(a2_in === correctA2){
+        msgs.push(`<div class="correct">✓ ${ex.a}² = ${correctA2}</div>`);
+      } else {
+        msgs.push(`<div class="wrong">✗ ${ex.a}² doit être ${correctA2} (pas ${a2_in})</div>`);
+        ok = false;
+      }
+      if(b2_in === correctB2){
+        msgs.push(`<div class="correct">✓ ${ex.b}² = ${correctB2}</div>`);
+      } else {
+        msgs.push(`<div class="wrong">✗ ${ex.b}² doit être ${correctB2} (pas ${b2_in})</div>`);
+        ok = false;
+      }
+      if(sum_in === correctSum){
+        msgs.push(`<div class="correct">✓ somme = ${correctSum}</div>`);
+      } else {
+        msgs.push(`<div class="wrong">✗ la somme doit être ${correctSum} (pas ${sum_in})</div>`);
+        ok = false;
+      }
+      // root: allow small decimal tolerance if not integer
+      if(Math.abs(root_in - correctRoot) < 0.01){
+        msgs.push(`<div class="correct">✓ hypoténuse ≈ ${correctRoot}</div>`);
+      } else {
+        msgs.push(`<div class="wrong">✗ hypoténuse ≈ ${correctRoot} (pas ${root_in})</div>`);
+        ok = false;
+      }
+
+      if(ok){
+        feedback.innerHTML = `<span class="correct">Bravo — tout est corrigé ✅</span>`;
+        // show the formal corrected demonstration below
+        const sol = document.createElement('div');
+        sol.style.marginTop = '12px';
+        sol.style.padding = '10px';
+        sol.style.borderRadius = '8px';
+        sol.style.background = '#f3fff7';
+        sol.style.border = '1px solid #d1f3d8';
+        sol.innerHTML = `
+          <div style="font-weight:800;margin-bottom:6px">Démonstration corrigée :</div>
+          <div>${ex.a}² = ${correctA2}</div>
+          <div>${ex.b}² = ${correctB2}</div>
+          <div>${correctA2} + ${correctB2} = ${correctSum}</div>
+          <div>√(${correctSum}) = ${correctRoot}</div>
+          <div style="margin-top:8px;font-weight:800;color:var(--primary-color)">Conclusion : Oui, ${ex.a}, ${ex.b} et ${correctRoot} vérifient Pythagore.</div>
+        `;
+        // remove previous solution if any and append
+        const oldSol = card.querySelector('.solution');
+        if(oldSol) oldSol.remove();
+        sol.className = 'solution';
+        left.appendChild(sol);
+      } else {
+        feedback.innerHTML = msgs.join('');
+        // remove solution if present
+        const oldSol = card.querySelector('.solution');
+        if(oldSol) oldSol.remove();
+      }
+    });
+
+    // append elements
+    left.appendChild(statement);
+    left.appendChild(réd);
+    left.appendChild(verifyBtn);
+    left.appendChild(feedback);
+
+    // right: figure svg
+    right.innerHTML = makeTriangleSVG(ex.a, ex.b, ex.cVal, ex.id);
+
+    card.appendChild(left);
+    card.appendChild(right);
+    container.appendChild(card);
+  }
+
+  // initialize multiple exercises
+  const container = document.getElementById('exercises');
+  function generateSeries(n=3){
+    container.innerHTML = '';
+    for(let i=0;i<n;i++){
+      const ex = genExercise();
+      renderCard(ex, container);
+    }
+  }
+
+  // regen button
+  document.getElementById('regenBtn').addEventListener('click', () => generateSeries(3));
+
+  // generate at load
+  generateSeries(3);
+
+})();
+</script>
+
+</body>
+</html>
