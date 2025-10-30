@@ -1,207 +1,144 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aire — Figures collées et extrudées</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
-
-<style>
-:root{
-  --primary-color:#3a86ff;
-  --background-color:#f0f4f8;
-  --accent-shape:#3a86ff;
-  --border-radius:8px;
-  --transition:0.25s ease;
-  --text-color:#212529;
-}
-
-*{box-sizing:border-box}
-body{font-family:'Mabry Pro',sans-serif;background:var(--background-color);margin:0;padding:2rem;color:var(--text-color);text-align:center;}
-h1{font-family:'Androgy Demo',sans-serif;font-size:2.4rem;color:var(--primary-color);margin:0 0 1rem;}
-canvas{background:white;border:1px solid #ccc;border-radius:var(--border-radius);margin-bottom:1rem;}
-
-.controls{display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;align-items:center;margin:1rem 0}
-.btn{padding:0.6rem 1.1rem;border-radius:var(--border-radius);border:none;background:var(--primary-color);color:white;cursor:pointer;transition:background var(--transition);font-family:inherit}
-.btn:hover{background:#8338ec}
-
-.feedback{height:1.4rem;margin-top:0.5rem;font-weight:700}
-.feedback.ok{color:green}
-.feedback.bad{color:red}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Activité Géométrique</title>
+  <style>
+    body {
+      font-family: 'Mabry Pro', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Androgy Demo', sans-serif;
+      color: #3a86ff;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    .shapes, .figure {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      min-width: 250px;
+      min-height: 250px;
+    }
+    .shape {
+      margin: 10px;
+      cursor: grab;
+    }
+    .dropzone {
+      border: 2px dashed #a074a3;
+      width: 120px;
+      height: 120px;
+      margin: 10px;
+      display: inline-block;
+      vertical-align: top;
+      position: relative;
+    }
+    .dropzone.filled {
+      border-style: solid;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Aire — Figures collées et extrudées</h1>
+<h1>Activité Géométrique : Compose la figure</h1>
 
-<canvas id="canvas" width="400" height="400"></canvas>
+<div class="container">
+  <!-- Zone des formes disponibles -->
+  <div class="shapes">
+    <h2>Formes disponibles</h2>
+    <div class="shape" draggable="true" data-kind="square">
+      <svg viewBox="0 0 100 100">
+        <rect x="10" y="10" width="80" height="80" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Carré</div>
+    </div>
+    <div class="shape" draggable="true" data-kind="rectangle">
+      <svg viewBox="0 0 120 60">
+        <rect x="0" y="0" width="120" height="60" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Rectangle</div>
+    </div>
+    <div class="shape" draggable="true" data-kind="circle">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Cercle</div>
+    </div>
+    <div class="shape" draggable="true" data-kind="triangle">
+      <svg viewBox="0 0 100 100">
+        <polygon points="50,0 0,100 100,100" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Triangle</div>
+    </div>
+    <div class="shape" draggable="true" data-kind="hemicircle-left">
+      <svg viewBox="0 0 100 50">
+        <path d="M100,50 A50,50 0 0,0 0,50 Z" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Demi-cercle gauche</div>
+    </div>
+    <div class="shape" draggable="true" data-kind="hemicircle-right">
+      <svg viewBox="0 0 100 50">
+        <path d="M0,50 A50,50 0 0,1 100,50 Z" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
+      </svg>
+      <div>Demi-cercle droit</div>
+    </div>
+  </div>
 
-<div class="controls">
-  <button class="btn" data-shape="square">aire carré</button>
-  <button class="btn" data-shape="triangle">aire triangle</button>
-  <button class="btn" data-shape="rectangle">aire rectangle</button>
-  <button class="btn" data-shape="circle">aire cercle</button>
-  <button class="btn" data-op="plus">+</button>
-  <button class="btn" data-op="minus">-</button>
-  <button class="btn" id="checkBtn">Valider</button>
+  <!-- Zone figure à compléter -->
+  <div class="figure" id="figure">
+    <h2>Figure cible</h2>
+    <div class="dropzone" data-expected="rectangle"></div>
+    <div class="dropzone" data-expected="hemicircle-left"></div>
+    <div class="dropzone" data-expected="hemicircle-right"></div>
+  </div>
 </div>
 
-<div class="feedback" id="feedback"></div>
-
 <script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const feedbackEl = document.getElementById('feedback');
-const checkBtn = document.getElementById('checkBtn');
+  const shapes = document.querySelectorAll('.shape');
+  const dropzones = document.querySelectorAll('.dropzone');
 
-const shapesTypes = ['square','rectangle','triangle','circle'];
-let figure = [];
-let studentExpr = [];
+  let draggedShape = null;
 
-// Utilitaire
-function randomInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  shapes.forEach(shape => {
+    shape.addEventListener('dragstart', e => {
+      draggedShape = shape;
+    });
+  });
 
-// Calcul aire d’une forme
-function areaShape(s){
-  switch(s.type){
-    case 'square': return s.w*s.w;
-    case 'rectangle': return s.w*s.h;
-    case 'triangle': return (s.w*s.h)/2;
-    case 'circle': return Math.PI*(s.w/2)**2;
-  }
-}
-
-// Aire totale (en tenant compte de soustraction)
-function totalArea(){
-  if(figure.mode==='extrude'){
-    return areaShape(figure[0]) - areaShape(figure[1]);
-  } else {
-    return figure.reduce((acc,s)=>acc+areaShape(s),0);
-  }
-}
-
-// Générer figure
-function generateFigure(){
-  figure = [];
-  const mode = Math.random()<0.5?'coller':'extrude';
-  figure.mode = mode;
-
-  if(mode==='coller'){
-    const numShapes = randomInt(2,3);
-    let baseX = 200, baseY = 200;
-    for(let i=0;i<numShapes;i++){
-      const type = shapesTypes[randomInt(0,shapesTypes.length-1)];
-      const w = randomInt(40,80);
-      const h = (type==='square' || type==='circle')?w:randomInt(40,80);
-      let x = baseX, y = baseY;
-      if(i>0){
-        // Coller à la forme précédente
-        const prev = figure[i-1];
-        x = prev.x + prev.w; // simple collage horizontal
-        y = prev.y;
+  dropzones.forEach(zone => {
+    zone.addEventListener('dragover', e => e.preventDefault());
+    zone.addEventListener('drop', e => {
+      if (!draggedShape) return;
+      // Supprimer la précédente si nécessaire
+      if (zone.firstChild) zone.firstChild.remove();
+      // Cloner le SVG de la forme
+      const svgClone = draggedShape.querySelector('svg').cloneNode(true);
+      zone.appendChild(svgClone);
+      zone.classList.add('filled');
+      // Vérification simple
+      if(zone.dataset.expected === draggedShape.dataset.kind){
+        zone.style.backgroundColor = "#d4f8d4"; // correct
+      } else {
+        zone.style.backgroundColor = "#f8d4d4"; // incorrect
       }
-      figure.push({type,x,y,w,h});
-    }
-  } else { // extrusion / soustraction
-    // Deux formes centrées
-    const w1 = randomInt(80,120), h1 = randomInt(80,120);
-    const w2 = Math.floor(w1*0.6), h2 = Math.floor(h1*0.6);
-    const type1 = shapesTypes[randomInt(0,shapesTypes.length-1)];
-    const type2 = shapesTypes[randomInt(0,shapesTypes.length-1)];
-    const x = 200, y = 200;
-    figure.push({type:type1,x:x-w1/2,y:y-h1/2,w:w1,h:h1});
-    figure.push({type:type2,x:x-w2/2,y:y-h2/2,w:w2,h:h2});
-  }
-}
-
-// Dessiner figure
-function drawFigure(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(figure.mode==='extrude'){
-    // Dessiner forme du bas
-    const base = figure[0];
-    drawShape(base);
-    // Dessiner forme du haut en “trou” (effet soustraction)
-    const top = figure[1];
-    ctx.globalCompositeOperation='destination-out';
-    drawShape(top);
-    ctx.globalCompositeOperation='source-over';
-  } else {
-    figure.forEach(drawShape);
-  }
-}
-
-function drawShape(s){
-  ctx.fillStyle='rgba(58,134,255,0.7)';
-  ctx.strokeStyle='black';
-  ctx.lineWidth=1;
-  switch(s.type){
-    case 'square': ctx.fillRect(s.x,s.y,s.w,s.w); ctx.strokeRect(s.x,s.y,s.w,s.w); break;
-    case 'rectangle': ctx.fillRect(s.x,s.y,s.w,s.h); ctx.strokeRect(s.x,s.y,s.w,s.h); break;
-    case 'triangle':
-      ctx.beginPath();
-      ctx.moveTo(s.x,s.y+s.h);
-      ctx.lineTo(s.x+s.w/2,s.y);
-      ctx.lineTo(s.x+s.w,s.y+s.h);
-      ctx.closePath();
-      ctx.fill(); ctx.stroke();
-      break;
-    case 'circle':
-      ctx.beginPath();
-      ctx.arc(s.x+s.w/2,s.y+s.w/2,s.w/2,0,Math.PI*2);
-      ctx.fill(); ctx.stroke();
-      break;
-  }
-}
-
-// Nouvelle question
-function newQuestion(){
-  generateFigure();
-  drawFigure();
-  studentExpr=[];
-  feedbackEl.textContent='';
-  feedbackEl.className='feedback';
-}
-
-// Gestion clic boutons
-document.querySelectorAll('.btn[data-shape]').forEach(btn=>{
-  btn.addEventListener('click',e=>{
-    const type = e.target.dataset.shape;
-    const s = figure.find(f=>f.type===type);
-    if(s) studentExpr.push(areaShape(s));
-    feedbackEl.textContent = 'Expression : '+studentExpr.join(' ');
+      draggedShape = null;
+    });
   });
-});
-
-document.querySelectorAll('.btn[data-op]').forEach(btn=>{
-  btn.addEventListener('click',e=>{
-    const op = e.target.dataset.op==='plus'?'+':'-';
-    studentExpr.push(op);
-    feedbackEl.textContent = 'Expression : '+studentExpr.join(' ');
-  });
-});
-
-// Valider
-checkBtn.addEventListener('click',()=>{
-  try{
-    const expr = studentExpr.join(' ');
-    const studentTotal = eval(expr);
-    const realTotal = totalArea();
-    const diff = Math.abs(studentTotal-realTotal);
-    const ok = diff<0.1;
-    feedbackEl.textContent = ok?'Bravo ! ✅':'Essaye encore ❌ (Aire réelle: '+realTotal.toFixed(1)+')';
-    feedbackEl.className = ok?'feedback ok':'feedback bad';
-  }catch(e){
-    feedbackEl.textContent='Erreur dans l’expression';
-    feedbackEl.className='feedback bad';
-  }
-  setTimeout(newQuestion,1500);
-});
-
-// Première question
-newQuestion();
 </script>
 
 </body>
