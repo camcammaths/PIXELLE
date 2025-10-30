@@ -43,11 +43,13 @@ h1{
   border:1px solid transparent;
   box-sizing:border-box;
   position:relative;
-  background:transparent; /* intérieur vide */
+  background:transparent;
 }
 .edge{
   position:absolute;
   background:var(--line-color);
+  z-index:1;
+  box-shadow:0 0 2px rgba(0,0,0,0.2);
 }
 .edge.top, .edge.bottom{
   height:3px;
@@ -91,6 +93,7 @@ button:hover{background:#8338ec;}
 .feedback{
   height:1.5rem;
   font-weight:bold;
+  font-size:1.1rem;
 }
 .feedback.ok{color:green;}
 .feedback.bad{color:red;}
@@ -174,7 +177,6 @@ function drawGrid(){
       const cell = document.createElement('div');
       cell.classList.add('cell');
       if(coords.has(coordKey(x,y))){
-        // Ajouter seulement les bords visibles
         const dirs = {
           top: !coords.has(coordKey(x,y-1)),
           bottom: !coords.has(coordKey(x,y+1)),
