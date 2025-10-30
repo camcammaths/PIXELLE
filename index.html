@@ -5,28 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Maths ludiques - Accueil</title>
 
-  <!-- Import des polices -->
+  <!-- Polices -->
   <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --primary-color: #3a86ff;       /* Bleu vif typform */
-      --secondary-color: #8338ec;     /* Violet typform */
-      --background-color: #f0f4f8;    /* Fond clair doux */
-      --button-bg: #a8d0ff;           /* Bouton doux bleu clair */
-      --button-bg-hover: #7ab3ff;     /* Hover bouton */
-      --text-color: #212529;          /* Texte sombre */
+      --primary-color: #3a86ff;
+      --secondary-color: #8338ec;
+      --background-color: #f0f4f8;
+      --button-bg: #a8d0ff;
+      --button-bg-hover: #7ab3ff;
+      --text-color: #212529;
       --border-radius: 8px;
       --transition: 0.3s ease;
     }
 
-    /* Reset et base */
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
+
     body {
-      margin: 0; padding: 2rem;
+      margin: 0; 
+      padding: 2rem;
       font-family: 'Mabry Pro', sans-serif;
       background-color: var(--background-color);
       color: var(--text-color);
@@ -36,29 +35,29 @@
       min-height: 100vh;
     }
 
-    /* Titre principal */
     h1 {
       font-family: 'Androgy Demo', sans-serif;
       font-weight: normal;
       font-size: 3rem;
-      text-transform: capitalize;
       margin-bottom: 1.5rem;
       color: var(--primary-color);
       user-select: none;
     }
 
-    /* Container des boutons */
+    /* Grille des "pixels" */
     nav {
-      display: flex;
-      gap: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      gap: 10px;
       margin-bottom: 3rem;
+      width: 100%;
+      max-width: 600px;
     }
 
-    /* Style des boutons */
+    /* Style des boutons transformés en cubes */
     .btn {
-      font-family: 'Mabry Pro', sans-serif;
-      font-size: 1.25rem;
-      padding: 0.75rem 2rem;
+      width: 60px;
+      height: 60px;
       background-color: var(--button-bg);
       border: none;
       border-radius: var(--border-radius);
@@ -67,9 +66,12 @@
       box-shadow: 0 4px 10px rgba(58, 134, 255, 0.3);
       text-decoration: none;
       text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       transition: background-color var(--transition), box-shadow var(--transition), transform var(--transition);
       user-select: none;
-      display: inline-block;
+      font-size: 0.7rem;
     }
 
     .btn:hover:not(.disabled) {
@@ -77,7 +79,6 @@
       box-shadow: 0 6px 15px rgba(58, 134, 255, 0.6);
       transform: translateY(-2px);
       color: white;
-      text-decoration: none;
     }
 
     .btn.disabled, .btn[aria-disabled="true"] {
@@ -86,7 +87,6 @@
       pointer-events: none;
     }
 
-    /* Petite description */
     p.description {
       max-width: 400px;
       font-size: 1.125rem;
@@ -102,23 +102,22 @@
   <h1>Pixelle</h1>
 
   <nav>
-    <a href="index.html" class="btn disabled" aria-disabled="true"></a>
-    <a href="matchcards.html" class="btn">Match cards</a>
+    <a href="index.html" class="btn disabled" aria-disabled="true">Home</a>
+    <a href="matchcards.html" class="btn">MC</a>
     <a href="quiz.html" class="btn">Quiz</a>
     <a href="find.html" class="btn">Find</a>
-    <a href="geometrie.html" class="btn">Geometrie</a>
-    <a href="repertoire.html" class="btn">Repertoire</a>
-    <a href="developpement.html" class="btn">Developpement</a>
-    <a href="geo.html" class="btn">Geo</a>
-    <a href="geo2.html" class="btn">Geo2</a>
-    <a href="geo3.html" class="btn">Geo3</a>
-    <a href="coloriage.html" class="btn">Coloriage</a>
+    <a href="geometrie.html" class="btn">Geo</a>
+    <a href="repertoire.html" class="btn">Rep</a>
+    <a href="developpement.html" class="btn">Dev</a>
+    <a href="geo.html" class="btn">G1</a>
+    <a href="geo2.html" class="btn">G2</a>
+    <a href="geo3.html" class="btn">G3</a>
+    <a href="coloriage.html" class="btn">Col</a>
   </nav>
 
   <p class="description">
-    Bienvenu ! Dans un univers qui s’illumine pixel par pixel. Un univers où chaque théorème devient une aventure visuelle, chaque formule un terrain de jeu. A toi de jouer 
-
+    Bienvenu ! Dans un univers qui s’illumine pixel par pixel. Un univers où chaque théorème devient une aventure visuelle, chaque formule un terrain de jeu. À toi de jouer
   </p>
-  
+
 </body>
 </html>
