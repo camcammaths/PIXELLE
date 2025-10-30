@@ -12,7 +12,6 @@
 <style>
 :root {
   --primary: #3a86ff;
-  --secondary: #8338ec;
   --background: #f0f4f8;
   --text: #212529;
   --border-radius: 8px;
@@ -126,8 +125,7 @@ function generateQuestion() {
   while(choices.size < 5){
     const wrongSign = Math.random()<0.5 ? '+' : '-';
     const wrongVal = wrongSign==='+' ? a*b : -a*b;
-    const text = `${wrongSign}${Math.abs(wrongVal)}`;
-    choices.add(text);
+    choices.add(`${wrongSign}${Math.abs(wrongVal)}`);
   }
 
   return {expr, terms, choices:[...choices].sort(()=>Math.random()-0.5)};
@@ -140,6 +138,7 @@ function renderQuestion() {
   expressionEl.textContent = q.expr;
   slotsEl.innerHTML = '';
   paletteEl.innerHTML = '';
+  feedbackEl.textContent = '';
 
   // Créer slots
   q.terms.forEach(term=>{
@@ -157,12 +156,15 @@ function renderQuestion() {
     brick.className='brick';
     brick.textContent = t;
     brick.draggable = true;
-    brick.addEventListener('dragstart', e=>{dragged=e.target; e.target.classList.add('dragging');});
-    brick.addEventListener('dragend', e=>e.target.classList.remove('dragging'));
+    brick.addEventListener('dragstart', e=>{
+      dragged = e.target;
+      e.target.classList.add('dragging');
+    });
+    brick.addEventListener('dragend', e=>{
+      e.target.classList.remove('dragging');
+    });
     paletteEl.appendChild(brick);
   });
-
-  feedbackEl.textContent = '';
 }
 
 // Gérer dépôt dans slot
@@ -178,21 +180,21 @@ function onDrop(e){
 
 // Vérifier slots et générer nouvelle question si correct
 function checkSlots(){
-  let allCorrect = true;
-  Array.from(slotsEl.children).forEach(slot=>{
-    const expected = slot.dataset.expect;
+  const slots = Array.from(slotsEl.children);
+  let allCorrect = slots.every(slot => slot.firstChild && slot.firstChild.textContent === slot.dataset.expect);
+
+  slots.forEach(slot=>{
     const actual = slot.firstChild ? slot.firstChild.textContent : null;
-    if(actual===expected){
-      slot.style.borderColor='green';
+    if(actual === slot.dataset.expect){
+      slot.style.borderColor = 'green';
     } else {
-      slot.style.borderColor='red';
-      allCorrect=false;
+      slot.style.borderColor = 'red';
     }
   });
 
   if(allCorrect){
     feedbackEl.textContent = 'Bravo ! ✅ Nouvelle question...';
-    setTimeout(renderQuestion, 1500); // nouvelle question après 1.5s
+    setTimeout(renderQuestion, 1500);
   } else {
     feedbackEl.textContent = 'Vérifie les signes ❌';
   }
