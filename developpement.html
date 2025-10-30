@@ -4,30 +4,96 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Développement — Drag & Drop robuste</title>
+
 <style>
-  :root{
-    --primary:#3a86ff; --bg:#f0f4f8; --text:#212529; --rad:8px;
+  @font-face {
+    font-family: 'Androgy Demo';
+    src: url('https://fonts.cdnfonts.com/s/96247/AndrogyDemo.woff') format('woff');
   }
-  body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:24px;text-align:center}
-  h1{color:var(--primary);font-size:1.8rem;margin-bottom:12px}
-  #expression{font-weight:700;margin-bottom:14px}
-  #slots,#palette{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
-  .slot,.brick{min-width:90px;padding:10px;border-radius:var(--rad);font-weight:700;cursor:grab;user-select:none}
-  .slot{border:2px dashed var(--primary);background:#fff;min-height:48px;display:flex;align-items:center;justify-content:center;font-style:italic}
-  .slot.filled{background:#dff0ff;border-style:solid}
-  .brick{background:var(--primary);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-  .brick:active{cursor:grabbing}
-  #feedback{font-weight:700;margin-top:8px;height:1.2rem}
-  .hint{font-size:0.85rem;color:#666;margin-top:6px}
+
+  :root{
+    --primary-color:#3a86ff;
+    --bg:#f0f4f8;
+    --text:#212529;
+    --rad:8px;
+  }
+
+  body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    margin:24px;
+    text-align:center;
+  }
+
+  h1{
+    font-family:'Androgy Demo',sans-serif;
+    font-size:2.5rem;
+    color:var(--primary-color);
+    margin-bottom:2rem;
+  }
+
+  #expression{
+    font-weight:700;
+    margin-bottom:14px;
+  }
+
+  #slots,#palette{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+
+  .slot,.brick{
+    min-width:90px;
+    padding:10px;
+    border-radius:var(--rad);
+    font-weight:700;
+    cursor:grab;
+    user-select:none;
+  }
+
+  .slot{
+    border:2px dashed var(--primary-color);
+    background:#fff;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-style:italic;
+  }
+
+  .slot.filled{
+    background:#dff0ff;
+    border-style:solid;
+  }
+
+  .brick{
+    background:var(--primary-color);
+    color:#fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+
+  .brick:active{
+    cursor:grabbing;
+  }
+
+  #feedback{
+    font-weight:700;
+    margin-top:8px;
+    height:1.2rem;
+  }
 </style>
 </head>
+
 <body>
   <h1>Développement</h1>
   <div id="expression">a(x + b)</div>
   <div id="slots" aria-label="slots"></div>
   <div id="palette" aria-label="palette"></div>
   <div id="feedback"></div>
-  <div class="hint">Si ça ne déplace pas : ouvre la console (F12) pour voir les messages.</div>
 
 <script>
 (() => {
@@ -39,7 +105,6 @@
 
   function randomInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-  // Génère la question + 5 choix (avec pièges de signes)
   function generateQuestion(){
     const a = randomInt(2,6);
     const b = randomInt(1,6);
@@ -48,14 +113,12 @@
     const constTermVal = sign === '+' ? a*b : -a*b;
     const terms = [`${a}x`, `${sign}${Math.abs(constTermVal)}`];
 
-    // Génération des choix (set pour éviter doublons)
     const choices = new Set();
     choices.add(`${a}x`);
     choices.add(`${sign}${Math.abs(constTermVal)}`);
     while(choices.size < 5){
       const wrongSign = Math.random()<0.5?'+':'-';
       const wrongVal = wrongSign === '+' ? a*b : -a*b;
-      // créer variantes piège en changeant a parfois (pour complexifier)
       if(Math.random() < 0.3){
         const altA = a + (Math.random()<0.5?1:-1);
         if(altA > 0) choices.add(`${altA}x`);
@@ -67,7 +130,6 @@
     return {expr, terms, choices: [...choices].sort(()=>Math.random()-0.5)};
   }
 
-  // Création élément brick avec id unique et listeners standards dataTransfer
   function createBrick(text){
     const id = `brick-${++brickIdCounter}`;
     const el = document.createElement('div');
@@ -77,19 +139,11 @@
     el.textContent = text;
 
     el.addEventListener('dragstart', (e) => {
-      // stocke l'id de l'élément transféré
-      try {
-        e.dataTransfer.setData('text/plain', id);
-        // effet permis
-        e.dataTransfer.effectAllowed = 'move';
-        console.log('dragstart', id, text);
-      } catch(err){
-        console.warn('dragstart setData failed', err);
-      }
+      e.dataTransfer.setData('text/plain', id);
+      e.dataTransfer.effectAllowed = 'move';
     });
 
     el.addEventListener('keydown', (e) => {
-      // accessible au clavier : Enter = déplacer vers premier slot vide
       if(e.key === 'Enter'){
         const firstEmpty = Array.from(slotsEl.children).find(s => !s.firstChild);
         if(firstEmpty) firstEmpty.appendChild(el);
@@ -100,7 +154,6 @@
     return el;
   }
 
-  // Renders
   function renderQuestion(){
     const q = generateQuestion();
     expressionEl.textContent = q.expr;
@@ -108,44 +161,33 @@
     paletteEl.innerHTML = '';
     feedbackEl.textContent = '';
 
-    // create 2 slots (pour ax et const)
     q.terms.forEach(term => {
       const slot = document.createElement('div');
       slot.className = 'slot';
       slot.dataset.expect = term;
       slot.setAttribute('aria-label', `slot ${term}`);
-      // dragover / drop
+
       slot.addEventListener('dragover', (e) => e.preventDefault());
       slot.addEventListener('drop', (e) => {
         e.preventDefault();
-        try {
-          const id = e.dataTransfer.getData('text/plain');
-          const dragged = document.getElementById(id);
-          if(dragged) {
-            // si slot contient déjà quelque chose -> renvoyer dans palette
-            if(slot.firstChild) paletteEl.appendChild(slot.firstChild);
-            slot.appendChild(dragged);
-            slot.classList.add('filled');
-            console.log('dropped', id, dragged.textContent, 'into', slot.dataset.expect);
-            checkSlots();
-          } else {
-            console.log('drop: element not found for id', id);
-          }
-        } catch(err){
-          console.error('drop error', err);
+        const id = e.dataTransfer.getData('text/plain');
+        const dragged = document.getElementById(id);
+        if(dragged){
+          if(slot.firstChild) paletteEl.appendChild(slot.firstChild);
+          slot.appendChild(dragged);
+          slot.classList.add('filled');
+          checkSlots();
         }
       });
 
       slotsEl.appendChild(slot);
     });
 
-    // create bricks in palette
     q.choices.forEach(choice => {
       const b = createBrick(choice);
       paletteEl.appendChild(b);
     });
 
-    // Small accessibility: allow clicking a brick to put in first empty slot
     paletteEl.addEventListener('click', (e) => {
       const target = e.target.closest('.brick');
       if(!target) return;
@@ -174,18 +216,13 @@
 
     if(allCorrect && slots.every(s => s.firstChild)){
       feedbackEl.textContent = 'Bravo ! ✅ Nouvelle question...';
-      // courte attente puis nouvelle question
       setTimeout(renderQuestion, 900);
     } else {
       feedbackEl.textContent = 'Vérifie les signes ❌';
     }
   }
 
-  // Render first question
   renderQuestion();
-
-  // Debug helper accessible globalement si besoin
-  window.__dbgRenderQuestion = renderQuestion;
 })();
 </script>
 </body>
