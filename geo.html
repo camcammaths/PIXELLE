@@ -1,144 +1,184 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Activité Géométrique</title>
-  <style>
-    body {
-      font-family: 'Mabry Pro', sans-serif;
-      background: #f0f4f8;
-      margin: 0;
-      padding: 2rem;
-      text-align: center;
-    }
-    h1 {
-      font-family: 'Androgy Demo', sans-serif;
-      color: #3a86ff;
-    }
-    .container {
-      display: flex;
-      justify-content: center;
-      gap: 4rem;
-      flex-wrap: wrap;
-      margin-top: 2rem;
-    }
-    .shapes, .figure {
-      background: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      min-width: 250px;
-      min-height: 250px;
-    }
-    .shape {
-      margin: 10px;
-      cursor: grab;
-    }
-    .dropzone {
-      border: 2px dashed #a074a3;
-      width: 120px;
-      height: 120px;
-      margin: 10px;
-      display: inline-block;
-      vertical-align: top;
-      position: relative;
-    }
-    .dropzone.filled {
-      border-style: solid;
-    }
-    svg {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aire — Puzzle des carrés unité</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+
+<style>
+:root{
+  --primary-color: #3a86ff;
+  --background-color: #f0f4f8;
+  --accent-square: #3a86ff;
+  --cell-size: 36px;
+  --border-radius: 8px;
+  --transition: 0.25s ease;
+  --text-color: #212529;
+}
+*{box-sizing:border-box}
+body{
+  font-family: 'Mabry Pro', sans-serif;
+  background: var(--background-color);
+  margin:0;
+  padding:2rem;
+  color:var(--text-color);
+  text-align:center;
+}
+h1{
+  font-family:'Androgy Demo',sans-serif;
+  font-size:2.4rem;
+  color:var(--primary-color);
+  margin:0 0 1rem;
+}
+#gridWrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:1rem;
+}
+#grid{
+  display:grid;
+  gap:0;
+  padding:0;
+}
+.cell{
+  width:var(--cell-size);
+  height:var(--cell-size);
+  border-radius:0;
+  background:transparent;
+  border:1px solid #e0e0e0;
+}
+.cell.filled{
+  background:var(--accent-square);
+}
+.controls{
+  display:flex;
+  gap:0.75rem;
+  justify-content:center;
+  align-items:center;
+  margin:1rem 0;
+}
+input[type=number]{
+  padding:0.5rem 0.6rem;
+  border-radius:8px;
+  border:2px solid rgba(0,0,0,0.08);
+  width:120px;
+  font-size:1rem;
+}
+.btn{
+  padding:0.6rem 1.1rem;
+  border-radius:var(--border-radius);
+  border:none;
+  background:var(--primary-color);
+  color:white;
+  cursor:pointer;
+  transition:background var(--transition);
+  font-family:inherit;
+}
+.btn:hover{background:#8338ec;}
+.feedback{
+  height:1.4rem;
+  margin-top:0.5rem;
+  font-weight:700;
+}
+.feedback.ok{color:green;}
+.feedback.bad{color:red;}
+</style>
 </head>
 <body>
 
-<h1>Activité Géométrique : Compose la figure</h1>
+<h1>Aire — Puzzle des carrés unité</h1>
 
-<div class="container">
-  <!-- Zone des formes disponibles -->
-  <div class="shapes">
-    <h2>Formes disponibles</h2>
-    <div class="shape" draggable="true" data-kind="square">
-      <svg viewBox="0 0 100 100">
-        <rect x="10" y="10" width="80" height="80" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
-      </svg>
-      <div>Carré</div>
-    </div>
-    <div class="shape" draggable="true" data-kind="rectangle">
-      <svg viewBox="0 0 120 60">
-        <rect x="0" y="0" width="120" height="60" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
-      </svg>
-      <div>Rectangle</div>
-    </div>
-    <div class="shape" draggable="true" data-kind="circle">
-      <svg viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="40" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
-      </svg>
-      <div>Cercle</div>
-    </div>
-    <div class="shape" draggable="true" data-kind="triangle">
-      <svg viewBox="0 0 100 100">
-        <polygon points="50,0 0,100 100,100" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
-      </svg>
-      <div>Triangle</div>
-    </div>
-    <div class="shape" draggable="true" data-kind="hemicircle-left">
-      <svg viewBox="0 0 100 50">
-        <path d="M100,50 A50,50 0 0,0 0,50 Z" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
-      </svg>
-      <div>Demi-cercle gauche</div>
-    </div>
-    <div class="shape" draggable="true" data-kind="hemicircle-right">
-      <svg viewBox="0 0 100 50">
-        <path d="M0,50 A50,50 0 0,1 100,50 Z" fill="#dde1f0" stroke="#a074a3" stroke-width="2"/>
-      </svg>
-      <div>Demi-cercle droit</div>
-    </div>
-  </div>
-
-  <!-- Zone figure à compléter -->
-  <div class="figure" id="figure">
-    <h2>Figure cible</h2>
-    <div class="dropzone" data-expected="rectangle"></div>
-    <div class="dropzone" data-expected="hemicircle-left"></div>
-    <div class="dropzone" data-expected="hemicircle-right"></div>
-  </div>
+<div id="gridWrap">
+  <div id="grid"></div>
 </div>
 
+<div class="controls">
+  <input id="answer" type="number" min="0" inputmode="numeric" placeholder="Ton aire" />
+  <button class="btn" id="checkBtn">Valider</button>
+</div>
+
+<div class="feedback" id="feedback" aria-live="polite"></div>
+
 <script>
-  const shapes = document.querySelectorAll('.shape');
-  const dropzones = document.querySelectorAll('.dropzone');
+const gridEl = document.getElementById('grid');
+const checkBtn = document.getElementById('checkBtn');
+const answerEl = document.getElementById('answer');
+const feedbackEl = document.getElementById('feedback');
 
-  let draggedShape = null;
+let coords = new Set();
+let correctArea = 0;
 
-  shapes.forEach(shape => {
-    shape.addEventListener('dragstart', e => {
-      draggedShape = shape;
-    });
-  });
+function coordKey(x,y){return x+','+y;}
+function parseKey(k){const [x,y]=k.split(',').map(Number);return {x,y};}
 
-  dropzones.forEach(zone => {
-    zone.addEventListener('dragover', e => e.preventDefault());
-    zone.addEventListener('drop', e => {
-      if (!draggedShape) return;
-      // Supprimer la précédente si nécessaire
-      if (zone.firstChild) zone.firstChild.remove();
-      // Cloner le SVG de la forme
-      const svgClone = draggedShape.querySelector('svg').cloneNode(true);
-      zone.appendChild(svgClone);
-      zone.classList.add('filled');
-      // Vérification simple
-      if(zone.dataset.expected === draggedShape.dataset.kind){
-        zone.style.backgroundColor = "#d4f8d4"; // correct
-      } else {
-        zone.style.backgroundColor = "#f8d4d4"; // incorrect
-      }
-      draggedShape = null;
-    });
-  });
+function generateShape(minCells=4,maxCells=10){
+  coords.clear();
+  const target = Math.floor(Math.random()*(maxCells-minCells+1))+minCells;
+  coords.add(coordKey(0,0));
+  const frontier = [coordKey(0,0)];
+
+  while(coords.size < target){
+    const base = frontier[Math.floor(Math.random()*frontier.length)];
+    const {x,y} = parseKey(base);
+    const neighbors = [
+      [x+1,y],[x-1,y],[x,y+1],[x,y-1]
+    ].map(([nx,ny]) => coordKey(nx,ny));
+    const possible = neighbors.filter(n => !coords.has(n));
+    if(possible.length > 0){
+      const chosen = possible[Math.floor(Math.random()*possible.length)];
+      coords.add(chosen);
+      frontier.push(chosen);
+    } else {
+      frontier.splice(frontier.indexOf(base),1);
+    }
+  }
+  correctArea = coords.size;
+  drawGrid();
+}
+
+function drawGrid(){
+  const positions = Array.from(coords).map(parseKey);
+  const xs = positions.map(p=>p.x);
+  const ys = positions.map(p=>p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const width = maxX-minX+1, height = maxY-minY+1;
+
+  gridEl.style.gridTemplateColumns = `repeat(${width}, var(--cell-size))`;
+  gridEl.style.gridTemplateRows = `repeat(${height}, var(--cell-size))`;
+  gridEl.innerHTML='';
+
+  for(let y=minY;y<=maxY;y++){
+    for(let x=minX;x<=maxX;x++){
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      if(coords.has(coordKey(x,y))) cell.classList.add('filled');
+      gridEl.appendChild(cell);
+    }
+  }
+}
+
+checkBtn.addEventListener('click', ()=>{
+  const val = parseInt(answerEl.value);
+  if(!val && val !== 0) return;
+  if(val === correctArea){
+    feedbackEl.textContent = '✅ Correct !';
+    feedbackEl.className = 'feedback ok';
+  } else {
+    feedbackEl.textContent = `❌ Faux (aire = ${correctArea})`;
+    feedbackEl.className = 'feedback bad';
+  }
+  setTimeout(()=>{
+    answerEl.value='';
+    generateShape();
+  },1000);
+});
+
+generateShape();
 </script>
 
 </body>
