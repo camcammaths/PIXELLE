@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Factorisation</title>
+
+<style>
+  @font-face {
+    font-family: 'Androgy Demo';
+    src: url('https://fonts.cdnfonts.com/s/96247/AndrogyDemo.woff') format('woff');
+  }
+
+  :root{
+    --primary-color:#3a86ff;
+    --bg:#f0f4f8;
+    --text:#212529;
+    --rad:8px;
+  }
+
+  body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    margin:24px;
+    text-align:center;
+  }
+
+  h1{
+    font-family:'Androgy Demo',sans-serif;
+    font-size:2.5rem;
+    color:var(--primary-color);
+    margin-bottom:2rem;
+  }
+
+  #expression{
+    font-weight:700;
+    margin-bottom:14px;
+  }
+
+  #slots,#palette{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+
+  .slot,.brick{
+    min-width:90px;
+    padding:10px;
+    border-radius:var(--rad);
+    font-weight:700;
+    cursor:grab;
+    user-select:none;
+  }
+
+  .slot{
+    border:2px dashed var(--primary-color);
+    background:#fff;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-style:italic;
+  }
+
+  .slot.filled{
+    background:#dff0ff;
+    border-style:solid;
+  }
+
+  .brick{
+    background:var(--primary-color);
+    color:#fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+
+  .brick:active{
+    cursor:grabbing;
+  }
+
+  #feedback{
+    font-weight:700;
+    margin-top:8px;
+    height:1.2rem;
+  }
+</style>
+</head>
+
+<body>
+  <h1>Factorisation</h1>
+  <div id="expression">?</div>
+  <div id="slots" aria-label="slots"></div>
+  <div id="palette" aria-label="palette"></div>
+  <div id="feedback"></div>
+
+<script>
+(() => {
+  const expressionEl = document.getElementById('expression');
+  const slotsEl = document.getElementById('slots');
+  const paletteEl = document.getElementById('palette');
+  const feedbackEl = document.getElementById('feedback');
+  let brickIdCounter = 0;
+
+  function randomInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  // Génération d'une expression factorisable niveau 3ème
+  function generateQuestion(){
+    const a = randomInt(1,5);
+    const b = randomInt(1,5);
+    const c = randomInt(1,5);
+
+    // Choix de type d'expression
+    const type = Math.random() < 0.5 ? 'ax+ay' : 'x^2+bx';
+    let expr, terms;
+
+    if(type==='ax+ay'){
+      expr = `${a}x + ${a}y`;
+      terms = [`${a}`, `(x + y)`];
+    } else {
+      expr = `x^2 + ${b}x`;
+      terms = [`x`, `(x + ${b})`];
+    }
+
+    // Palette de choix
+    const choices = new Set();
+    terms.forEach(t=>choices.add(t));
+    while(choices.size < 5){
+      const rand = randomInt(1,9);
+      const fake = Math.random()<0.5?`${rand}`:`(${rand}+${randomInt(1,5)})`;
+      choices.add(fake);
+    }
+
+    return {expr, terms, choices:[...choices].sort(()=>Math.random()-0.5)};
+  }
+
+  function createBrick(text){
+    const id = `brick-${++brickIdCounter}`;
+    const el = document.createElement('div');
+    el.className = 'brick';
+    el.id = id;
+    el.draggable = true;
+    el.textContent = text;
+
+    el.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    return el;
+  }
+
+  function renderQuestion(){
+    const q = generateQuestion();
+    expressionEl.textContent = q.expr;
+    slotsEl.innerHTML = '';
+    paletteEl.innerHTML = '';
+    feedbackEl.textContent = '';
+
+    q.terms.forEach(term => {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.dataset.expect = term;
+      slot.setAttribute('aria-label', `slot ${term}`);
+
+      slot.addEventListener('dragover', (e) => e.preventDefault());
+      slot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/plain');
+        const dragged = document.getElementById(id);
+        if(dragged){
+          if(slot.firstChild) paletteEl.appendChild(slot.firstChild);
+          slot.appendChild(dragged);
+          slot.classList.add('filled');
+          checkSlots();
+        }
+      });
+
+      slotsEl.appendChild(slot);
+    });
+
+    q.choices.forEach(choice => {
+      const b = createBrick(choice);
+      paletteEl.appendChild(b);
+    });
+
+    paletteEl.addEventListener('click', (e) => {
+      const target = e.target.closest('.brick');
+      if(!target) return;
+      const firstEmpty = Array.from(slotsEl.children).find(s => !s.firstChild);
+      if(firstEmpty){
+        firstEmpty.appendChild(target);
+        firstEmpty.classList.add('filled');
+        checkSlots();
+      }
+    }, {once: false});
+  }
+
+  function checkSlots(){
+    const slots = Array.from(slotsEl.children);
+    let allCorrect = true;
+    slots.forEach(slot => {
+      const expected = slot.dataset.expect;
+      const actual = slot.firstChild ? slot.firstChild.textContent : null;
+      if(actual === expected){
+        slot.style.borderColor = 'green';
+      } else {
+        slot.style.borderColor = actual ? 'red' : '';
+        allCorrect = false;
+      }
+    });
+
+    if(allCorrect && slots.every(s => s.firstChild)){
+      feedbackEl.textContent = 'Bravo ! ✅ Nouvelle question...';
+      setTimeout(renderQuestion, 900);
+    } else {
+      feedbackEl.textContent = 'Vérifie les choix ❌';
+    }
+  }
+
+  renderQuestion();
+})();
+</script>
+</body>
+</html>
