@@ -3,52 +3,44 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Coloriage magique — Nombres relatifs</title>
+<title>Coloriage magique — Arbre nombres relatifs</title>
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet">
 <style>
-:root{--primary-color:#3a86ff;--accent:#8338ec;--bg:#f8fbff;--paper:#fff;--muted:#6b7280;--shadow:0 6px 18px rgba(25,42,70,0.08);}
+:root{--primary-color:#3a86ff;--bg:#f8fbff;--muted:#6b7280;--shadow:0 6px 18px rgba(25,42,70,0.08);}
 body{margin:0;font-family:'Androgy Demo',sans-serif;background:var(--bg);color:#0f172a}
 header{display:flex;align-items:center;gap:1rem;padding:1rem}
 h1{color:var(--primary-color);font-size:2.2rem;margin:0}
 .controls{margin-left:auto;display:flex;gap:0.5rem;align-items:center}
-select,input,button{padding:0.5rem;border-radius:8px;border:1px solid #ddd;font-family:inherit}
+select,button{padding:0.5rem;border-radius:8px;border:1px solid #ddd;font-family:inherit}
 button{background:var(--primary-color);color:#fff;border:none;cursor:pointer;box-shadow:var(--shadow)}
 main{padding:1rem;display:flex;gap:1rem}
-.workspace{flex:1;background:var(--paper);border-radius:12px;box-shadow:var(--shadow);padding:1rem;text-align:center}
-svg{width:100%;max-width:800px;height:auto;border-radius:12px;background:linear-gradient(#fff,#fdfdfd);}
+.workspace{flex:1;background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:1rem;text-align:center}
+svg{width:100%;max-width:800px;height:auto;border-radius:12px;background:linear-gradient(#87ceeb,#fdfdfd);}
 footer{text-align:center;color:var(--muted);padding:1rem}
-.color-picker{width:36px;height:24px;border-radius:6px;border:1px solid #ddd;cursor:pointer}
 </style>
 </head>
 <body>
 <header>
-<h1>Coloriage magique — Nombres relatifs</h1>
+<h1>Coloriage magique — Arbre</h1>
 <div class="controls">
 <label for="level">Niveau</label>
 <select id="level"><option value="5">5e</option><option value="4" selected>4e</option><option value="3">3e</option></select>
 <label for="mode">Opérations</label>
 <select id="mode"><option value="addsub">+ / -</option><option value="mult">× / ÷</option><option value="mix">Mix</option></select>
 <button id="generate">Nouvelle feuille</button>
-<button id="answers">Afficher réponses</button>
 </div>
 </header>
 <main>
 <div class="workspace" id="workspace"></div>
-<div id="colorSelectors" style="margin-top:1rem"></div>
 </main>
-<footer>Une seule feuille à la fois. Choisis les couleurs par résultat pour révéler l'image finale.</footer>
+<footer>Une feuille à la fois. Tronc = marron, feuilles = vert, ciel = bleu.</footer>
 <script>
-const ws = document.getElementById('workspace');
-const genBtn = document.getElementById('generate');
-const ansBtn = document.getElementById('answers');
-const levelSel = document.getElementById('level');
-const modeSel = document.getElementById('mode');
-const colorDiv = document.getElementById('colorSelectors');
-let showAnswers=false;
-let currentMap={};
+const ws=document.getElementById('workspace');
+const genBtn=document.getElementById('generate');
+const levelSel=document.getElementById('level');
+const modeSel=document.getElementById('mode');
 
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
-
 function randomExpr(level,mode){
   const ops={addsub:['+','-'],mult:['*','/'],mix:['+','-','*','/']};
   const chosen=ops[mode];
@@ -67,8 +59,6 @@ function randomExpr(level,mode){
 
 function genColoriage(){
   ws.innerHTML='';
-  colorDiv.innerHTML='';
-  currentMap={};
   const level=+levelSel.value;
   const mode=modeSel.value;
   const cols=6,rows=8,cellW=100,cellH=70;
@@ -77,50 +67,44 @@ function genColoriage(){
   const svg=document.createElementNS(svgns,'svg');
   svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
 
-  const title=document.createElementNS(svgns,'text');
-  title.setAttribute('x',20);title.setAttribute('y',40);title.setAttribute('font-size','22');title.setAttribute('fill','var(--primary-color)');
-  title.textContent='Coloriage magique — nombres relatifs';svg.appendChild(title);
+  // Draw sky background
+  const sky=document.createElementNS(svgns,'rect');
+  sky.setAttribute('x',0);sky.setAttribute('y',0);sky.setAttribute('width',width);sky.setAttribute('height',height);sky.setAttribute('fill','#87ceeb');
+  svg.appendChild(sky);
 
-  let results=[];
-  let cells=[];
+  // Draw tree trunk positions (value 0)
+  const trunkCols=[2,3];
+  const trunkRows=[4,5,6];
+
+  // Draw leaves positions (value 1)
+  const leafCoords=[
+    [1,2],[2,1],[2,2],[2,3],[2,4],[3,1],[3,2],[3,3],[3,4],[4,2]
+  ];
+
+  // Draw cells with expressions
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
       const x=20+c*cellW,y=60+r*cellH;
-      const {text,val}=randomExpr(level,mode);
+      let val=randInt(-5,5);
+      let fill='none';
+      // assign tree pattern
+      if(trunkCols.includes(c)&&trunkRows.includes(r))fill='#8B4513';
+      for(const [lc,lr] of leafCoords){if(c===lc && r===lr)fill='#228B22';}
       const rect=document.createElementNS(svgns,'rect');
       rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',cellW-4);rect.setAttribute('height',cellH-4);
-      rect.setAttribute('rx',8);rect.setAttribute('fill','none');rect.setAttribute('stroke','#000');
-      rect.dataset.val=val;svg.appendChild(rect);
+      rect.setAttribute('rx',8);rect.setAttribute('fill',fill);rect.setAttribute('stroke','#000');
+      svg.appendChild(rect);
 
+      const {text}=randomExpr(level,mode);
       const t=document.createElementNS(svgns,'text');
       t.setAttribute('x',x+cellW/2-4);t.setAttribute('y',y+cellH/2);
       t.setAttribute('text-anchor','middle');t.setAttribute('font-size','14');t.textContent=text;svg.appendChild(t);
-
-      results.push(val);
-      cells.push(rect);
     }
   }
-
-  results=[...new Set(results)].sort((a,b)=>a-b);
-  results.forEach(r=>{
-    const input=document.createElement('input');
-    input.type='color';input.value='#'+Math.floor(Math.random()*16777215).toString(16);
-    input.className='color-picker';
-    input.oninput=()=>{currentMap[r]=input.value;updateColors(cells);};
-    const label=document.createElement('span');label.textContent=' '+r+' ';label.style.marginRight='10px';
-    colorDiv.appendChild(label);colorDiv.appendChild(input);
-  });
-
-  function updateColors(cells){
-    cells.forEach(cell=>{cell.setAttribute('fill',currentMap[cell.dataset.val]||'none');});
-  }
-
-  if(showAnswers){cells.forEach(cell=>{cell.setAttribute('fill','#888');});}
   ws.appendChild(svg);
 }
 
 genBtn.onclick=genColoriage;
-ansBtn.onclick=()=>{showAnswers=!showAnswers;ansBtn.textContent=showAnswers?'Masquer réponses':'Afficher réponses';genColoriage();};
 window.onload=genColoriage;
 </script>
 </body>
