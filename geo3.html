@@ -4,247 +4,166 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Théorème de Pythagore</title>
-
-<!-- Polices -->
-<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
-
 <style>
 :root {
   --primary-color: #3a86ff;
   --secondary-color: #8338ec;
-  --background-color: #f0f4f8;
-  --text-color: #212529;
-  --border-radius: 12px;
-  --transition: 0.3s ease;
-  --shadow: 0 6px 14px rgba(0,0,0,0.08);
+  --background: #f8f9fc;
+  --text-color: #333;
+  --accent: #ffbe0b;
 }
-
 body {
-  font-family: 'Mabry Pro', sans-serif;
-  background: var(--background-color);
+  font-family: "Mabry Pro", sans-serif;
+  background: var(--background);
   color: var(--text-color);
-  margin: 2rem;
-  text-align: center;
+  margin: 0;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-
 h1 {
   font-family: 'Androgy Demo', sans-serif;
   font-size: 2.5rem;
   color: var(--primary-color);
   margin-bottom: 2rem;
 }
-
-/* --------- Structure principale --------- */
 .container {
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: stretch;
-  gap: 2rem;
+  gap: 3rem;
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
 }
-
 .card {
   background: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  flex: 1 1 340px;
-  min-width: 320px;
-  max-width: 380px;
+  border: 2px solid var(--primary-color);
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  width: 340px;
+  min-height: 360px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 1.5rem;
+  justify-content: space-between;
 }
-
-/* --------- Figure --------- */
-figure {
-  margin: 0;
-  text-align: center;
-}
-figcaption {
-  margin-top: 0.6rem;
-  font-weight: bold;
-  color: var(--secondary-color);
+#figure {
+  width: 360px;
+  height: 360px;
 }
 svg {
-  display: block;
-  margin: 0 auto;
-}
-
-/* --------- Texte --------- */
-#text-area {
-  text-align: left;
   width: 100%;
-  line-height: 1.6;
+  height: 100%;
 }
-
-span.editable {
-  border-bottom: 2px dotted var(--primary-color);
-  cursor: text;
-  display: inline-block;
-  min-width: 30px;
-  padding: 0 2px;
-}
-
-/* --------- Boutons --------- */
-.buttons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
 button {
-  padding: 0.8rem 1.6rem;
-  min-width: 160px;
-  background-color: var(--primary-color);
-  border: none;
+  background: var(--primary-color);
   color: white;
-  font-weight: bold;
-  border-radius: var(--border-radius);
+  border: none;
+  border-radius: 0.8rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background-color var(--transition), transform var(--transition);
-  box-shadow: var(--shadow);
+  transition: background 0.2s;
+  width: 100%;
 }
 button:hover {
-  background-color: #2a68cc;
-  transform: translateY(-2px);
+  background: var(--secondary-color);
 }
-
-/* --------- Feedback --------- */
-#feedback {
+.editable {
+  color: var(--accent);
+  border-bottom: 1px dotted var(--accent);
+  cursor: pointer;
+}
+.correct {
+  color: green;
+}
+.incorrect {
+  color: red;
+}
+.feedback {
+  text-align: center;
   font-weight: bold;
   margin-top: 1rem;
-  font-size: 1.1rem;
 }
 </style>
 </head>
-
 <body>
-<h1>Théorème de Pythagore</h1>
-
+<h1>Corrige le texte selon le théorème de Pythagore</h1>
 <div class="container">
-  <!-- Bloc Figure -->
-  <div class="card">
-    <figure>
-      <svg width="220" height="180">
-        <polygon id="triangle" points="40,140 160,140 40,40" fill="none" stroke="#3a86ff" stroke-width="3"/>
-        <text x="30" y="40" font-size="16" fill="#212529">A</text>
-        <text x="165" y="145" font-size="16" fill="#212529">C</text>
-        <text x="25" y="150" font-size="16" fill="#212529">B</text>
-        <text id="AB" x="10" y="90" font-size="14" fill="#212529"></text>
-        <text id="BC" x="90" y="155" font-size="14" fill="#212529"></text>
-        <text id="AC" x="110" y="80" font-size="14" fill="#212529"></text>
-      </svg>
-      <figcaption>Triangle ABC</figcaption>
-    </figure>
+  <div class="card" id="figure">
+    <svg viewBox="0 0 200 200">
+      <!-- Triangle plus grand -->
+      <polygon points="40,160 160,160 40,40" fill="none" stroke="#3a86ff" stroke-width="3"/>
+      <text x="30" y="170" font-size="16" fill="#333">A</text>
+      <text x="165" y="170" font-size="16" fill="#333">B</text>
+      <text x="30" y="35" font-size="16" fill="#333">C</text>
+      <!-- petit carré pour angle droit -->
+      <rect x="40" y="140" width="20" height="20" fill="none" stroke="#3a86ff" stroke-width="2"/>
+    </svg>
   </div>
 
-  <!-- Bloc Texte -->
   <div class="card">
-    <div id="text-area"></div>
+    <p>Le triangle <span class="editable" data-answer="ABC">ACB</span> est rectangle en 
+      <span class="editable" data-answer="B">C</span>.</p>
+    <p>D’après le théorème de Pythagore, on a :</p>
+    <p><span class="editable" data-answer="AC² = AB² + BC²">AB² = AC² + BC²</span></p>
+    <p><span class="editable" data-answer="AC² = 1,2² + 3,5²">AC² = 1,2² + 3,5²</span></p>
+    <p><span class="editable" data-answer="AC² = 1,44 + 12,25">AC² = 1,44 + 12,25</span></p>
+    <p><span class="editable" data-answer="AC² = 13,69">AC² = 13,96</span></p>
+    <p><span class="editable" data-answer="AC = √13,69">AC = √13,96</span></p>
+    <p><span class="editable" data-answer="AC = 3,7 m">AC = 3,8 m</span></p>
+    <p>La longueur <span class="editable" data-answer="AC">AC</span> est de 
+      <span class="editable" data-answer="3,7 m">3,8 m</span>.</p>
+    <button id="check">Vérifier</button>
+    <div class="feedback" id="feedback"></div>
   </div>
-</div>
-
-<div id="feedback"></div>
-
-<div class="buttons">
-  <button onclick="checkAnswers()">Vérifier</button>
-  <button onclick="generateExercise()">Nouvel exercice</button>
 </div>
 
 <script>
-const textArea = document.getElementById('text-area');
-const feedback = document.getElementById('feedback');
-const sideAB = document.getElementById('AB');
-const sideBC = document.getElementById('BC');
-const sideAC = document.getElementById('AC');
-
-let correctValues = {};
-
-function generateExercise() {
-  const AB = (Math.random() * 2 + 1).toFixed(1);
-  const BC = (Math.random() * 3 + 2).toFixed(1);
-  const AC = Math.sqrt(AB**2 + BC**2).toFixed(1);
-
-  const AB2 = (AB ** 2).toFixed(2);
-  const BC2 = (BC ** 2).toFixed(2);
-  const AC2 = (AC ** 2).toFixed(2);
-  const sum = (parseFloat(AB2) + parseFloat(BC2)).toFixed(2);
-
-  correctValues = {
-    AB, BC, AC, AB2, BC2, AC2, sum,
-    angle: "B",
-    formula: "AC² = AB² + BC²"
-  };
-
-  const wrongAngle = ["A", "B", "C"].sort(() => Math.random()-0.5)[0];
-  const wrongFormulaOptions = [
-    "AB² = AC² + BC²",
-    "AC² = AB² - BC²",
-    "BC² = AB² + AC²"
-  ];
-  const wrongFormula = wrongFormulaOptions[Math.floor(Math.random() * wrongFormulaOptions.length)];
-
-  const angleError = Math.random() < 0.5;
-  const formulaError = Math.random() < 0.5;
-
-  const angleText = angleError ? wrongAngle : "B";
-  const formulaText = formulaError ? wrongFormula : "AC² = AB² + BC²";
-
-  const randomErr = (val) => (Math.random() < 0.4 ? (parseFloat(val)+(Math.random()*1-0.5)).toFixed(2) : val);
-
-  const texte = `
-  Le triangle ABC est rectangle en <span class="editable" contenteditable>${angleText}</span>.<br>
-  D’après le théorème de Pythagore,<br>
-  on a :<br>
-  <span class="editable" contenteditable>${formulaText}</span><br><br>
-  AC² = <span class="editable" contenteditable>${randomErr(AB)}²</span> + <span class="editable" contenteditable>${randomErr(BC)}²</span><br>
-  AC² = <span class="editable" contenteditable>${randomErr(AB2)}</span> + <span class="editable" contenteditable>${randomErr(BC2)}</span><br>
-  AC² = <span class="editable" contenteditable>${randomErr(sum)}</span><br>
-  AC = √<span class="editable" contenteditable>${randomErr(sum)}</span><br>
-  AC = <span class="editable" contenteditable>${randomErr(AC)}</span> m<br>
-  <br>
-  La longueur AC est de <span class="editable" contenteditable>${randomErr(AC)}</span> m.
-  `;
-
-  textArea.innerHTML = texte;
-  sideAB.textContent = `AB = ${AB} m`;
-  sideBC.textContent = `BC = ${BC} m`;
-  sideAC.textContent = `AC = ?`;
-  feedback.textContent = '';
-}
-
-function checkAnswers() {
-  const edits = Array.from(document.querySelectorAll('.editable'));
-  let correct = 0;
-  let total = edits.length;
-
-  edits.forEach(span => {
-    const val = span.textContent.trim().replace(",", ".");
-    let ok = false;
-
-    if (val === correctValues.angle || val.toUpperCase() === correctValues.angle) ok = true;
-    if (val.replace(/\s+/g, "") === correctValues.formula.replace(/\s+/g, "")) ok = true;
-
-    const numVal = parseFloat(val);
-    if (!isNaN(numVal)) {
-      const close = Object.values(correctValues).some(v => Math.abs(parseFloat(v) - numVal) < 0.15);
-      if (close) ok = true;
-    }
-
-    span.style.color = ok ? "green" : "red";
-    if (ok) correct++;
+document.querySelectorAll('.editable').forEach(span => {
+  span.addEventListener('click', () => {
+    const current = span.textContent;
+    const input = document.createElement('input');
+    input.value = current;
+    input.style.width = (current.length + 1) + 'ch';
+    span.replaceWith(input);
+    input.focus();
+    input.addEventListener('blur', () => {
+      const newSpan = document.createElement('span');
+      newSpan.className = 'editable';
+      newSpan.dataset.answer = span.dataset.answer;
+      newSpan.textContent = input.value;
+      input.replaceWith(newSpan);
+      newSpan.addEventListener('click', span.onclick);
+    });
   });
+});
 
-  feedback.textContent = correct === total ? "✅ Parfait !" : "❌ Il y a des erreurs à corriger.";
-}
-
-generateExercise();
+document.getElementById('check').addEventListener('click', () => {
+  let score = 0;
+  let total = 0;
+  document.querySelectorAll('.editable').forEach(span => {
+    total++;
+    const user = span.textContent.trim().replace(',', '.');
+    const correct = span.dataset.answer.trim().replace(',', '.');
+    if (user === correct) {
+      span.classList.add('correct');
+      span.classList.remove('incorrect');
+      score++;
+    } else {
+      span.classList.add('incorrect');
+      span.classList.remove('correct');
+    }
+  });
+  const fb = document.getElementById('feedback');
+  if (score === total) {
+    fb.textContent = "✅ Bravo, tout est correct !";
+    fb.style.color = "green";
+  } else {
+    fb.textContent = `❌ ${total - score} erreur(s) à corriger.`;
+    fb.style.color = "red";
+  }
+});
 </script>
 </body>
 </html>
