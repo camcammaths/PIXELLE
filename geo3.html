@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Theoreme de Pythagore</title>
+<title>Théorème de Pythagore</title>
 
 <!-- Polices -->
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
@@ -15,8 +15,9 @@
   --secondary-color: #8338ec;
   --background-color: #f0f4f8;
   --text-color: #212529;
-  --border-radius: 10px;
+  --border-radius: 14px;
   --transition: 0.3s ease;
+  --shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
 }
 
 body {
@@ -37,30 +38,43 @@ h1 {
 .container {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  gap: 3rem;
+  align-items: stretch;
+  gap: 2rem;
   flex-wrap: wrap;
+  margin-bottom: 1.5rem;
 }
 
-figure {
-  background: white;
-  border-radius: var(--border-radius);
-  padding: 1rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-figcaption {
-  margin-top: 0.5rem;
-  font-weight: bold;
-}
-
-#text-area {
+.card {
   background: white;
   border-radius: var(--border-radius);
   padding: 1.5rem;
+  box-shadow: var(--shadow);
+  flex: 1 1 340px;
+  min-width: 320px;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+figure {
+  margin: 0;
+}
+
+svg {
+  display: block;
+  margin: 0 auto;
+}
+
+figcaption {
+  margin-top: 0.8rem;
+  font-weight: bold;
+  color: var(--secondary-color);
+}
+
+#text-area {
   text-align: left;
-  width: 340px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  line-height: 1.6;
 }
 
 span.editable {
@@ -68,54 +82,73 @@ span.editable {
   cursor: text;
   display: inline-block;
   min-width: 30px;
+  padding: 0 2px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 button {
-  margin-top: 1rem;
-  padding: 0.6rem 1.2rem;
+  padding: 0.8rem 1.6rem;
   background-color: var(--primary-color);
   border: none;
   color: white;
   font-weight: bold;
+  font-size: 1rem;
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: background-color var(--transition);
+  transition: background-color var(--transition), transform var(--transition);
+  min-width: 160px;
 }
 button:hover {
   background-color: #2a68cc;
+  transform: translateY(-2px);
 }
 
 #feedback {
   font-weight: bold;
-  margin-top: 1rem;
+  margin-top: 1.2rem;
+  font-size: 1.1rem;
 }
 </style>
 </head>
 
 <body>
-<h1>Theoreme de Pythagore</h1>
+<h1>Théorème de Pythagore</h1>
 
 <div class="container">
-  <figure>
-    <svg width="220" height="180">
-      <polygon id="triangle" points="40,140 160,140 40,40" fill="none" stroke="#3a86ff" stroke-width="3"/>
-      <text x="30" y="40" font-size="16" fill="#212529">A</text>
-      <text x="165" y="145" font-size="16" fill="#212529">C</text>
-      <text x="25" y="150" font-size="16" fill="#212529">B</text>
-      <text id="AB" x="10" y="90" font-size="14" fill="#212529"></text>
-      <text id="BC" x="90" y="155" font-size="14" fill="#212529"></text>
-      <text id="AC" x="110" y="80" font-size="14" fill="#212529"></text>
-    </svg>
-    <figcaption>Triangle ABC</figcaption>
-  </figure>
+  <!-- Bloc Figure -->
+  <div class="card">
+    <figure>
+      <svg width="220" height="180">
+        <polygon id="triangle" points="40,140 160,140 40,40" fill="none" stroke="#3a86ff" stroke-width="3"/>
+        <text x="30" y="40" font-size="16" fill="#212529">A</text>
+        <text x="165" y="145" font-size="16" fill="#212529">C</text>
+        <text x="25" y="150" font-size="16" fill="#212529">B</text>
+        <text id="AB" x="10" y="90" font-size="14" fill="#212529"></text>
+        <text id="BC" x="90" y="155" font-size="14" fill="#212529"></text>
+        <text id="AC" x="110" y="80" font-size="14" fill="#212529"></text>
+      </svg>
+      <figcaption>Triangle ABC</figcaption>
+    </figure>
+  </div>
 
-  <div id="text-area"></div>
+  <!-- Bloc Texte -->
+  <div class="card">
+    <div id="text-area"></div>
+  </div>
 </div>
 
 <div id="feedback"></div>
 
-<button onclick="checkAnswers()">Vérifier</button>
-<button onclick="generateExercise()">Nouvel exercice</button>
+<div class="buttons">
+  <button onclick="checkAnswers()">Vérifier</button>
+  <button onclick="generateExercise()">Nouvel exercice</button>
+</div>
 
 <script>
 const textArea = document.getElementById('text-area');
@@ -131,7 +164,6 @@ function generateExercise() {
   const BC = (Math.random() * 3 + 2).toFixed(1);
   const AC = Math.sqrt(AB**2 + BC**2).toFixed(1);
 
-  // Calculs corrects
   const AB2 = (AB ** 2).toFixed(2);
   const BC2 = (BC ** 2).toFixed(2);
   const AC2 = (AC ** 2).toFixed(2);
@@ -143,7 +175,6 @@ function generateExercise() {
     formula: "AC² = AB² + BC²"
   };
 
-  // Introduire des erreurs aléatoires
   const wrongAngle = ["A", "B", "C"].sort(() => Math.random()-0.5)[0];
   const wrongFormulaOptions = [
     "AB² = AC² + BC²",
@@ -164,7 +195,7 @@ function generateExercise() {
   Le triangle ABC est rectangle en <span class="editable" contenteditable>${angleText}</span>.<br>
   D’après le théorème de Pythagore,<br>
   on a :<br>
-  <span class="editable" contenteditable>${formulaText}</span><br>
+  <span class="editable" contenteditable>${formulaText}</span><br><br>
   AC² = <span class="editable" contenteditable>${randomErr(AB)}²</span> + <span class="editable" contenteditable>${randomErr(BC)}²</span><br>
   AC² = <span class="editable" contenteditable>${randomErr(AB2)}</span> + <span class="editable" contenteditable>${randomErr(BC2)}</span><br>
   AC² = <span class="editable" contenteditable>${randomErr(sum)}</span><br>
@@ -190,11 +221,9 @@ function checkAnswers() {
     const val = span.textContent.trim().replace(",", ".");
     let ok = false;
 
-    // Vérification de la formule et de l’angle
     if (val === correctValues.angle || val.toUpperCase() === correctValues.angle) ok = true;
     if (val.replace(/\s+/g, "") === correctValues.formula.replace(/\s+/g, "")) ok = true;
 
-    // Vérification numérique
     const numVal = parseFloat(val);
     if (!isNaN(numVal)) {
       const close = Object.values(correctValues).some(v => Math.abs(parseFloat(v) - numVal) < 0.15);
