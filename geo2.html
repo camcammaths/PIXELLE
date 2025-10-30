@@ -3,35 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Perimetre</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+<title>Calcul du Perimetre</title>
 
 <style>
 :root{
   --primary-color:#3a86ff;
-  --background-color:#f0f4f8;
-  --accent-square:#3a86ff;
-  --cell-size:36px;
+  --background-color:#f8fafc;
+  --cell-size:40px;
+  --line-color:#3a86ff;
+  --text-color:#222;
   --border-radius:8px;
-  --transition:0.25s ease;
-  --text-color:#212529;
 }
-*{box-sizing:border-box}
 body{
   font-family:'Mabry Pro',sans-serif;
   background:var(--background-color);
   margin:0;
   padding:2rem;
-  color:var(--text-color);
   text-align:center;
+  color:var(--text-color);
 }
 h1{
-  font-family:'Androgy Demo',sans-serif;
-  font-size:2.4rem;
   color:var(--primary-color);
-  margin:0 0 1rem;
+  font-size:2rem;
+  margin-bottom:1rem;
 }
 #gridWrap{
   display:flex;
@@ -42,45 +36,61 @@ h1{
 #grid{
   display:grid;
   gap:0;
+  position:relative;
 }
 .cell{
   width:var(--cell-size);
   height:var(--cell-size);
-  background:transparent;
-  border:1px solid #e0e0e0;
+  border:1px solid transparent;
+  box-sizing:border-box;
+  position:relative;
 }
-.cell.filled{
-  background:var(--accent-square);
+.edge{
+  position:absolute;
+  background:var(--line-color);
 }
+.edge.top, .edge.bottom{
+  height:2px;
+  width:100%;
+  left:0;
+}
+.edge.left, .edge.right{
+  width:2px;
+  height:100%;
+  top:0;
+}
+.edge.top{top:0;}
+.edge.bottom{bottom:0;}
+.edge.left{left:0;}
+.edge.right{right:0;}
+
 .controls{
   display:flex;
-  gap:0.75rem;
   justify-content:center;
   align-items:center;
-  margin:1rem 0;
+  gap:0.5rem;
+  margin:1.2rem 0;
 }
-input[type=number]{
-  padding:0.5rem 0.6rem;
-  border-radius:8px;
-  border:2px solid rgba(0,0,0,0.08);
+input{
+  padding:0.5rem 0.7rem;
+  border:2px solid rgba(0,0,0,0.1);
+  border-radius:var(--border-radius);
   width:120px;
   font-size:1rem;
 }
-.btn{
-  padding:0.6rem 1.1rem;
-  border-radius:var(--border-radius);
-  border:none;
+button{
   background:var(--primary-color);
+  border:none;
   color:white;
+  padding:0.6rem 1rem;
+  border-radius:var(--border-radius);
   cursor:pointer;
-  transition:background var(--transition);
-  font-family:inherit;
+  transition:0.2s;
 }
-.btn:hover{background:#8338ec;}
+button:hover{background:#8338ec;}
 .feedback{
-  height:1.4rem;
-  margin-top:0.5rem;
-  font-weight:700;
+  height:1.5rem;
+  font-weight:bold;
 }
 .feedback.ok{color:green;}
 .feedback.bad{color:red;}
@@ -88,29 +98,27 @@ input[type=number]{
 </head>
 <body>
 
-<h1>Perimetre</h1>
+<h1>🧩 Calcul du Perimetre</h1>
 
-<div id="gridWrap">
-  <div id="grid"></div>
-</div>
+<div id="gridWrap"><div id="grid"></div></div>
 
 <div class="controls">
-  <input id="answer" type="number" min="0" inputmode="numeric" placeholder="Ton périmètre" />
-  <button class="btn" id="checkBtn">Valider</button>
+  <input id="answer" type="number" min="0" placeholder="Ton périmètre" />
+  <button id="checkBtn">Valider</button>
 </div>
 
-<div class="feedback" id="feedback" aria-live="polite"></div>
+<div class="feedback" id="feedback"></div>
 
 <script>
 const gridEl = document.getElementById('grid');
-const checkBtn = document.getElementById('checkBtn');
 const answerEl = document.getElementById('answer');
 const feedbackEl = document.getElementById('feedback');
+const checkBtn = document.getElementById('checkBtn');
 
 let coords = new Set();
 let correctPerimeter = 0;
 
-function coordKey(x,y){return x+','+y;}
+function coordKey(x,y){return `${x},${y}`;}
 function parseKey(k){const [x,y]=k.split(',').map(Number);return {x,y};}
 
 function generateShape(minCells=4,maxCells=10){
@@ -119,20 +127,17 @@ function generateShape(minCells=4,maxCells=10){
   coords.add(coordKey(0,0));
   const frontier = [coordKey(0,0)];
 
-  while(coords.size < target){
+  while(coords.size < target && frontier.length>0){
     const base = frontier[Math.floor(Math.random()*frontier.length)];
     const {x,y} = parseKey(base);
-    const neighbors = [
-      [x+1,y],[x-1,y],[x,y+1],[x,y-1]
-    ].map(([nx,ny]) => coordKey(nx,ny));
-    const possible = neighbors.filter(n => !coords.has(n));
-    if(possible.length > 0){
-      const chosen = possible[Math.floor(Math.random()*possible.length)];
-      coords.add(chosen);
-      frontier.push(chosen);
-    } else {
-      frontier.splice(frontier.indexOf(base),1);
-    }
+    const candidates = [[x+1,y],[x-1,y],[x,y+1],[x,y-1]]
+      .map(([nx,ny]) => coordKey(nx,ny))
+      .filter(n => !coords.has(n));
+    if(candidates.length){
+      const pick = candidates[Math.floor(Math.random()*candidates.length)];
+      coords.add(pick);
+      frontier.push(pick);
+    } else frontier.splice(frontier.indexOf(base),1);
   }
   correctPerimeter = computePerimeter();
   drawGrid();
@@ -142,24 +147,20 @@ function computePerimeter(){
   let perim = 0;
   for(const key of coords){
     const {x,y} = parseKey(key);
-    // chaque côté exposé compte pour 1 unité
-    const neighbors = [
-      coordKey(x+1,y),
-      coordKey(x-1,y),
-      coordKey(x,y+1),
-      coordKey(x,y-1)
+    const sides = [
+      [x,y-1],[x,y+1],[x-1,y],[x+1,y]
     ];
-    for(const n of neighbors){
-      if(!coords.has(n)) perim++;
+    for(const [nx,ny] of sides){
+      if(!coords.has(coordKey(nx,ny))) perim++;
     }
   }
   return perim;
 }
 
 function drawGrid(){
-  const positions = Array.from(coords).map(parseKey);
-  const xs = positions.map(p=>p.x);
-  const ys = positions.map(p=>p.y);
+  const pts = Array.from(coords).map(parseKey);
+  const xs = pts.map(p=>p.x);
+  const ys = pts.map(p=>p.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
   const width = maxX-minX+1, height = maxY-minY+1;
@@ -172,7 +173,22 @@ function drawGrid(){
     for(let x=minX;x<=maxX;x++){
       const cell = document.createElement('div');
       cell.classList.add('cell');
-      if(coords.has(coordKey(x,y))) cell.classList.add('filled');
+      if(coords.has(coordKey(x,y))){
+        // ajouter les bords extérieurs visibles
+        const dirs = {
+          top: !coords.has(coordKey(x,y-1)),
+          bottom: !coords.has(coordKey(x,y+1)),
+          left: !coords.has(coordKey(x-1,y)),
+          right: !coords.has(coordKey(x+1,y))
+        };
+        for(const d in dirs){
+          if(dirs[d]){
+            const edge = document.createElement('div');
+            edge.classList.add('edge', d);
+            cell.appendChild(edge);
+          }
+        }
+      }
       gridEl.appendChild(cell);
     }
   }
@@ -180,7 +196,7 @@ function drawGrid(){
 
 checkBtn.addEventListener('click', ()=>{
   const val = parseInt(answerEl.value);
-  if(!val && val !== 0) return;
+  if(isNaN(val)) return;
   if(val === correctPerimeter){
     feedbackEl.textContent = '✅ Correct !';
     feedbackEl.className = 'feedback ok';
@@ -193,9 +209,8 @@ checkBtn.addEventListener('click', ()=>{
     generateShape();
   },1000);
 });
-<a href="geo2.html" class="btn">Geo2</a>
+
 generateShape();
 </script>
-
 </body>
 </html>
