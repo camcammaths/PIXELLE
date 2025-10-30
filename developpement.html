@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Developpement</title>
+<title>Développement</title>
 
 <!-- Polices -->
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
@@ -111,6 +111,7 @@ const feedbackEl = document.getElementById('feedback');
 let currentTerms = [];
 let dragged = null;
 
+// Générer question avec 2 termes et 5 choix avec pièges
 function generateQuestion() {
   const a = Math.floor(Math.random()*5)+2;
   const b = Math.floor(Math.random()*5)+1;
@@ -119,7 +120,6 @@ function generateQuestion() {
   const constTerm = sign==='+' ? a*b : -a*b;
   const terms = [`${a}x`, `${sign}${Math.abs(constTerm)}`];
 
-  // Générer 5 propositions avec pièges sur les signes
   const choices = new Set();
   choices.add(`${a}x`);
   choices.add(`${sign}${Math.abs(constTerm)}`);
@@ -133,6 +133,7 @@ function generateQuestion() {
   return {expr, terms, choices:[...choices].sort(()=>Math.random()-0.5)};
 }
 
+// Afficher la question
 function renderQuestion() {
   const q = generateQuestion();
   currentTerms = q.terms;
@@ -140,6 +141,7 @@ function renderQuestion() {
   slotsEl.innerHTML = '';
   paletteEl.innerHTML = '';
 
+  // Créer slots
   q.terms.forEach(term=>{
     const slot = document.createElement('div');
     slot.className='slot';
@@ -149,6 +151,7 @@ function renderQuestion() {
     slotsEl.appendChild(slot);
   });
 
+  // Créer palette
   q.choices.forEach(t=>{
     const brick = document.createElement('div');
     brick.className='brick';
@@ -162,6 +165,7 @@ function renderQuestion() {
   feedbackEl.textContent = '';
 }
 
+// Gérer dépôt dans slot
 function onDrop(e){
   e.preventDefault();
   const slot = e.currentTarget;
@@ -169,15 +173,28 @@ function onDrop(e){
   slot.appendChild(dragged);
   slot.classList.add('filled');
 
-  // Vérification immédiate après placement
-  const expected = slot.dataset.expect;
-  const actual = slot.firstChild ? slot.firstChild.textContent : null;
-  if(actual===expected){
-    slot.style.borderColor='green';
-    feedbackEl.textContent = 'Correct ✅';
+  checkSlots();
+}
+
+// Vérifier slots et générer nouvelle question si correct
+function checkSlots(){
+  let allCorrect = true;
+  Array.from(slotsEl.children).forEach(slot=>{
+    const expected = slot.dataset.expect;
+    const actual = slot.firstChild ? slot.firstChild.textContent : null;
+    if(actual===expected){
+      slot.style.borderColor='green';
+    } else {
+      slot.style.borderColor='red';
+      allCorrect=false;
+    }
+  });
+
+  if(allCorrect){
+    feedbackEl.textContent = 'Bravo ! ✅ Nouvelle question...';
+    setTimeout(renderQuestion, 1500); // nouvelle question après 1.5s
   } else {
-    slot.style.borderColor='red';
-    feedbackEl.textContent = 'Vérifie le signe ❌';
+    feedbackEl.textContent = 'Vérifie les signes ❌';
   }
 }
 
