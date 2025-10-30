@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Coloriage magique — Nombres relatifs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --primary-color:#3a86ff;
+      --accent:#8338ec;
+      --bg:#f8fbff;
+      --paper:#fff;
+      --muted:#6b7280;
+      --shadow:0 6px 18px rgba(25,42,70,0.08);
+    }
+    body{margin:0;font-family:'Androgy Demo',sans-serif;background:var(--bg);color:#0f172a}
+    header{display:flex;align-items:center;gap:1rem;padding:1rem}
+    h1{color:var(--primary-color);font-size:2.2rem;margin:0}
+    .controls{margin-left:auto;display:flex;gap:0.5rem;align-items:center}
+    select,button{padding:0.5rem;border-radius:8px;border:1px solid #ddd;font-family:inherit}
+    button{background:var(--primary-color);color:#fff;border:none;cursor:pointer;box-shadow:var(--shadow)}
+    main{padding:1rem;display:flex;gap:1rem}
+    .workspace{flex:1;background:var(--paper);border-radius:12px;box-shadow:var(--shadow);padding:1rem;text-align:center}
+    svg{width:100%;max-width:800px;height:auto;border-radius:12px;background:linear-gradient(#fff,#fdfdfd);}
+    footer{text-align:center;color:var(--muted);padding:1rem}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Coloriage magique — Nombres relatifs</h1>
+    <div class="controls">
+      <label for="level">Niveau</label>
+      <select id="level">
+        <option value="5">5e</option>
+        <option value="4" selected>4e</option>
+        <option value="3">3e</option>
+      </select>
+      <label for="mode">Opérations</label>
+      <select id="mode">
+        <option value="addsub">+ / -</option>
+        <option value="mult">× / ÷</option>
+        <option value="mix">Mix</option>
+      </select>
+      <button id="generate">Nouvelle feuille</button>
+      <button id="answers">Afficher réponses</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="workspace" id="workspace"></div>
+  </main>
+  <footer>Une feuille de coloriage magique est générée à la fois.</footer>
+
+  <script>
+    const ws = document.getElementById('workspace');
+    const genBtn = document.getElementById('generate');
+    const ansBtn = document.getElementById('answers');
+    const levelSel = document.getElementById('level');
+    const modeSel = document.getElementById('mode');
+    let showAnswers = false;
+
+    function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+
+    function randomExpr(level,mode){
+      const ops = {addsub:['+','-'],mult:['*','/'],mix:['+','-','*','/']};
+      const chosen = ops[mode];
+      const n = level==5?2:3;
+      let expr = randInt(-10,10).toString();
+      for(let i=1;i<n;i++){
+        let op = chosen[Math.floor(Math.random()*chosen.length)];
+        let num = randInt(-10,10);
+        if(op==='/'&&num===0) num=1;
+        expr += ' '+op+' '+num;
+      }
+      let val;
+      try{val=eval(expr);}catch{val=0;}
+      return {text:expr.replace('*','×').replace('/','÷'),val:Math.round(val*100)/100};
+    }
+
+    function genColoriage(){
+      ws.innerHTML='';
+      const level = +levelSel.value;
+      const mode = modeSel.value;
+      const cols=6,rows=8,cellW=100,cellH=70;
+      const width=cols*cellW+40,height=rows*cellH+80;
+      const svgns='http://www.w3.org/2000/svg';
+      const svg=document.createElementNS(svgns,'svg');
+      svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+
+      const title=document.createElementNS(svgns,'text');
+      title.setAttribute('x',20);title.setAttribute('y',40);
+      title.setAttribute('font-size','22');title.setAttribute('fill','var(--primary-color)');
+      title.textContent='Coloriage magique — nombres relatifs';
+      svg.appendChild(title);
+
+      let colors=['#f94144','#f3722c','#f9c74f','#90be6d','#43aa8b','#577590'];
+      let results=[];
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          const x=20+c*cellW,y=60+r*cellH;
+          const {text,val}=randomExpr(level,mode);
+          const rect=document.createElementNS(svgns,'rect');
+          rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',cellW-4);rect.setAttribute('height',cellH-4);
+          rect.setAttribute('rx',8);rect.setAttribute('fill','none');rect.setAttribute('stroke','#000');rect.dataset.val=val;
+          svg.appendChild(rect);
+
+          const t=document.createElementNS(svgns,'text');
+          t.setAttribute('x',x+cellW/2-4);t.setAttribute('y',y+cellH/2);
+          t.setAttribute('text-anchor','middle');t.setAttribute('font-size','14');t.textContent=text;
+          svg.appendChild(t);
+
+          results.push(val);
+        }
+      }
+      results=[...new Set(results)].sort((a,b)=>a-b);
+      const map={};results.forEach((r,i)=>map[r]=colors[i%colors.length]);
+
+      if(showAnswers){svg.querySelectorAll('rect').forEach(r=>{r.setAttribute('fill',map[r.dataset.val]);});}
+      ws.appendChild(svg);
+    }
+
+    genBtn.onclick=genColoriage;
+    ansBtn.onclick=()=>{showAnswers=!showAnswers;ansBtn.textContent=showAnswers?'Masquer réponses':'Afficher réponses';genColoriage();};
+
+    window.onload=genColoriage;
+  </script>
+</body>
+</html>
