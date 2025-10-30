@@ -1,1 +1,186 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aire — Puzzle des carrés unité</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+
+<style>
+:root{
+  --primary-color: #3a86ff;
+  --background-color: #f0f4f8;
+  --accent-square: #3a86ff;
+  --cell-size: 36px;
+  --border-radius: 8px;
+  --transition: 0.25s ease;
+  --text-color: #212529;
+}
+*{box-sizing:border-box}
+body{
+  font-family: 'Mabry Pro', sans-serif;
+  background: var(--background-color);
+  margin:0;
+  padding:2rem;
+  color:var(--text-color);
+  text-align:center;
+}
+h1{
+  font-family:'Androgy Demo',sans-serif;
+  font-size:2.4rem;
+  color:var(--primary-color);
+  margin:0 0 1rem;
+}
+#gridWrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:1rem;
+}
+#grid{
+  display:grid;
+  gap:0;
+  padding:0;
+}
+.cell{
+  width:var(--cell-size);
+  height:var(--cell-size);
+  border-radius:0;
+  background:transparent;
+  border:1px solid #e0e0e0;
+}
+.cell.filled{
+  background:var(--accent-square);
+}
+.controls{
+  display:flex;
+  gap:0.75rem;
+  justify-content:center;
+  align-items:center;
+  margin:1rem 0;
+}
+input[type=number]{
+  padding:0.5rem 0.6rem;
+  border-radius:8px;
+  border:2px solid rgba(0,0,0,0.08);
+  width:120px;
+  font-size:1rem;
+}
+.btn{
+  padding:0.6rem 1.1rem;
+  border-radius:var(--border-radius);
+  border:none;
+  background:var(--primary-color);
+  color:white;
+  cursor:pointer;
+  transition:background var(--transition);
+  font-family:inherit;
+}
+.btn:hover{background:#8338ec;}
+.feedback{
+  height:1.4rem;
+  margin-top:0.5rem;
+  font-weight:700;
+}
+.feedback.ok{color:green;}
+.feedback.bad{color:red;}
+</style>
+</head>
+<body>
+
+<h1>Aire — Puzzle des carrés unité</h1>
+
+<div id="gridWrap">
+  <div id="grid"></div>
+</div>
+
+<div class="controls">
+  <input id="answer" type="number" min="0" inputmode="numeric" placeholder="Ton aire" />
+  <button class="btn" id="checkBtn">Valider</button>
+</div>
+
+<div class="feedback" id="feedback" aria-live="polite"></div>
+
+<script>
+const gridEl = document.getElementById('grid');
+const checkBtn = document.getElementById('checkBtn');
+const answerEl = document.getElementById('answer');
+const feedbackEl = document.getElementById('feedback');
+
+let coords = new Set();
+let correctArea = 0;
+
+function coordKey(x,y){return x+','+y;}
+function parseKey(k){const [x,y]=k.split(',').map(Number);return {x,y};}
+
+function generateShape(minCells=4,maxCells=10){
+  coords.clear();
+  const target = Math.floor(Math.random()*(maxCells-minCells+1))+minCells;
+  coords.add(coordKey(0,0));
+  const frontier = [coordKey(0,0)];
+
+  while(coords.size < target){
+    const base = frontier[Math.floor(Math.random()*frontier.length)];
+    const {x,y} = parseKey(base);
+    const neighbors = [
+      [x+1,y],[x-1,y],[x,y+1],[x,y-1]
+    ].map(([nx,ny]) => coordKey(nx,ny));
+    const possible = neighbors.filter(n => !coords.has(n));
+    if(possible.length > 0){
+      const chosen = possible[Math.floor(Math.random()*possible.length)];
+      coords.add(chosen);
+      frontier.push(chosen);
+    } else {
+      frontier.splice(frontier.indexOf(base),1);
+    }
+  }
+  correctArea = coords.size;
+  drawGrid();
+}
+
+function drawGrid(){
+  const positions = Array.from(coords).map(parseKey);
+  const xs = positions.map(p=>p.x);
+  const ys = positions.map(p=>p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const width = maxX-minX+1, height = maxY-minY+1;
+
+  gridEl.style.gridTemplateColumns = `repeat(${width}, var(--cell-size))`;
+  gridEl.style.gridTemplateRows = `repeat(${height}, var(--cell-size))`;
+  gridEl.innerHTML='';
+
+  for(let y=minY;y<=maxY;y++){
+    for(let x=minX;x<=maxX;x++){
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      if(coords.has(coordKey(x,y))) cell.classList.add('filled');
+      gridEl.appendChild(cell);
+    }
+  }
+}
+
+checkBtn.addEventListener('click', ()=>{
+  const val = parseInt(answerEl.value);
+  if(!val && val !== 0) return;
+  if(val === correctArea){
+    feedbackEl.textContent = '✅ Correct !';
+    feedbackEl.className = 'feedback ok';
+  } else {
+    feedbackEl.textContent = `❌ Faux (aire = ${correctArea})`;
+    feedbackEl.className = 'feedback bad';
+  }
+  setTimeout(()=>{
+    answerEl.value='';
+    generateShape();
+  },1000);
+});
+
+generateShape();
+</script>
+
+</body>
+</html>
 
