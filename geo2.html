@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calcul du Perimetre</title>
-
+<title>Périmètre — Puzzle des contours</title>
 <style>
 :root{
   --primary-color:#3a86ff;
@@ -44,18 +43,19 @@ h1{
   border:1px solid transparent;
   box-sizing:border-box;
   position:relative;
+  background:transparent; /* intérieur vide */
 }
 .edge{
   position:absolute;
   background:var(--line-color);
 }
 .edge.top, .edge.bottom{
-  height:2px;
+  height:3px;
   width:100%;
   left:0;
 }
 .edge.left, .edge.right{
-  width:2px;
+  width:3px;
   height:100%;
   top:0;
 }
@@ -98,7 +98,7 @@ button:hover{background:#8338ec;}
 </head>
 <body>
 
-<h1>🧩 Calcul du Perimetre</h1>
+<h1>🧩 Calcul du Périmètre</h1>
 
 <div id="gridWrap"><div id="grid"></div></div>
 
@@ -174,7 +174,7 @@ function drawGrid(){
       const cell = document.createElement('div');
       cell.classList.add('cell');
       if(coords.has(coordKey(x,y))){
-        // ajouter les bords extérieurs visibles
+        // Ajouter seulement les bords visibles
         const dirs = {
           top: !coords.has(coordKey(x,y-1)),
           bottom: !coords.has(coordKey(x,y+1)),
@@ -210,6 +210,7 @@ checkBtn.addEventListener('click', ()=>{
   },1000);
 });
 
+// Générer la première forme
 generateShape();
 </script>
 </body>
