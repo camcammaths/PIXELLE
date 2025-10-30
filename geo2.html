@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calcul du Perimetre</title>
+<title>Calcul du Périmètre</title>
 <style>
 :root{
   --primary-color:#3a86ff;
@@ -14,7 +14,7 @@
   --border-radius:8px;
 }
 body{
-  font-family:'Mabry Pro',sans-serif;
+  font-family:'Mabry Pro',sans-serif; /* typographie générale */
   background:var(--background-color);
   margin:0;
   padding:2rem;
@@ -22,9 +22,10 @@ body{
   color:var(--text-color);
 }
 h1{
+  font-family:'Androgy Demo',sans-serif; /* typographie du titre */
+  font-size:2.4rem;
   color:var(--primary-color);
-  font-size:2rem;
-  margin-bottom:1rem;
+  margin:0 0 1rem;
 }
 #gridWrap{
   display:flex;
@@ -94,6 +95,7 @@ button:hover{background:#8338ec;}
   height:1.5rem;
   font-weight:bold;
   font-size:1.1rem;
+  font-family:'Mabry Pro',sans-serif; /* typographie du feedback */
 }
 .feedback.ok{color:green;}
 .feedback.bad{color:red;}
@@ -101,7 +103,7 @@ button:hover{background:#8338ec;}
 </head>
 <body>
 
-<h1>🧩 Calcul du Perimetre</h1>
+<h1>Calcul du Périmètre</h1>
 
 <div id="gridWrap"><div id="grid"></div></div>
 
@@ -212,7 +214,6 @@ checkBtn.addEventListener('click', ()=>{
   },1000);
 });
 
-// Générer la première forme
 generateShape();
 </script>
 </body>
