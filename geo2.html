@@ -3,25 +3,25 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calculs d'aires</title>
+<title>Périmètre — Puzzle des carrés unité</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
 
 <style>
 :root{
-  --primary-color: #3a86ff;
-  --background-color: #f0f4f8;
-  --accent-square: #3a86ff;
-  --cell-size: 36px;
-  --border-radius: 8px;
-  --transition: 0.25s ease;
-  --text-color: #212529;
+  --primary-color:#3a86ff;
+  --background-color:#f0f4f8;
+  --accent-square:#3a86ff;
+  --cell-size:36px;
+  --border-radius:8px;
+  --transition:0.25s ease;
+  --text-color:#212529;
 }
 *{box-sizing:border-box}
 body{
-  font-family: 'Mabry Pro', sans-serif;
-  background: var(--background-color);
+  font-family:'Mabry Pro',sans-serif;
+  background:var(--background-color);
   margin:0;
   padding:2rem;
   color:var(--text-color);
@@ -42,12 +42,10 @@ h1{
 #grid{
   display:grid;
   gap:0;
-  padding:0;
 }
 .cell{
   width:var(--cell-size);
   height:var(--cell-size);
-  border-radius:0;
   background:transparent;
   border:1px solid #e0e0e0;
 }
@@ -90,14 +88,14 @@ input[type=number]{
 </head>
 <body>
 
-<h1>Calculs d'aires</h1>
+<h1>Périmètre — Puzzle des carrés unité</h1>
 
 <div id="gridWrap">
   <div id="grid"></div>
 </div>
 
 <div class="controls">
-  <input id="answer" type="number" min="0" inputmode="numeric" placeholder="Ton aire" />
+  <input id="answer" type="number" min="0" inputmode="numeric" placeholder="Ton périmètre" />
   <button class="btn" id="checkBtn">Valider</button>
 </div>
 
@@ -110,7 +108,7 @@ const answerEl = document.getElementById('answer');
 const feedbackEl = document.getElementById('feedback');
 
 let coords = new Set();
-let correctArea = 0;
+let correctPerimeter = 0;
 
 function coordKey(x,y){return x+','+y;}
 function parseKey(k){const [x,y]=k.split(',').map(Number);return {x,y};}
@@ -136,8 +134,26 @@ function generateShape(minCells=4,maxCells=10){
       frontier.splice(frontier.indexOf(base),1);
     }
   }
-  correctArea = coords.size;
+  correctPerimeter = computePerimeter();
   drawGrid();
+}
+
+function computePerimeter(){
+  let perim = 0;
+  for(const key of coords){
+    const {x,y} = parseKey(key);
+    // chaque côté exposé compte pour 1 unité
+    const neighbors = [
+      coordKey(x+1,y),
+      coordKey(x-1,y),
+      coordKey(x,y+1),
+      coordKey(x,y-1)
+    ];
+    for(const n of neighbors){
+      if(!coords.has(n)) perim++;
+    }
+  }
+  return perim;
 }
 
 function drawGrid(){
@@ -165,11 +181,11 @@ function drawGrid(){
 checkBtn.addEventListener('click', ()=>{
   const val = parseInt(answerEl.value);
   if(!val && val !== 0) return;
-  if(val === correctArea){
+  if(val === correctPerimeter){
     feedbackEl.textContent = '✅ Correct !';
     feedbackEl.className = 'feedback ok';
   } else {
-    feedbackEl.textContent = `❌ Faux (aire = ${correctArea})`;
+    feedbackEl.textContent = `❌ Faux (périmètre = ${correctPerimeter})`;
     feedbackEl.className = 'feedback bad';
   }
   setTimeout(()=>{
@@ -183,4 +199,3 @@ generateShape();
 
 </body>
 </html>
-
