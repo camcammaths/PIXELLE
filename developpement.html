@@ -1,207 +1,192 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Développement</title>
-
-<!-- Polices -->
-<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Développement — Drag & Drop robuste</title>
 <style>
-:root {
-  --primary: #3a86ff;
-  --background: #f0f4f8;
-  --text: #212529;
-  --border-radius: 8px;
-  --transition: 0.3s ease;
-}
-
-body {
-  font-family: 'Mabry Pro', sans-serif;
-  background: var(--background);
-  color: var(--text);
-  margin: 2rem;
-  user-select: none;
-  text-align: center;
-}
-
-h1 {
-  font-family: 'Androgy Demo', sans-serif;
-  text-transform: capitalize;
-  color: var(--primary);
-  margin-bottom: 1.5rem;
-}
-
-#expression {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  font-weight: bold;
-}
-
-#slots, #palette {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-
-.slot, .brick {
-  padding: 0.75rem 1rem;
-  min-width: 80px;
-  border-radius: var(--border-radius);
-  font-weight: bold;
-  text-align: center;
-  cursor: grab;
-  transition: all var(--transition);
-  user-select: none;
-}
-
-.slot {
-  min-height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed var(--primary);
-  background: white;
-  font-style: italic;
-}
-
-.slot.filled { 
-  border-style: solid; 
-  background-color: #d0e2ff; 
-  font-style: normal; 
-}
-
-.brick {
-  background: var(--primary);
-  color: white;
-  border: none;
-  cursor: grab;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-.brick.dragging { opacity: 0.5; cursor: grabbing; }
-.brick:hover { transform: scale(1.05); }
-
-#feedback {
-  font-weight: bold;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
+  :root{
+    --primary:#3a86ff; --bg:#f0f4f8; --text:#212529; --rad:8px;
+  }
+  body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);margin:24px;text-align:center}
+  h1{color:var(--primary);font-size:1.8rem;margin-bottom:12px}
+  #expression{font-weight:700;margin-bottom:14px}
+  #slots,#palette{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+  .slot,.brick{min-width:90px;padding:10px;border-radius:var(--rad);font-weight:700;cursor:grab;user-select:none}
+  .slot{border:2px dashed var(--primary);background:#fff;min-height:48px;display:flex;align-items:center;justify-content:center;font-style:italic}
+  .slot.filled{background:#dff0ff;border-style:solid}
+  .brick{background:var(--primary);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .brick:active{cursor:grabbing}
+  #feedback{font-weight:700;margin-top:8px;height:1.2rem}
+  .hint{font-size:0.85rem;color:#666;margin-top:6px}
 </style>
 </head>
 <body>
-
-<h1>Développement</h1>
-
-<div id="expression">a(x + b)</div>
-<div id="slots"></div>
-<div id="palette"></div>
-<div id="feedback"></div>
+  <h1>Développement</h1>
+  <div id="expression">a(x + b)</div>
+  <div id="slots" aria-label="slots"></div>
+  <div id="palette" aria-label="palette"></div>
+  <div id="feedback"></div>
+  <div class="hint">Si ça ne déplace pas : ouvre la console (F12) pour voir les messages.</div>
 
 <script>
-const expressionEl = document.getElementById('expression');
-const slotsEl = document.getElementById('slots');
-const paletteEl = document.getElementById('palette');
-const feedbackEl = document.getElementById('feedback');
+(() => {
+  const expressionEl = document.getElementById('expression');
+  const slotsEl = document.getElementById('slots');
+  const paletteEl = document.getElementById('palette');
+  const feedbackEl = document.getElementById('feedback');
+  let brickIdCounter = 0;
 
-let currentTerms = [];
-let dragged = null;
+  function randomInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-// Générer question avec 2 termes et 5 choix avec pièges
-function generateQuestion() {
-  const a = Math.floor(Math.random()*5)+2;
-  const b = Math.floor(Math.random()*5)+1;
-  const sign = Math.random()<0.5?'+':'-';
-  const expr = `${a}(x ${sign} ${b})`;
-  const constTerm = sign==='+' ? a*b : -a*b;
-  const terms = [`${a}x`, `${sign}${Math.abs(constTerm)}`];
+  // Génère la question + 5 choix (avec pièges de signes)
+  function generateQuestion(){
+    const a = randomInt(2,6);
+    const b = randomInt(1,6);
+    const sign = Math.random()<0.5 ? '+' : '-';
+    const expr = `${a}(x ${sign} ${b})`;
+    const constTermVal = sign === '+' ? a*b : -a*b;
+    const terms = [`${a}x`, `${sign}${Math.abs(constTermVal)}`];
 
-  const choices = new Set();
-  choices.add(`${a}x`);
-  choices.add(`${sign}${Math.abs(constTerm)}`);
-  while(choices.size < 5){
-    const wrongSign = Math.random()<0.5 ? '+' : '-';
-    const wrongVal = wrongSign==='+' ? a*b : -a*b;
-    choices.add(`${wrongSign}${Math.abs(wrongVal)}`);
-  }
-
-  return {expr, terms, choices:[...choices].sort(()=>Math.random()-0.5)};
-}
-
-// Afficher la question
-function renderQuestion() {
-  const q = generateQuestion();
-  currentTerms = q.terms;
-  expressionEl.textContent = q.expr;
-  slotsEl.innerHTML = '';
-  paletteEl.innerHTML = '';
-  feedbackEl.textContent = '';
-
-  // Créer slots
-  q.terms.forEach(term=>{
-    const slot = document.createElement('div');
-    slot.className='slot';
-    slot.dataset.expect = term;
-    slot.addEventListener('dragover', e=>e.preventDefault());
-    slot.addEventListener('drop', onDrop);
-    slotsEl.appendChild(slot);
-  });
-
-  // Créer palette
-  q.choices.forEach(t=>{
-    const brick = document.createElement('div');
-    brick.className='brick';
-    brick.textContent = t;
-    brick.draggable = true;
-    brick.addEventListener('dragstart', e=>{
-      dragged = e.target;
-      e.target.classList.add('dragging');
-    });
-    brick.addEventListener('dragend', e=>{
-      e.target.classList.remove('dragging');
-    });
-    paletteEl.appendChild(brick);
-  });
-}
-
-// Gérer dépôt dans slot
-function onDrop(e){
-  e.preventDefault();
-  const slot = e.currentTarget;
-  if(slot.firstChild){ paletteEl.appendChild(slot.firstChild); }
-  slot.appendChild(dragged);
-  slot.classList.add('filled');
-
-  checkSlots();
-}
-
-// Vérifier slots et générer nouvelle question si correct
-function checkSlots(){
-  const slots = Array.from(slotsEl.children);
-  let allCorrect = slots.every(slot => slot.firstChild && slot.firstChild.textContent === slot.dataset.expect);
-
-  slots.forEach(slot=>{
-    const actual = slot.firstChild ? slot.firstChild.textContent : null;
-    if(actual === slot.dataset.expect){
-      slot.style.borderColor = 'green';
-    } else {
-      slot.style.borderColor = 'red';
+    // Génération des choix (set pour éviter doublons)
+    const choices = new Set();
+    choices.add(`${a}x`);
+    choices.add(`${sign}${Math.abs(constTermVal)}`);
+    while(choices.size < 5){
+      const wrongSign = Math.random()<0.5?'+':'-';
+      const wrongVal = wrongSign === '+' ? a*b : -a*b;
+      // créer variantes piège en changeant a parfois (pour complexifier)
+      if(Math.random() < 0.3){
+        const altA = a + (Math.random()<0.5?1:-1);
+        if(altA > 0) choices.add(`${altA}x`);
+      } else {
+        choices.add(`${wrongSign}${Math.abs(wrongVal)}`);
+      }
     }
-  });
 
-  if(allCorrect){
-    feedbackEl.textContent = 'Bravo ! ✅ Nouvelle question...';
-    setTimeout(renderQuestion, 1500);
-  } else {
-    feedbackEl.textContent = 'Vérifie les signes ❌';
+    return {expr, terms, choices: [...choices].sort(()=>Math.random()-0.5)};
   }
-}
 
-renderQuestion();
+  // Création élément brick avec id unique et listeners standards dataTransfer
+  function createBrick(text){
+    const id = `brick-${++brickIdCounter}`;
+    const el = document.createElement('div');
+    el.className = 'brick';
+    el.id = id;
+    el.draggable = true;
+    el.textContent = text;
+
+    el.addEventListener('dragstart', (e) => {
+      // stocke l'id de l'élément transféré
+      try {
+        e.dataTransfer.setData('text/plain', id);
+        // effet permis
+        e.dataTransfer.effectAllowed = 'move';
+        console.log('dragstart', id, text);
+      } catch(err){
+        console.warn('dragstart setData failed', err);
+      }
+    });
+
+    el.addEventListener('keydown', (e) => {
+      // accessible au clavier : Enter = déplacer vers premier slot vide
+      if(e.key === 'Enter'){
+        const firstEmpty = Array.from(slotsEl.children).find(s => !s.firstChild);
+        if(firstEmpty) firstEmpty.appendChild(el);
+        checkSlots();
+      }
+    });
+
+    return el;
+  }
+
+  // Renders
+  function renderQuestion(){
+    const q = generateQuestion();
+    expressionEl.textContent = q.expr;
+    slotsEl.innerHTML = '';
+    paletteEl.innerHTML = '';
+    feedbackEl.textContent = '';
+
+    // create 2 slots (pour ax et const)
+    q.terms.forEach(term => {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.dataset.expect = term;
+      slot.setAttribute('aria-label', `slot ${term}`);
+      // dragover / drop
+      slot.addEventListener('dragover', (e) => e.preventDefault());
+      slot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        try {
+          const id = e.dataTransfer.getData('text/plain');
+          const dragged = document.getElementById(id);
+          if(dragged) {
+            // si slot contient déjà quelque chose -> renvoyer dans palette
+            if(slot.firstChild) paletteEl.appendChild(slot.firstChild);
+            slot.appendChild(dragged);
+            slot.classList.add('filled');
+            console.log('dropped', id, dragged.textContent, 'into', slot.dataset.expect);
+            checkSlots();
+          } else {
+            console.log('drop: element not found for id', id);
+          }
+        } catch(err){
+          console.error('drop error', err);
+        }
+      });
+
+      slotsEl.appendChild(slot);
+    });
+
+    // create bricks in palette
+    q.choices.forEach(choice => {
+      const b = createBrick(choice);
+      paletteEl.appendChild(b);
+    });
+
+    // Small accessibility: allow clicking a brick to put in first empty slot
+    paletteEl.addEventListener('click', (e) => {
+      const target = e.target.closest('.brick');
+      if(!target) return;
+      const firstEmpty = Array.from(slotsEl.children).find(s => !s.firstChild);
+      if(firstEmpty){
+        firstEmpty.appendChild(target);
+        firstEmpty.classList.add('filled');
+        checkSlots();
+      }
+    }, {once: false});
+  }
+
+  function checkSlots(){
+    const slots = Array.from(slotsEl.children);
+    let allCorrect = true;
+    slots.forEach(slot => {
+      const expected = slot.dataset.expect;
+      const actual = slot.firstChild ? slot.firstChild.textContent : null;
+      if(actual === expected){
+        slot.style.borderColor = 'green';
+      } else {
+        slot.style.borderColor = actual ? 'red' : '';
+        allCorrect = false;
+      }
+    });
+
+    if(allCorrect && slots.every(s => s.firstChild)){
+      feedbackEl.textContent = 'Bravo ! ✅ Nouvelle question...';
+      // courte attente puis nouvelle question
+      setTimeout(renderQuestion, 900);
+    } else {
+      feedbackEl.textContent = 'Vérifie les signes ❌';
+    }
+  }
+
+  // Render first question
+  renderQuestion();
+
+  // Debug helper accessible globalement si besoin
+  window.__dbgRenderQuestion = renderQuestion;
+})();
 </script>
-
 </body>
 </html>
