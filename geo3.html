@@ -24,7 +24,6 @@ body {
   background: var(--background-color);
   color: var(--text-color);
   margin: 2rem;
-  user-select: none;
   text-align: center;
 }
 
@@ -60,7 +59,7 @@ figcaption {
   border-radius: var(--border-radius);
   padding: 1.5rem;
   text-align: left;
-  width: 320px;
+  width: 340px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
@@ -68,7 +67,7 @@ span.editable {
   border-bottom: 2px dotted var(--primary-color);
   cursor: text;
   display: inline-block;
-  min-width: 40px;
+  min-width: 30px;
 }
 
 button {
@@ -107,7 +106,7 @@ button:hover {
       <text id="BC" x="90" y="155" font-size="14" fill="#212529"></text>
       <text id="AC" x="110" y="80" font-size="14" fill="#212529"></text>
     </svg>
-    <figcaption>Triangle ABC rectangle en B</figcaption>
+    <figcaption>Triangle ABC</figcaption>
   </figure>
 
   <div id="text-area"></div>
@@ -116,6 +115,7 @@ button:hover {
 <div id="feedback"></div>
 
 <button onclick="checkAnswers()">Vérifier</button>
+<button onclick="generateExercise()">Nouvel exercice</button>
 
 <script>
 const textArea = document.getElementById('text-area');
@@ -125,11 +125,10 @@ const sideBC = document.getElementById('BC');
 const sideAC = document.getElementById('AC');
 
 let correctValues = {};
-let userValues = {};
 
 function generateExercise() {
-  const AB = (Math.random() * 2 + 1).toFixed(1); // 1.0 à 3.0
-  const BC = (Math.random() * 3 + 2).toFixed(1); // 2.0 à 5.0
+  const AB = (Math.random() * 2 + 1).toFixed(1);
+  const BC = (Math.random() * 3 + 2).toFixed(1);
   const AC = Math.sqrt(AB**2 + BC**2).toFixed(1);
 
   // Calculs corrects
@@ -138,53 +137,75 @@ function generateExercise() {
   const AC2 = (AC ** 2).toFixed(2);
   const sum = (parseFloat(AB2) + parseFloat(BC2)).toFixed(2);
 
-  correctValues = { AB, BC, AC, AB2, BC2, AC2, sum };
+  correctValues = {
+    AB, BC, AC, AB2, BC2, AC2, sum,
+    angle: "B",
+    formula: "AC² = AB² + BC²"
+  };
 
-  // Générer des erreurs aléatoires
-  const err = (val) => (Math.random() < 0.5 ? (parseFloat(val) + (Math.random()*1-0.5)).toFixed(2) : val);
+  // Introduire des erreurs aléatoires
+  const wrongAngle = ["A", "B", "C"].sort(() => Math.random()-0.5)[0];
+  const wrongFormulaOptions = [
+    "AB² = AC² + BC²",
+    "AC² = AB² - BC²",
+    "BC² = AB² + AC²"
+  ];
+  const wrongFormula = wrongFormulaOptions[Math.floor(Math.random() * wrongFormulaOptions.length)];
+
+  const angleError = Math.random() < 0.5;
+  const formulaError = Math.random() < 0.5;
+
+  const angleText = angleError ? wrongAngle : "B";
+  const formulaText = formulaError ? wrongFormula : "AC² = AB² + BC²";
+
+  const randomErr = (val) => (Math.random() < 0.4 ? (parseFloat(val)+(Math.random()*1-0.5)).toFixed(2) : val);
 
   const texte = `
-  Le triangle ABC est rectangle en B.<br>
+  Le triangle ABC est rectangle en <span class="editable" contenteditable>${angleText}</span>.<br>
   D’après le théorème de Pythagore,<br>
-  on a : <br>
-  AC² = AB² + BC²<br>
-  AC² = <span class="editable" contenteditable>${err(AB)}²</span> + <span class="editable" contenteditable>${err(BC)}²</span><br>
-  AC² = <span class="editable" contenteditable>${err(AB2)}</span> + <span class="editable" contenteditable>${err(BC2)}</span><br>
-  AC² = <span class="editable" contenteditable>${err(sum)}</span><br>
-  AC = √<span class="editable" contenteditable>${err(sum)}</span><br>
-  AC = <span class="editable" contenteditable>${err(AC)}</span> m<br>
+  on a :<br>
+  <span class="editable" contenteditable>${formulaText}</span><br>
+  AC² = <span class="editable" contenteditable>${randomErr(AB)}²</span> + <span class="editable" contenteditable>${randomErr(BC)}²</span><br>
+  AC² = <span class="editable" contenteditable>${randomErr(AB2)}</span> + <span class="editable" contenteditable>${randomErr(BC2)}</span><br>
+  AC² = <span class="editable" contenteditable>${randomErr(sum)}</span><br>
+  AC = √<span class="editable" contenteditable>${randomErr(sum)}</span><br>
+  AC = <span class="editable" contenteditable>${randomErr(AC)}</span> m<br>
   <br>
-  La longueur AC est de <span class="editable" contenteditable>${err(AC)}</span> m.
+  La longueur AC est de <span class="editable" contenteditable>${randomErr(AC)}</span> m.
   `;
 
   textArea.innerHTML = texte;
-
   sideAB.textContent = `AB = ${AB} m`;
   sideBC.textContent = `BC = ${BC} m`;
   sideAC.textContent = `AC = ?`;
-
   feedback.textContent = '';
 }
 
 function checkAnswers() {
   const edits = Array.from(document.querySelectorAll('.editable'));
   let correct = 0;
+  let total = edits.length;
 
   edits.forEach(span => {
-    const val = span.textContent.replace(/[^\d.,]/g, '');
-    userValues[span] = val;
+    const val = span.textContent.trim().replace(",", ".");
+    let ok = false;
 
-    // Vérifier si proche de l'une des bonnes valeurs
-    const isClose = Object.values(correctValues).some(c => Math.abs(parseFloat(c) - parseFloat(val)) < 0.1);
-    if (isClose) {
-      span.style.color = 'green';
-      correct++;
-    } else {
-      span.style.color = 'red';
+    // Vérification de la formule et de l’angle
+    if (val === correctValues.angle || val.toUpperCase() === correctValues.angle) ok = true;
+    if (val.replace(/\s+/g, "") === correctValues.formula.replace(/\s+/g, "")) ok = true;
+
+    // Vérification numérique
+    const numVal = parseFloat(val);
+    if (!isNaN(numVal)) {
+      const close = Object.values(correctValues).some(v => Math.abs(parseFloat(v) - numVal) < 0.15);
+      if (close) ok = true;
     }
+
+    span.style.color = ok ? "green" : "red";
+    if (ok) correct++;
   });
 
-  feedback.textContent = correct === edits.length ? "✅ Bravo, tout est juste !" : "❌ Il y a des erreurs à corriger.";
+  feedback.textContent = correct === total ? "✅ Parfait !" : "❌ Il y a des erreurs à corriger.";
 }
 
 generateExercise();
