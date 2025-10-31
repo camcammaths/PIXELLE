@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animation Développement</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+  }
+  .equation {
+    font-size: 2rem;
+    margin: 20px 0;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .step {
+    margin: 10px 0;
+    font-size: 1.5rem;
+    color: #3a86ff;
+  }
+</style>
+</head>
+<body>
+
+<h1>Animation : Développement (3ème)</h1>
+<div class="equation" id="equation">(a + b)(c + d)</div>
+<div class="step" id="step"></div>
+<button id="nextBtn">Prochaine étape</button>
+
+<script>
+let step = 0;
+const steps = [
+  "(a + b)(c + d)",
+  "On distribue a : a×c + a×d",
+  "On distribue b : b×c + b×d",
+  "On combine tout : ac + ad + bc + bd"
+];
+
+const equationDiv = document.getElementById("equation");
+const stepDiv = document.getElementById("step");
+const btn = document.getElementById("nextBtn");
+
+btn.addEventListener("click", () => {
+  step++;
+  if(step >= steps.length) step = 0;
+  stepDiv.textContent = steps[step];
+});
+</script>
+
+</body>
+</html>
