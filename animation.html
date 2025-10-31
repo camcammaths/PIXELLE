@@ -1,236 +1,298 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calcul d'Aire - Formules</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Générateur de formes — style pastel</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --shape:#f6e97b; /* pastel jaune */
+      --accent:#ffd3e8;
+      --gap:28px;
+      --pad:22px;
+      --shadow: rgba(0,0,0,0.02);
+      --ui-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);font-family:var(--ui-font);color:#2a2a2a}
 
-<!-- Polices -->
-<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+    .app{
+      display:grid;
+      grid-template-columns:360px 1fr;
+      gap:var(--gap);
+      padding:var(--pad);
+      box-sizing:border-box;
+      min-height:100vh;
+      align-items:start;
+    }
 
-<style>
-:root{
-  --primary-color: #3a86ff;
-  --background-color: #f0f4f8;
-  --yellow: #fff3b0;
-  --pink: #fbb1bd;
-  --border-radius: 10px;
-  --transition: 0.25s ease;
-  --text-color: #212529;
-}
+    /* sidebar */
+    .controls{
+      background:linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.99));
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 6px 18px var(--shadow);
+    }
+    h1{font-size:1.2rem;margin:0 0 12px}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+    button.btn{
+      border:0;padding:8px 10px;border-radius:8px;background:var(--shape);cursor:pointer;
+      box-shadow:inset 0 -6px rgba(0,0,0,0.03);font-weight:600
+    }
+    .small{font-size:0.85rem;padding:6px 8px}
+    label{display:block;margin-top:12px;font-size:0.86rem;color: #555}
+    input[type=range]{width:100%;margin-top:6px}
+    .seed{display:flex;gap:8px;margin-top:12px}
+    .seed input{flex:1;padding:8px;border-radius:8px;border:1px solid #eee}
 
-*{box-sizing:border-box;}
-body{
-  font-family:'Mabry Pro',sans-serif;
-  background:var(--background-color);
-  margin:0;
-  padding:2rem;
-  text-align:center;
-  color:var(--text-color);
-}
-h1{
-  font-family:'Androgy Demo',sans-serif;
-  font-size:2.4rem;
-  color:var(--primary-color);
-  margin-bottom:1.5rem;
-}
+    /* canvas area */
+    .stage{
+      padding:26px;border-radius:14px;min-height:80vh;background:linear-gradient(180deg,#fff,#fff);display:flex;align-items:flex-start;justify-content:flex-start;overflow:auto;
+    }
+    .board{
+      width:1200px;height:820px;background:transparent;position:relative;border-radius:12px;display:block;
+    }
 
-/* FIGURES */
-#figure{
-  position:relative;
-  width:240px;
-  height:200px;
-  margin:2rem auto;
-  background:var(--background-color);
-}
-.shape{
-  position:absolute;
-  opacity:0.9;
-}
-.square{
-  width:100px; height:100px;
-  background:var(--pink);
-}
-.rectangle{
-  width:140px; height:80px;
-  background:var(--pink);
-}
-.circle{
-  width:100px; height:100px;
-  border-radius:50%;
-  background:var(--pink);
-}
-.triangle{
-  width: 0; height: 0;
-  border-left: 60px solid transparent;
-  border-right: 60px solid transparent;
-  border-bottom: 100px solid var(--pink);
-}
-.half-circle{
-  width:100px; height:50px;
-  background:var(--pink);
-  border-top-left-radius:100px;
-  border-top-right-radius:100px;
-}
+    /* shape styles (for exported PNG look) */
+    .shape{
+      position:absolute;display:block;transform-origin:center center;filter:drop-shadow(0 6px 18px rgba(0,0,0,0.035));
+    }
 
-/* FIGURE COMPOSÉE (JAUNE) */
-.composed{
-  background:var(--yellow);
-  border-radius:var(--border-radius);
-}
+    /* miniature view */
+    .preview{
+      width:120px;height:120px;border-radius:8px;background:var(--shape);display:flex;align-items:center;justify-content:center;margin-top:12px;box-shadow:0 4px 10px var(--shadow)
+    }
 
-/* DRAG & DROP */
-.vignettes, .dropzone{
-  display:flex;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:0.75rem;
-  margin:1rem auto;
-}
-.vignette{
-  padding:0.6rem 1rem;
-  background:white;
-  border:2px solid var(--primary-color);
-  border-radius:var(--border-radius);
-  cursor:grab;
-  transition:transform var(--transition), background var(--transition);
-  font-weight:600;
-}
-.vignette:hover{
-  background:var(--primary-color);
-  color:white;
-  transform:scale(1.05);
-}
-.dropzone{
-  border:2px dashed #ccc;
-  min-height:60px;
-  background:white;
-  border-radius:var(--border-radius);
-  padding:1rem;
-}
-.dropzone.over{
-  border-color:var(--primary-color);
-  background:#eaf2ff;
-}
+    footer.hint{margin-top:18px;font-size:0.85rem;color:#666}
 
-/* BOUTON + FEEDBACK */
-.btn{
-  padding:0.6rem 1.2rem;
-  border:none;
-  border-radius:var(--border-radius);
-  background:var(--primary-color);
-  color:white;
-  cursor:pointer;
-  font-family:inherit;
-  font-size:1rem;
-  margin-top:1rem;
-}
-.btn:hover{background:#8338ec;}
-.feedback{
-  margin-top:0.75rem;
-  font-weight:bold;
-}
-.feedback.ok{color:green;}
-.feedback.bad{color:red;}
-</style>
+    /* responsive */
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr;}
+      .stage{order:2}
+    }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <aside class="controls">
+      <h1>Générateur de formes — style pastel</h1>
+      <div class="btn-row" role="toolbar" aria-label="formes">
+        <button class="btn" data-shape="square">Carré</button>
+        <button class="btn" data-shape="rect">Rectangle</button>
+        <button class="btn" data-shape="circle">Cercle</button>
+        <button class="btn" data-shape="triangle">Triangle</button>
+        <button class="btn" data-shape="semicircle">Demi-cercle</button>
+        <button class="btn" data-shape="pill">Pill</button>
+        <button class="btn" data-shape="arrow">Flèche</button>
+        <button class="btn" data-shape="hole-square">Carré creux</button>
+      </div>
 
-<h1>Calcul d'Aire</h1>
+      <label>Taille générale <span id="sizeVal">120</span> px</label>
+      <input id="size" type="range" min="40" max="420" value="120">
 
-<div id="figure"></div>
+      <label>Rotation aléatoire</label>
+      <input id="rot" type="range" min="0" max="180" value="0">
 
-<div class="vignettes">
-  <div class="vignette" draggable="true" data-value="Aire carré">Aire carré</div>
-  <div class="vignette" draggable="true" data-value="Aire rectangle">Aire rectangle</div>
-  <div class="vignette" draggable="true" data-value="Aire cercle">Aire cercle</div>
-  <div class="vignette" draggable="true" data-value="Aire triangle">Aire triangle</div>
-  <div class="vignette" draggable="true" data-value="Aire demi-cercle">Aire demi-cercle</div>
-  <div class="vignette" draggable="true" data-value="+">+</div>
-  <div class="vignette" draggable="true" data-value="-">−</div>
-</div>
+      <label>Espacement (graine)</label>
+      <div class="seed">
+        <input id="seed" placeholder="ex: 42 ou vide => aléatoire">
+        <button class="btn small" id="genMany">Générer 12</button>
+      </div>
 
-<h3>Compose la formule :</h3>
-<div class="dropzone" id="dropzone"></div>
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+        <div class="preview" id="preview"></div>
+        <div style="flex:1">
+          <button class="btn small" id="clear">Effacer</button>
+          <button class="btn small" id="export">Exporter PNG</button>
+        </div>
+      </div>
 
-<button class="btn" id="validateBtn">Valider</button>
-<div class="feedback" id="feedback"></div>
+      <footer class="hint">Clique sur une forme pour l'ajouter. Utilise la taille et rotation pour contrôler le rendu. Le style visuel reste épuré et très aérien.</footer>
+    </aside>
 
-<script>
-const figureEl = document.getElementById('figure');
-const dropzone = document.getElementById('dropzone');
-const feedback = document.getElementById('feedback');
-const validateBtn = document.getElementById('validateBtn');
+    <main class="stage">
+      <div class="board" id="board" aria-label="zone de composition"></div>
+    </main>
+  </div>
 
-const combos = [
-  { shapes: ['square','triangle'], op: '+', formula: 'Aire carré + Aire triangle' },
-  { shapes: ['rectangle','half-circle'], op: '+', formula: 'Aire rectangle + Aire demi-cercle' },
-  { shapes: ['rectangle','circle'], op: '-', formula: 'Aire rectangle − Aire cercle' },
-  { shapes: ['square','circle'], op: '-', formula: 'Aire carré − Aire cercle' }
-];
+  <script>
+    // Utilitaires simples
+    const board = document.getElementById('board');
+    const sizeEl = document.getElementById('size');
+    const rotEl = document.getElementById('rot');
+    const preview = document.getElementById('preview');
 
-let currentCombo = null;
+    function rand(seed) {
+      // simple seeded RNG (Mulberry32)
+      let t = Number(seed) || Math.floor(Math.random()*1e9);
+      return function(){ t += 0x6D2B79F5; let r = Math.imul(t ^ t>>>15, 1 | t); r ^= r + Math.imul(r ^ r>>>7, 61 | r); return ((r ^ r>>>14) >>> 0) / 4294967296; }
+    }
 
-/* --- Génération de la figure --- */
-function generateFigure(){
-  figureEl.innerHTML = '';
-  dropzone.innerHTML = '';
-  feedback.textContent = '';
-  
-  currentCombo = combos[Math.floor(Math.random()*combos.length)];
+    function clearBoard(){ board.innerHTML = ''; }
+    document.getElementById('clear').addEventListener('click', clearBoard);
 
-  currentCombo.shapes.forEach((shape,i)=>{
-    const el = document.createElement('div');
-    el.classList.add('shape','composed',shape);
-    el.style.left = (i*40)+'px';
-    el.style.top = (i*20)+'px';
-    el.style.opacity = 0.8;
-    figureEl.appendChild(el);
-  });
-}
+    // create DOM shape wrappers using SVG for crisp geometry
+    function makeSVGElement(tag, attrs={}){
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for(const k in attrs) el.setAttribute(k, attrs[k]);
+      return el;
+    }
 
-/* --- Drag & Drop --- */
-document.querySelectorAll('.vignette').forEach(v=>{
-  v.addEventListener('dragstart', e=>{
-    e.dataTransfer.setData('text/plain', v.dataset.value);
-  });
-});
+    function buildShape(type, size, rotation, opts={}){
+      const wrapper = document.createElement('div');
+      wrapper.className = 'shape';
+      wrapper.style.width = size + 'px';
+      wrapper.style.height = size + 'px';
+      wrapper.style.transform = `rotate(${rotation}deg)`;
 
-dropzone.addEventListener('dragover', e=>{
-  e.preventDefault();
-  dropzone.classList.add('over');
-});
-dropzone.addEventListener('dragleave', ()=>dropzone.classList.remove('over'));
-dropzone.addEventListener('drop', e=>{
-  e.preventDefault();
-  dropzone.classList.remove('over');
-  const val = e.dataTransfer.getData('text/plain');
-  const item = document.createElement('div');
-  item.textContent = val;
-  item.classList.add('vignette');
-  item.style.cursor='default';
-  item.draggable=false;
-  dropzone.appendChild(item);
-});
+      // create svg
+      const svg = makeSVGElement('svg', {width:size, height:size, viewBox:`0 0 ${size} ${size}`});
 
-/* --- Validation --- */
-validateBtn.addEventListener('click', ()=>{
-  const answer = Array.from(dropzone.children).map(el=>el.textContent.trim()).join(' ');
-  if(normalize(answer) === normalize(currentCombo.formula)){
-    feedback.textContent = '✅ Bravo, c’est correct !';
-    feedback.className = 'feedback ok';
-  } else {
-    feedback.textContent = `❌ Réponse attendue : ${currentCombo.formula}`;
-    feedback.className = 'feedback bad';
-  }
-  setTimeout(generateFigure, 3000);
-});
+      const fill = 'var(--shape)';
 
-function normalize(str){return str.toLowerCase().replace(/\s+/g,' ').trim();}
+      if(type === 'square' || type === 'rect'){
+        const w = type==='rect' ? Math.round(size*1.6) : size;
+        svg.setAttribute('width', w);
+        svg.setAttribute('viewBox', `0 0 ${w} ${size}`);
+        const rect = makeSVGElement('rect', {x:0,y:0,width:w,height:size, rx:10, ry:10, fill: 'var(--shape)'});
+        svg.appendChild(rect);
+        wrapper.style.width = w + 'px';
+      }
 
-generateFigure();
-</script>
+      if(type === 'circle'){
+        const c = makeSVGElement('circle', {cx:size/2, cy:size/2, r:size/2, fill:'var(--shape)'});
+        svg.appendChild(c);
+      }
 
+      if(type === 'triangle'){
+        const tri = makeSVGElement('polygon', {points:`${size/2},0 ${size},${size} 0,${size}`, fill:'var(--shape)'});
+        svg.appendChild(tri);
+      }
+
+      if(type === 'semicircle'){
+        const d = `M0,${size} A${size/2},${size/2} 0 0,1 ${size},${size} L${size},${size} L0,${size} Z`;
+        const path = makeSVGElement('path', {d:d, fill:'var(--shape)'});
+        svg.appendChild(path);
+      }
+
+      if(type === 'pill'){
+        const w = size*1.9;
+        svg.setAttribute('width', w);
+        svg.setAttribute('viewBox', `0 0 ${w} ${size}`);
+        const r = size/2;
+        const pathD = `M${r},0 h${w-2*r} a${r},${r} 0 0 1 ${r},${r} v0 a${r},${r} 0 0 1 -${r},${r} h-${w-2*r} a${r},${r} 0 0 1 -${r},-${r} z`;
+        const p = makeSVGElement('path', {d:pathD, fill:'var(--shape)'});
+        svg.appendChild(p);
+        wrapper.style.width = w + 'px';
+      }
+
+      if(type === 'arrow'){
+        const w = size*1.9;
+        svg.setAttribute('width', w);
+        svg.setAttribute('viewBox', `0 0 ${w} ${size}`);
+        const rectW = w - size/1.6;
+        const r = size/2;
+        const rect = makeSVGElement('rect', {x:0,y:0,width:rectW,height:size, rx:r/1.8, ry:r/1.8, fill:'var(--shape)'});
+        const pts = `${rectW},0 ${w},${size/2} ${rectW},${size}`;
+        const head = makeSVGElement('polygon', {points:pts, fill:'var(--shape)'});
+        svg.appendChild(rect); svg.appendChild(head);
+        wrapper.style.width = w + 'px';
+      }
+
+      if(type === 'hole-square'){
+        const outer = makeSVGElement('rect', {x:0,y:0,width:size,height:size, rx:8, fill:'var(--shape)'});
+        const hole = makeSVGElement('circle', {cx:size*0.3, cy:size*0.5, r:size*0.26, fill:'#fff'});
+        svg.appendChild(outer); svg.appendChild(hole);
+      }
+
+      wrapper.appendChild(svg);
+
+      // attach simple drag to reposition on board
+      let isDown=false, startX=0, startY=0, ox=0, oy=0;
+      wrapper.addEventListener('pointerdown', e=>{
+        isDown=true; wrapper.setPointerCapture(e.pointerId);
+        startX=e.clientX; startY=e.clientY; ox=parseFloat(wrapper.style.left||0); oy=parseFloat(wrapper.style.top||0);
+      });
+      window.addEventListener('pointermove', e=>{
+        if(!isDown) return;
+        const dx = e.clientX - startX; const dy = e.clientY - startY;
+        wrapper.style.left = (ox + dx) + 'px'; wrapper.style.top = (oy + dy) + 'px';
+      });
+      window.addEventListener('pointerup', ()=>{ isDown=false; });
+
+      return wrapper;
+    }
+
+    // place shapes in a loose grid using seeded RNG
+    function populate(shapeType, count=8, seedVal=null){
+      const rng = rand(seedVal || Math.floor(Math.random()*1e9));
+      const base = Number(sizeEl.value);
+      const rotBase = Number(rotEl.value);
+      const cols = 4;
+      const margin = 36;
+      const boardRect = board.getBoundingClientRect();
+
+      for(let i=0;i<count;i++){
+        const s = Math.round(base * (0.8 + rng()*0.8));
+        const rot = Math.round((rng()-0.5)*2*rotBase);
+        const node = buildShape(shapeType, s, rot);
+        node.style.left = Math.round(rng()*(boardRect.width - (s+200))) + 'px';
+        node.style.top = Math.round(rng()*(boardRect.height - (s+200))) + 'px';
+        board.appendChild(node);
+      }
+
+      refreshPreview();
+    }
+
+    // preview small sample
+    function refreshPreview(){
+      preview.innerHTML = '';
+      const p = buildShape('circle', 72, 0);
+      p.style.transform = 'none'; p.style.width='72px'; p.style.height='72px';
+      preview.appendChild(p);
+    }
+
+    // wire buttons
+    document.querySelectorAll('[data-shape]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const t = btn.getAttribute('data-shape');
+        const s = Number(sizeEl.value);
+        const rot = Number(rotEl.value);
+        const node = buildShape(t, s, rot);
+        // initial position: top-left area
+        node.style.left = '18px'; node.style.top = (18 + board.children.length*6) + 'px';
+        board.appendChild(node);
+        refreshPreview();
+      });
+    });
+
+    document.getElementById('genMany').addEventListener('click', ()=>{
+      const seedVal = document.getElementById('seed').value || Math.floor(Math.random()*1e9);
+      clearBoard();
+      populate('rect', 4, seedVal);
+      populate('circle', 3, Number(seedVal)+1);
+      populate('pill', 2, Number(seedVal)+2);
+      populate('arrow', 2, Number(seedVal)+3);
+    });
+
+    document.getElementById('export').addEventListener('click', ()=>{
+      // simple export by serializing board to SVG wrapper
+      const w = board.scrollWidth; const h = board.scrollHeight;
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>` +
+                  Array.from(board.children).map(node=>{
+                    const rect = node.getBoundingClientRect();
+                    const left = Math.round(parseFloat(node.style.left||0));
+                    const top = Math.round(parseFloat(node.style.top||0));
+                    const inner = node.innerHTML.replace(/(\n|\r)/g,'');
+                    return `<g transform='translate(${left},${top})'>${inner}</g>`;
+                  }).join('') + '</svg>';
+      const blob = new Blob([svg],{type:'image/svg+xml'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='composition.svg'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    // initial preview
+    refreshPreview();
+  </script>
 </body>
 </html>
