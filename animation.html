@@ -1,58 +1,245 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Animation Développement</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calcul d'Aire</title>
+
+<!-- Polices -->
+<link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
+
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 50px;
-  }
-  .equation {
-    font-size: 2rem;
-    margin: 20px 0;
-  }
-  button {
-    padding: 10px 20px;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  .step {
-    margin: 10px 0;
-    font-size: 1.5rem;
-    color: #3a86ff;
-  }
+:root{
+  --primary-color: #3a86ff;
+  --background-color: #f0f4f8;
+  --text-color: #212529;
+  --border-radius: 10px;
+  --transition: 0.25s ease;
+}
+
+body{
+  font-family: 'Mabry Pro', sans-serif;
+  background: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 2rem;
+  text-align: center;
+}
+
+h1{
+  font-family: 'Androgy Demo', sans-serif;
+  font-size: 2.4rem;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+}
+
+/* --- Figure --- */
+.figure{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem auto;
+  position: relative;
+  width: 180px;
+  height: 180px;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.shape{
+  position: absolute;
+  opacity: 0.9;
+}
+.square{
+  width: 100px; height: 100px;
+  background: var(--primary-color);
+}
+.circle{
+  width: 100px; height: 100px;
+  background: #8338ec;
+  border-radius: 50%;
+}
+.rectangle{
+  width: 120px; height: 80px;
+  background: #ff006e;
+}
+.triangle{
+  width: 0; height: 0;
+  border-left: 60px solid transparent;
+  border-right: 60px solid transparent;
+  border-bottom: 100px solid #fb5607;
+}
+.half-circle{
+  width: 100px; height: 50px;
+  background: #ffbe0b;
+  border-top-left-radius: 100px;
+  border-top-right-radius: 100px;
+}
+
+/* --- Vignettes --- */
+.vignettes, .dropzone{
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem auto;
+}
+
+.vignette{
+  padding: 0.6rem 1rem;
+  background: white;
+  border: 2px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  cursor: grab;
+  transition: transform var(--transition), background var(--transition);
+  font-weight: 600;
+}
+.vignette:hover{
+  background: var(--primary-color);
+  color: white;
+  transform: scale(1.05);
+}
+.dropzone{
+  border: 2px dashed #ccc;
+  min-height: 60px;
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+.dropzone.over{
+  border-color: var(--primary-color);
+  background: #eaf2ff;
+}
+
+/* --- Bouton + Feedback --- */
+.btn{
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: var(--border-radius);
+  background: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+.btn:hover{background:#8338ec;}
+.feedback{
+  margin-top: 0.75rem;
+  font-weight: bold;
+}
+.feedback.ok{color:green;}
+.feedback.bad{color:red;}
 </style>
 </head>
 <body>
 
-<h1>Animation : Développement (3ème)</h1>
-<div class="equation" id="equation">(a + b)(c + d)</div>
-<div class="step" id="step"></div>
-<button id="nextBtn">Prochaine étape</button>
+<h1>Calcul d'Aire</h1>
+
+<div class="figure" id="figure"></div>
+
+<div class="vignettes" id="vignettes">
+  <div class="vignette" draggable="true" data-value="aire carré">Aire carré</div>
+  <div class="vignette" draggable="true" data-value="aire rectangle">Aire rectangle</div>
+  <div class="vignette" draggable="true" data-value="aire cercle">Aire cercle</div>
+  <div class="vignette" draggable="true" data-value="aire triangle">Aire triangle</div>
+  <div class="vignette" draggable="true" data-value="aire demi-cercle">Aire demi-cercle</div>
+  <div class="vignette" draggable="true" data-value="+">+</div>
+  <div class="vignette" draggable="true" data-value="-">−</div>
+</div>
+
+<h3>Compose la formule :</h3>
+<div class="dropzone" id="dropzone"></div>
+
+<button class="btn" id="validateBtn">Valider</button>
+<div class="feedback" id="feedback"></div>
 
 <script>
-let step = 0;
-const steps = [
-  "(a + b)(c + d)",
-  "On distribue a : a×c + a×d",
-  "On distribue b : b×c + b×d",
-  "On combine tout : ac + ad + bc + bd"
+const figureEl = document.getElementById('figure');
+const dropzone = document.getElementById('dropzone');
+const feedback = document.getElementById('feedback');
+const validateBtn = document.getElementById('validateBtn');
+
+const combos = [
+  { shapes: ['square','circle'], op: '-' },
+  { shapes: ['rectangle','half-circle'], op: '-' },
+  { shapes: ['rectangle','triangle'], op: '+' },
+  { shapes: ['square','triangle'], op: '+' },
 ];
 
-const equationDiv = document.getElementById("equation");
-const stepDiv = document.getElementById("step");
-const btn = document.getElementById("nextBtn");
+let currentCombo = null;
 
-btn.addEventListener("click", () => {
-  step++;
-  if(step >= steps.length) step = 0;
-  stepDiv.textContent = steps[step];
+/* --- Génération de la figure --- */
+function generateFigure(){
+  figureEl.innerHTML = '';
+  feedback.textContent = '';
+  dropzone.innerHTML = '';
+
+  currentCombo = combos[Math.floor(Math.random()*combos.length)];
+
+  currentCombo.shapes.forEach((shape, i)=>{
+    const el = document.createElement('div');
+    el.classList.add('shape', shape);
+    el.style.zIndex = 2 - i;
+    el.style.transform = `translate(${i*20}px, ${i*20}px)`;
+    figureEl.appendChild(el);
+  });
+}
+
+/* --- Drag & Drop --- */
+document.querySelectorAll('.vignette').forEach(v=>{
+  v.addEventListener('dragstart', e=>{
+    e.dataTransfer.setData('text/plain', v.dataset.value);
+  });
 });
+
+dropzone.addEventListener('dragover', e=>{
+  e.preventDefault();
+  dropzone.classList.add('over');
+});
+dropzone.addEventListener('dragleave', ()=>dropzone.classList.remove('over'));
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault();
+  dropzone.classList.remove('over');
+  const val = e.dataTransfer.getData('text/plain');
+  const item = document.createElement('div');
+  item.textContent = val;
+  item.classList.add('vignette');
+  item.style.cursor='default';
+  item.draggable=false;
+  dropzone.appendChild(item);
+});
+
+/* --- Validation --- */
+validateBtn.addEventListener('click', ()=>{
+  const answer = Array.from(dropzone.children).map(el=>el.textContent.trim()).join(' ');
+  const correct = `Aire ${shapeLabel(currentCombo.shapes[0])} ${currentCombo.op} Aire ${shapeLabel(currentCombo.shapes[1])}`;
+  
+  if(normalize(answer) === normalize(correct)){
+    feedback.textContent = '✅ Bravo, c’est correct !';
+    feedback.className = 'feedback ok';
+  } else {
+    feedback.textContent = `❌ Réponse attendue : ${correct}`;
+    feedback.className = 'feedback bad';
+  }
+  setTimeout(generateFigure, 2500);
+});
+
+function shapeLabel(shape){
+  return shape
+    .replace('square','carré')
+    .replace('rectangle','rectangle')
+    .replace('circle','cercle')
+    .replace('triangle','triangle')
+    .replace('half-circle','demi-cercle');
+}
+
+function normalize(str){
+  return str.toLowerCase().replace(/\s+/g,' ').trim();
+}
+
+generateFigure();
 </script>
 
 </body>
