@@ -6,17 +6,80 @@
 <title>Coloriage magique — Arbre nombres relatifs</title>
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet">
 <style>
-:root{--primary-color:#3a86ff;--bg:#f8fbff;--muted:#6b7280;--shadow:0 6px 18px rgba(25,42,70,0.08);}
-body{margin:0;font-family:'Androgy Demo',sans-serif;background:var(--bg);color:#0f172a}
-header{display:flex;align-items:center;gap:1rem;padding:1rem}
-h1{color:var(--primary-color);font-size:2.2rem;margin:0}
-.controls{margin-left:auto;display:flex;gap:0.5rem;align-items:center}
-select,button{padding:0.5rem;border-radius:8px;border:1px solid #ddd;font-family:inherit}
-button{background:var(--primary-color);color:#fff;border:none;cursor:pointer;box-shadow:var(--shadow)}
-main{padding:1rem;display:flex;gap:1rem}
-.workspace{flex:1;background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:1rem;text-align:center}
-svg{width:100%;max-width:800px;height:auto;border-radius:12px;background:linear-gradient(#87ceeb,#fdfdfd);}
-footer{text-align:center;color:var(--muted);padding:1rem}
+:root{
+  --primary-color:#3a86ff;
+  --bg:#f8fbff;
+  --muted:#6b7280;
+  --shadow:0 6px 18px rgba(25,42,70,0.08);
+}
+body{
+  margin:0;
+  font-family:'Androgy Demo',sans-serif;
+  background:var(--bg);
+  color:#0f172a;
+}
+header{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  padding:1rem;
+}
+h1{
+  color:var(--primary-color);
+  font-size:2.2rem;
+  margin:0;
+}
+.controls{
+  margin-left:auto;
+  display:flex;
+  gap:0.5rem;
+  align-items:center;
+}
+select,button{
+  padding:0.5rem;
+  border-radius:8px;
+  border:1px solid #ddd;
+  font-family:inherit;
+}
+button{
+  background:var(--primary-color);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+}
+main{padding:1rem;display:flex;gap:1rem;}
+.workspace{
+  flex:1;
+  background:#fff;
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  padding:1rem;
+  text-align:center;
+}
+svg{
+  width:100%;
+  max-width:800px;
+  height:auto;
+  border-radius:12px;
+  background:linear-gradient(#87ceeb,#fdfdfd);
+}
+footer{text-align:center;color:var(--muted);padding:1rem;}
+.legend{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin-top:1rem;
+}
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:0.4rem;
+}
+.legend-color{
+  width:20px;height:20px;border-radius:4px;border:1px solid #000;
+}
 </style>
 </head>
 <body>
@@ -24,34 +87,44 @@ footer{text-align:center;color:var(--muted);padding:1rem}
 <h1>Coloriage magique — Arbre</h1>
 <div class="controls">
 <label for="level">Niveau</label>
-<select id="level"><option value="5">5e</option><option value="4" selected>4e</option><option value="3">3e</option></select>
+<select id="level">
+  <option value="5">5e</option>
+  <option value="4" selected>4e</option>
+  <option value="3">3e</option>
+</select>
 <label for="mode">Opérations</label>
-<select id="mode"><option value="addsub">+ / -</option><option value="mult">× / ÷</option><option value="mix">Mix</option></select>
+<select id="mode">
+  <option value="addsub">+ / -</option>
+  <option value="mult">× / ÷</option>
+  <option value="mix">Mix</option>
+</select>
 <button id="generate">Nouvelle feuille</button>
 </div>
 </header>
+
 <main>
 <div class="workspace" id="workspace"></div>
 </main>
-<footer>Une feuille à la fois. Tronc = marron, feuilles = vert, ciel = bleu.</footer>
+
+<footer>
+Une feuille à la fois. <strong>Tronc = 5 (marron)</strong>, <strong>Feuilles = 3 (vert)</strong>, <strong>Ciel = 7 (bleu clair)</strong>.
+</footer>
+
 <script>
 const ws=document.getElementById('workspace');
 const genBtn=document.getElementById('generate');
 const levelSel=document.getElementById('level');
 const modeSel=document.getElementById('mode');
 
-function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+
 function randomExpr(level,mode){
   const ops={addsub:['+','-'],mult:['*','/'],mix:['+','-','*','/']};
   const chosen=ops[mode];
-  const n=level==5?2:3;
-  let expr=randInt(-10,10).toString();
-  for(let i=1;i<n;i++){
-    let op=chosen[Math.floor(Math.random()*chosen.length)];
-    let num=randInt(-10,10);
-    if(op==='/'&&num===0)num=1;
-    expr+=' '+op+' '+num;
-  }
+  let a=randInt(-9,9), b=randInt(-9,9);
+  let op=chosen[Math.floor(Math.random()*chosen.length)];
+  if(op==='/'&&b===0)b=1;
+  let expr=`${a} ${op} ${b}`;
   let val;
   try{val=eval(expr);}catch{val=0;}
   return {text:expr.replace('*','×').replace('/','÷'),val:Math.round(val*100)/100};
@@ -67,41 +140,61 @@ function genColoriage(){
   const svg=document.createElementNS(svgns,'svg');
   svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
 
-  // Draw sky background
-  const sky=document.createElementNS(svgns,'rect');
-  sky.setAttribute('x',0);sky.setAttribute('y',0);sky.setAttribute('width',width);sky.setAttribute('height',height);sky.setAttribute('fill','#87ceeb');
-  svg.appendChild(sky);
+  // Références de couleur selon la valeur
+  const colorMap={
+    3:'#228B22',  // Feuilles vert
+    5:'#8B4513',  // Tronc marron
+    7:'#87ceeb'   // Ciel bleu
+  };
 
-  // Draw tree trunk positions (value 0)
-  const trunkCols=[2,3];
-  const trunkRows=[4,5,6];
+  // Structure de l’arbre
+  const trunkCells=[[4,2],[5,2],[6,2]];
+  const leafCells=[[2,1],[3,0],[3,1],[3,2],[4,1]];
+  const skyCells=[[0,0],[1,0],[1,1],[0,1]];
 
-  // Draw leaves positions (value 1)
-  const leafCoords=[
-    [1,2],[2,1],[2,2],[2,3],[2,4],[3,1],[3,2],[3,3],[3,4],[4,2]
-  ];
-
-  // Draw cells with expressions
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
-      const x=20+c*cellW,y=60+r*cellH;
-      let val=randInt(-5,5);
-      let fill='none';
-      // assign tree pattern
-      if(trunkCols.includes(c)&&trunkRows.includes(r))fill='#8B4513';
-      for(const [lc,lr] of leafCoords){if(c===lc && r===lr)fill='#228B22';}
+      const x=20+c*cellW, y=60+r*cellH;
+      const {text,val}=randomExpr(level,mode);
+
+      let targetVal=null;
+      if(trunkCells.some(([rr,cc])=>rr===r&&cc===c))targetVal=5;
+      else if(leafCells.some(([rr,cc])=>rr===r&&cc===c))targetVal=3;
+      else if(skyCells.some(([rr,cc])=>rr===r&&cc===c))targetVal=7;
+
+      const fill=(targetVal?colorMap[targetVal]+'40':'#fff'); // couleur pâle pour guide
+
       const rect=document.createElementNS(svgns,'rect');
-      rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',cellW-4);rect.setAttribute('height',cellH-4);
-      rect.setAttribute('rx',8);rect.setAttribute('fill',fill);rect.setAttribute('stroke','#000');
+      rect.setAttribute('x',x);
+      rect.setAttribute('y',y);
+      rect.setAttribute('width',cellW-4);
+      rect.setAttribute('height',cellH-4);
+      rect.setAttribute('rx',8);
+      rect.setAttribute('fill',fill);
+      rect.setAttribute('stroke','#000');
       svg.appendChild(rect);
 
-      const {text}=randomExpr(level,mode);
       const t=document.createElementNS(svgns,'text');
-      t.setAttribute('x',x+cellW/2-4);t.setAttribute('y',y+cellH/2);
-      t.setAttribute('text-anchor','middle');t.setAttribute('font-size','14');t.textContent=text;svg.appendChild(t);
+      t.setAttribute('x',x+cellW/2-4);
+      t.setAttribute('y',y+cellH/2+4);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size','14');
+      t.textContent=text;
+      svg.appendChild(t);
     }
   }
+
   ws.appendChild(svg);
+
+  // Légende
+  const legend=document.createElement('div');
+  legend.className='legend';
+  legend.innerHTML=`
+    <div class="legend-item"><div class="legend-color" style="background:#8B4513"></div>= 5 (Tronc)</div>
+    <div class="legend-item"><div class="legend-color" style="background:#228B22"></div>= 3 (Feuilles)</div>
+    <div class="legend-item"><div class="legend-color" style="background:#87ceeb"></div>= 7 (Ciel)</div>
+  `;
+  ws.appendChild(legend);
 }
 
 genBtn.onclick=genColoriage;
