@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calcul d'Aire - Formules</title>
+<title>Formule d'Aire</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
@@ -12,19 +12,18 @@
 :root {
   --primary-color: #3a86ff;
   --background-color: #f0f4f8;
-  --accent: #8338ec;
-  --text-color: #212529;
-  --tile-bg: white;
-  --tile-border: 2px solid rgba(0,0,0,0.08);
-  --radius: 10px;
+  --accent-square: #3a86ff;
+  --border-radius: 8px;
   --transition: 0.25s ease;
+  --text-color: #212529;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
 
 body {
   font-family: 'Mabry Pro', sans-serif;
   background: var(--background-color);
+  margin: 0;
   padding: 2rem;
   color: var(--text-color);
   text-align: center;
@@ -32,176 +31,175 @@ body {
 
 h1 {
   font-family: 'Androgy Demo', sans-serif;
-  color: var(--primary-color);
   font-size: 2.4rem;
-  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+  margin: 0 0 1rem;
 }
 
 #figure {
-  width: 220px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem auto;
+  width: 200px;
   height: 160px;
-  margin: 0 auto 2rem;
-  background: #ffef9f;
-  border-radius: 1rem;
   position: relative;
-  box-shadow: 0 0 0 3px rgba(0,0,0,0.05) inset;
-}
-#figure::before, #figure::after {
-  content:"";
-  position:absolute;
-  background:rgba(0,0,0,0.1);
 }
 
-/* Exemple : maison = carré + triangle */
-#figure[data-shape="maison"]::before {
-  width:100px; height:100px;
-  background:#ffca3a; bottom:10px; left:60px;
-}
-#figure[data-shape="maison"]::after {
-  width:0; height:0; left:50%; top:10px;
-  border-left:60px solid transparent;
-  border-right:60px solid transparent;
-  border-bottom:70px solid #ffca3a;
-  transform:translateX(-50%);
+/* --- Formes géométriques simplifiées --- */
+.shape {
+  position: absolute;
+  opacity: 0.9;
 }
 
-/* Vignettes */
-#tiles {
-  display:flex;
-  flex-wrap:wrap;
-  gap:0.75rem;
-  justify-content:center;
-  margin-bottom:1.5rem;
-}
-.tile {
-  background:var(--tile-bg);
-  border:var(--tile-border);
-  border-radius:var(--radius);
-  padding:0.6rem 1rem;
-  cursor:grab;
-  transition:transform var(--transition), background var(--transition);
-  font-weight:600;
-  user-select:none;
-}
-.tile:hover {
-  background:var(--primary-color);
-  color:white;
-  transform:translateY(-3px);
+.rect {
+  width: 200px;
+  height: 100px;
+  background: var(--accent-square);
+  border-radius: 8px;
 }
 
-/* Zone de réponse */
-#dropZone {
-  min-height:60px;
-  border:2px dashed var(--primary-color);
-  border-radius:var(--radius);
-  padding:0.6rem;
-  display:flex;
-  gap:0.6rem;
-  justify-content:center;
-  align-items:center;
-  flex-wrap:wrap;
-  background:white;
-}
-.drop-placeholder {
-  color:#999;
-  font-style:italic;
+.half-circle {
+  width: 100px;
+  height: 50px;
+  background: var(--accent-square);
+  border-top-left-radius: 100px;
+  border-top-right-radius: 100px;
+  position: absolute;
+  bottom: 100px;
+  left: 50px;
 }
 
-/* Bouton */
+/* --- Zone de formule --- */
+#formulaZone {
+  min-height: 80px;
+  border: 2px dashed rgba(0,0,0,0.2);
+  border-radius: var(--border-radius);
+  margin: 1.2rem auto;
+  width: 80%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  background: white;
+  padding: 1rem;
+  transition: border var(--transition);
+}
+
+#formulaZone.dragover {
+  border-color: var(--primary-color);
+}
+
+/* --- Vignettes à glisser --- */
+#pieces {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.piece {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: var(--border-radius);
+  cursor: grab;
+  user-select: none;
+  transition: transform var(--transition);
+  font-size: 1rem;
+}
+
+.piece:hover {
+  transform: scale(1.05);
+}
+
+/* --- Bouton et feedback --- */
 .btn {
-  margin-top:1.5rem;
-  padding:0.6rem 1.2rem;
-  border:none;
-  background:var(--primary-color);
-  color:white;
-  border-radius:var(--radius);
-  font-size:1rem;
-  cursor:pointer;
-  transition:background var(--transition);
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--border-radius);
+  border: none;
+  background: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  transition: background var(--transition);
+  font-family: inherit;
+  margin-top: 1rem;
 }
-.btn:hover { background:var(--accent); }
+.btn:hover { background: #8338ec; }
 
 .feedback {
-  margin-top:1rem;
-  font-weight:700;
+  height: 1.4rem;
+  margin-top: 0.5rem;
+  font-weight: 700;
 }
-.feedback.ok { color:green; }
-.feedback.bad { color:red; }
+.feedback.ok { color: green; }
+.feedback.bad { color: red; }
 </style>
 </head>
+
 <body>
+<h1>Compose la Formule de l'Aire</h1>
 
-<h1>Formule d’Aire</h1>
-
-<div id="figure" data-shape="maison"></div>
-
-<div id="tiles">
-  <div class="tile" draggable="true">Aire carré</div>
-  <div class="tile" draggable="true">Aire rectangle</div>
-  <div class="tile" draggable="true">Aire triangle</div>
-  <div class="tile" draggable="true">Aire cercle</div>
-  <div class="tile" draggable="true">+</div>
-  <div class="tile" draggable="true">−</div>
+<div id="figure">
+  <div class="shape rect"></div>
+  <div class="shape half-circle"></div>
 </div>
 
-<div id="dropZone">
-  <span class="drop-placeholder">Dépose ta formule ici</span>
+<p>Glisse les bons éléments pour former la formule de l’aire :</p>
+
+<div id="formulaZone" aria-label="zone de formule"></div>
+
+<div id="pieces">
+  <div class="piece" draggable="true">Aire rectangle</div>
+  <div class="piece" draggable="true">Aire carré</div>
+  <div class="piece" draggable="true">Aire triangle</div>
+  <div class="piece" draggable="true">Aire cercle</div>
+  <div class="piece" draggable="true">Aire demi-cercle</div>
+  <div class="piece" draggable="true">+</div>
+  <div class="piece" draggable="true">-</div>
 </div>
 
-<button class="btn" id="checkBtn">Valider</button>
-<div class="feedback" id="feedback"></div>
+<button id="checkBtn" class="btn">Valider</button>
+<div id="feedback" class="feedback"></div>
 
 <script>
-const tiles = document.querySelectorAll('.tile');
-const dropZone = document.getElementById('dropZone');
+const correctFormula = ["Aire rectangle", "+", "Aire demi-cercle"];
+const formulaZone = document.getElementById('formulaZone');
+const pieces = document.querySelectorAll('.piece');
 const feedback = document.getElementById('feedback');
-const figure = document.getElementById('figure');
-const checkBtn = document.getElementById('checkBtn');
 
-// exemple : la "maison" = aire carré + aire triangle
-const solutions = {
-  maison: ['Aire carré', '+', 'Aire triangle']
-};
-
-let dropped = [];
-
-tiles.forEach(tile => {
-  tile.addEventListener('dragstart', e => {
-    e.dataTransfer.setData('text/plain', tile.textContent);
+pieces.forEach(p => {
+  p.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', e.target.textContent);
   });
 });
 
-dropZone.addEventListener('dragover', e => {
+formulaZone.addEventListener('dragover', e => {
   e.preventDefault();
-  dropZone.style.background = '#eaf3ff';
+  formulaZone.classList.add('dragover');
 });
-dropZone.addEventListener('dragleave', () => {
-  dropZone.style.background = 'white';
-});
-dropZone.addEventListener('drop', e => {
+formulaZone.addEventListener('dragleave', () => formulaZone.classList.remove('dragover'));
+
+formulaZone.addEventListener('drop', e => {
   e.preventDefault();
-  dropZone.style.background = 'white';
   const text = e.dataTransfer.getData('text/plain');
-  if (text) {
-    const span = document.createElement('span');
-    span.textContent = text;
-    span.className = 'tile';
-    dropZone.appendChild(span);
-    dropped.push(text);
-    dropZone.querySelector('.drop-placeholder')?.remove();
-  }
+  const el = document.createElement('div');
+  el.className = 'piece';
+  el.textContent = text;
+  el.setAttribute('draggable', 'false');
+  formulaZone.appendChild(el);
+  formulaZone.classList.remove('dragover');
 });
 
-checkBtn.addEventListener('click', () => {
-  const shape = figure.dataset.shape;
-  const solution = solutions[shape].join('');
-  const answer = dropped.join('');
-  if (answer === solution) {
-    feedback.textContent = '✅ Bravo !';
-    feedback.className = 'feedback ok';
+document.getElementById('checkBtn').addEventListener('click', () => {
+  const current = Array.from(formulaZone.children).map(el => el.textContent.trim());
+  if (JSON.stringify(current) === JSON.stringify(correctFormula)) {
+    feedback.textContent = "✅ Correct !";
+    feedback.className = "feedback ok";
   } else {
-    feedback.textContent = `❌ Essaie encore`;
-    feedback.className = 'feedback bad';
+    feedback.textContent = "❌ Essaie encore";
+    feedback.className = "feedback bad";
   }
 });
 </script>
