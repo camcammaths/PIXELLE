@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Formule d'Aire</title>
+<title>Calcul d'Aire - Formules</title>
 
+<!-- Polices -->
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Mabry+Pro&display=swap" rel="stylesheet" />
 
@@ -12,18 +13,19 @@
 :root {
   --primary-color: #3a86ff;
   --background-color: #f0f4f8;
-  --accent-square: #3a86ff;
-  --border-radius: 8px;
-  --transition: 0.25s ease;
+  --accent: #8338ec;
   --text-color: #212529;
+  --tile-bg: white;
+  --tile-border: 2px solid rgba(0,0,0,0.08);
+  --radius: 10px;
+  --transition: 0.25s ease;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: 'Mabry Pro', sans-serif;
   background: var(--background-color);
-  margin: 0;
   padding: 2rem;
   color: var(--text-color);
   text-align: center;
@@ -31,171 +33,196 @@ body {
 
 h1 {
   font-family: 'Androgy Demo', sans-serif;
-  font-size: 2.4rem;
   color: var(--primary-color);
-  margin: 0 0 1rem;
+  font-size: 2.4rem;
+  margin-bottom: 1.5rem;
 }
 
 #figure {
+  width: 280px;
+  height: 200px;
+  margin: 0 auto 2rem;
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin: 1rem auto;
-  width: 200px;
-  height: 160px;
-  position: relative;
-}
-
-/* --- Formes géométriques simplifiées --- */
-.shape {
-  position: absolute;
-  opacity: 0.9;
-}
-
-.rect {
-  width: 200px;
-  height: 100px;
-  background: var(--accent-square);
-  border-radius: 8px;
-}
-
-.half-circle {
-  width: 100px;
-  height: 50px;
-  background: var(--accent-square);
-  border-top-left-radius: 100px;
-  border-top-right-radius: 100px;
-  position: absolute;
-  bottom: 100px;
-  left: 50px;
-}
-
-/* --- Zone de formule --- */
-#formulaZone {
-  min-height: 80px;
-  border: 2px dashed rgba(0,0,0,0.2);
-  border-radius: var(--border-radius);
-  margin: 1.2rem auto;
-  width: 80%;
-  display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  background: white;
-  padding: 1rem;
-  transition: border var(--transition);
 }
 
-#formulaZone.dragover {
-  border-color: var(--primary-color);
-}
-
-/* --- Vignettes à glisser --- */
-#pieces {
+/* Vignettes */
+#tiles {
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
-
-.piece {
+.tile {
+  background: var(--tile-bg);
+  border: var(--tile-border);
+  border-radius: var(--radius);
+  padding: 0.6rem 1rem;
+  cursor: grab;
+  transition: transform var(--transition), background var(--transition);
+  font-weight: 600;
+  user-select: none;
+}
+.tile:hover {
   background: var(--primary-color);
   color: white;
-  padding: 0.6rem 1rem;
-  border-radius: var(--border-radius);
-  cursor: grab;
-  user-select: none;
-  transition: transform var(--transition);
-  font-size: 1rem;
+  transform: translateY(-3px);
 }
 
-.piece:hover {
-  transform: scale(1.05);
+/* Zone de réponse */
+#dropZone {
+  min-height: 60px;
+  border: 2px dashed var(--primary-color);
+  border-radius: var(--radius);
+  padding: 0.6rem;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  background: white;
+}
+.drop-placeholder {
+  color: #999;
+  font-style: italic;
 }
 
-/* --- Bouton et feedback --- */
+/* Bouton */
 .btn {
-  padding: 0.6rem 1.1rem;
-  border-radius: var(--border-radius);
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.2rem;
   border: none;
   background: var(--primary-color);
   color: white;
+  border-radius: var(--radius);
+  font-size: 1rem;
   cursor: pointer;
   transition: background var(--transition);
-  font-family: inherit;
-  margin-top: 1rem;
 }
-.btn:hover { background: #8338ec; }
+.btn:hover { background: var(--accent); }
 
 .feedback {
-  height: 1.4rem;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   font-weight: 700;
 }
 .feedback.ok { color: green; }
 .feedback.bad { color: red; }
 </style>
 </head>
-
 <body>
-<h1>Compose la Formule de l'Aire</h1>
 
-<div id="figure">
-  <div class="shape rect"></div>
-  <div class="shape half-circle"></div>
+<h1>Formule d’Aire</h1>
+
+<div id="figure"></div>
+
+<div id="tiles">
+  <div class="tile" draggable="true">Aire carré</div>
+  <div class="tile" draggable="true">Aire rectangle</div>
+  <div class="tile" draggable="true">Aire triangle</div>
+  <div class="tile" draggable="true">Aire cercle</div>
+  <div class="tile" draggable="true">Aire demi-cercle</div>
+  <div class="tile" draggable="true">+</div>
+  <div class="tile" draggable="true">−</div>
 </div>
 
-<p>Glisse les bons éléments pour former la formule de l’aire :</p>
-
-<div id="formulaZone" aria-label="zone de formule"></div>
-
-<div id="pieces">
-  <div class="piece" draggable="true">Aire rectangle</div>
-  <div class="piece" draggable="true">Aire carré</div>
-  <div class="piece" draggable="true">Aire triangle</div>
-  <div class="piece" draggable="true">Aire cercle</div>
-  <div class="piece" draggable="true">Aire demi-cercle</div>
-  <div class="piece" draggable="true">+</div>
-  <div class="piece" draggable="true">-</div>
+<div id="dropZone">
+  <span class="drop-placeholder">Dépose ta formule ici</span>
 </div>
 
-<button id="checkBtn" class="btn">Valider</button>
-<div id="feedback" class="feedback"></div>
+<button class="btn" id="checkBtn">Valider</button>
+<div class="feedback" id="feedback"></div>
 
 <script>
-const correctFormula = ["Aire rectangle", "+", "Aire demi-cercle"];
-const formulaZone = document.getElementById('formulaZone');
-const pieces = document.querySelectorAll('.piece');
-const feedback = document.getElementById('feedback');
+// Figures SVG + formules associées
+const figures = [
+  {
+    name: "Figure 1",
+    formula: ["Aire rectangle", "+", "Aire demi-cercle", "+", "Aire demi-cercle"],
+    svg: `
+      <svg width="220" height="120" viewBox="0 0 220 120">
+        <rect x="40" y="40" width="140" height="40" fill="#f6ef9f" />
+        <path d="M40,60 a20,20 0 0,1 0,40 h0 a20,20 0 0,1 0,-40 z" fill="#f6ef9f"/>
+        <path d="M180,100 a20,20 0 0,1 0,-40 h0 a20,20 0 0,1 0,40 z" fill="#f6ef9f"/>
+      </svg>`
+  },
+  {
+    name: "Figure 2",
+    formula: ["Aire carré", "−", "Aire carré", "+", "Aire triangle"],
+    svg: `
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        <rect x="40" y="80" width="100" height="80" fill="#f6ef9f"/>
+        <rect x="70" y="110" width="40" height="40" fill="white"/>
+        <polygon points="40,80 90,20 140,80" fill="#f6ef9f"/>
+      </svg>`
+  },
+  {
+    name: "Figure 3",
+    formula: ["Aire carré", "−", "Aire cercle"],
+    svg: `
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        <rect x="30" y="30" width="100" height="100" fill="#f6ef9f"/>
+        <circle cx="80" cy="80" r="35" fill="white"/>
+      </svg>`
+  },
+  {
+    name: "Figure 4",
+    formula: ["Aire carré", "−", "Aire carré", "+", "Aire demi-cercle"],
+    svg: `
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <rect x="30" y="60" width="100" height="100" fill="#f6ef9f"/>
+        <rect x="55" y="85" width="50" height="50" fill="white"/>
+        <path d="M30,60 a50,50 0 0,1 100,0 z" fill="#f6ef9f"/>
+      </svg>`
+  }
+];
 
-pieces.forEach(p => {
-  p.addEventListener('dragstart', e => {
-    e.dataTransfer.setData('text/plain', e.target.textContent);
+// éléments HTML
+const figureContainer = document.getElementById("figure");
+const tiles = document.querySelectorAll(".tile");
+const dropZone = document.getElementById("dropZone");
+const feedback = document.getElementById("feedback");
+const checkBtn = document.getElementById("checkBtn");
+
+// Choisir une figure aléatoirement
+const randomFigure = figures[Math.floor(Math.random() * figures.length)];
+figureContainer.innerHTML = randomFigure.svg;
+
+let dropped = [];
+
+tiles.forEach(tile => {
+  tile.addEventListener("dragstart", e => {
+    e.dataTransfer.setData("text/plain", tile.textContent);
   });
 });
 
-formulaZone.addEventListener('dragover', e => {
+dropZone.addEventListener("dragover", e => {
   e.preventDefault();
-  formulaZone.classList.add('dragover');
+  dropZone.style.background = "#eaf3ff";
 });
-formulaZone.addEventListener('dragleave', () => formulaZone.classList.remove('dragover'));
-
-formulaZone.addEventListener('drop', e => {
+dropZone.addEventListener("dragleave", () => {
+  dropZone.style.background = "white";
+});
+dropZone.addEventListener("drop", e => {
   e.preventDefault();
-  const text = e.dataTransfer.getData('text/plain');
-  const el = document.createElement('div');
-  el.className = 'piece';
-  el.textContent = text;
-  el.setAttribute('draggable', 'false');
-  formulaZone.appendChild(el);
-  formulaZone.classList.remove('dragover');
+  dropZone.style.background = "white";
+  const text = e.dataTransfer.getData("text/plain");
+  if (text) {
+    const span = document.createElement("span");
+    span.textContent = text;
+    span.className = "tile";
+    dropZone.appendChild(span);
+    dropped.push(text);
+    dropZone.querySelector(".drop-placeholder")?.remove();
+  }
 });
 
-document.getElementById('checkBtn').addEventListener('click', () => {
-  const current = Array.from(formulaZone.children).map(el => el.textContent.trim());
-  if (JSON.stringify(current) === JSON.stringify(correctFormula)) {
-    feedback.textContent = "✅ Correct !";
+checkBtn.addEventListener("click", () => {
+  const solution = randomFigure.formula.join("");
+  const answer = dropped.join("");
+  if (answer === solution) {
+    feedback.textContent = "✅ Bravo !";
     feedback.className = "feedback ok";
   } else {
     feedback.textContent = "❌ Essaie encore";
