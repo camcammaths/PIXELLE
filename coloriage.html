@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Coloriage magique — Arbre nombres relatifs</title>
+<title>Coloriage interactif — Arbre nombres relatifs</title>
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -48,6 +48,18 @@ button{
   cursor:pointer;
   box-shadow:var(--shadow);
 }
+.palette{
+  display:flex;
+  gap:0.5rem;
+  margin-top:0.5rem;
+}
+.color-btn{
+  width:30px;
+  height:30px;
+  border-radius:6px;
+  border:2px solid #000;
+  cursor:pointer;
+}
 main{padding:1rem;display:flex;gap:1rem;}
 .workspace{
   flex:1;
@@ -84,7 +96,7 @@ footer{text-align:center;color:var(--muted);padding:1rem;}
 </head>
 <body>
 <header>
-<h1>Coloriage magique — Arbre</h1>
+<h1>Coloriage interactif — Arbre</h1>
 <div class="controls">
 <label for="level">Niveau</label>
 <select id="level">
@@ -102,12 +114,18 @@ footer{text-align:center;color:var(--muted);padding:1rem;}
 </div>
 </header>
 
+<div class="palette">
+  <div class="color-btn" data-color="#8B4513" title="Tronc (5)" style="background:#8B4513"></div>
+  <div class="color-btn" data-color="#228B22" title="Feuilles (3)" style="background:#228B22"></div>
+  <div class="color-btn" data-color="#87ceeb" title="Ciel (7)" style="background:#87ceeb"></div>
+</div>
+
 <main>
 <div class="workspace" id="workspace"></div>
 </main>
 
 <footer>
-Une feuille à la fois. <strong>Tronc = 5 (marron)</strong>, <strong>Feuilles = 3 (vert)</strong>, <strong>Ciel = 7 (bleu clair)</strong>.
+Clique sur une couleur puis sur une case pour la colorier.
 </footer>
 
 <script>
@@ -115,6 +133,12 @@ const ws=document.getElementById('workspace');
 const genBtn=document.getElementById('generate');
 const levelSel=document.getElementById('level');
 const modeSel=document.getElementById('mode');
+let currentColor = null;
+
+// Palette
+document.querySelectorAll('.color-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>currentColor=btn.dataset.color);
+});
 
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
 
@@ -140,29 +164,10 @@ function genColoriage(){
   const svg=document.createElementNS(svgns,'svg');
   svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
 
-  // Références de couleur selon la valeur
-  const colorMap={
-    3:'#228B22',  // Feuilles vert
-    5:'#8B4513',  // Tronc marron
-    7:'#87ceeb'   // Ciel bleu
-  };
-
-  // Structure de l’arbre
-  const trunkCells=[[4,2],[5,2],[6,2]];
-  const leafCells=[[2,1],[3,0],[3,1],[3,2],[4,1]];
-  const skyCells=[[0,0],[1,0],[1,1],[0,1]];
-
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
       const x=20+c*cellW, y=60+r*cellH;
       const {text,val}=randomExpr(level,mode);
-
-      let targetVal=null;
-      if(trunkCells.some(([rr,cc])=>rr===r&&cc===c))targetVal=5;
-      else if(leafCells.some(([rr,cc])=>rr===r&&cc===c))targetVal=3;
-      else if(skyCells.some(([rr,cc])=>rr===r&&cc===c))targetVal=7;
-
-      const fill=(targetVal?colorMap[targetVal]+'40':'#fff'); // couleur pâle pour guide
 
       const rect=document.createElementNS(svgns,'rect');
       rect.setAttribute('x',x);
@@ -170,8 +175,9 @@ function genColoriage(){
       rect.setAttribute('width',cellW-4);
       rect.setAttribute('height',cellH-4);
       rect.setAttribute('rx',8);
-      rect.setAttribute('fill',fill);
+      rect.setAttribute('fill','#fff');
       rect.setAttribute('stroke','#000');
+      rect.style.cursor='pointer';
       svg.appendChild(rect);
 
       const t=document.createElementNS(svgns,'text');
@@ -181,9 +187,13 @@ function genColoriage(){
       t.setAttribute('font-size','14');
       t.textContent=text;
       svg.appendChild(t);
+
+      // clic pour colorier
+      rect.addEventListener('click',()=>{
+        if(currentColor) rect.setAttribute('fill',currentColor);
+      });
     }
   }
-
   ws.appendChild(svg);
 
   // Légende
