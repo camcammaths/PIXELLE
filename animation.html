@@ -19,6 +19,7 @@
   --tile-border: 2px solid rgba(0,0,0,0.08);
   --radius: 10px;
   --transition: 0.25s ease;
+  --yellow: #f6ef9f;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,13 +39,116 @@ h1 {
   margin-bottom: 1.5rem;
 }
 
+/* FIGURE CONTAINER */
 #figure {
-  width: 280px;
-  height: 200px;
+  width: 240px;
+  height: 180px;
   margin: 0 auto 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+}
+
+/* Formes de base */
+.shape {
+  position: absolute;
+  background: var(--yellow);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Figure 1 : rectangle + 2 demi-cercles */
+.figure1 .rect {
+  width: 160px;
+  height: 60px;
+  top: 60px;
+  border-radius: 0;
+}
+.figure1::before,
+.figure1::after {
+  content: "";
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: var(--yellow);
+  border-radius: 50%;
+  top: 60px;
+}
+.figure1::before { left: 10px; clip-path: inset(0 30px 0 0); }
+.figure1::after { right: 10px; clip-path: inset(0 0 0 30px); }
+
+/* Figure 2 : carré - carré + triangle (maison) */
+.figure2 .square {
+  width: 100px;
+  height: 100px;
+  bottom: 10px;
+  background: var(--yellow);
+}
+.figure2 .square::after {
+  content: "";
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: white;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.figure2 .triangle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 10px;
+  width: 0;
+  height: 0;
+  border-left: 60px solid transparent;
+  border-right: 60px solid transparent;
+  border-bottom: 70px solid var(--yellow);
+}
+
+/* Figure 3 : carré - cercle */
+.figure3 .square {
+  width: 120px;
+  height: 120px;
+  top: 30px;
+  background: var(--yellow);
+}
+.figure3 .square::after {
+  content: "";
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: white;
+  border-radius: 50%;
+  top: 30px;
+  left: 30px;
+}
+
+/* Figure 4 : carré - carré + demi-cercle */
+.figure4 .square {
+  width: 120px;
+  height: 120px;
+  bottom: 0;
+  background: var(--yellow);
+}
+.figure4 .square::after {
+  content: "";
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: white;
+  bottom: 35px;
+  left: 35px;
+}
+.figure4::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 60px;
+  background: var(--yellow);
+  border-top-left-radius: 60px;
+  border-top-right-radius: 60px;
 }
 
 /* Vignettes */
@@ -135,59 +239,33 @@ h1 {
 <div class="feedback" id="feedback"></div>
 
 <script>
-// Figures SVG + formules associées
+// Les figures possibles
 const figures = [
-  {
-    name: "Figure 1",
-    formula: ["Aire rectangle", "+", "Aire demi-cercle", "+", "Aire demi-cercle"],
-    svg: `
-      <svg width="220" height="120" viewBox="0 0 220 120">
-        <rect x="40" y="40" width="140" height="40" fill="#f6ef9f" />
-        <path d="M40,60 a20,20 0 0,1 0,40 h0 a20,20 0 0,1 0,-40 z" fill="#f6ef9f"/>
-        <path d="M180,100 a20,20 0 0,1 0,-40 h0 a20,20 0 0,1 0,40 z" fill="#f6ef9f"/>
-      </svg>`
-  },
-  {
-    name: "Figure 2",
-    formula: ["Aire carré", "−", "Aire carré", "+", "Aire triangle"],
-    svg: `
-      <svg width="180" height="180" viewBox="0 0 180 180">
-        <rect x="40" y="80" width="100" height="80" fill="#f6ef9f"/>
-        <rect x="70" y="110" width="40" height="40" fill="white"/>
-        <polygon points="40,80 90,20 140,80" fill="#f6ef9f"/>
-      </svg>`
-  },
-  {
-    name: "Figure 3",
-    formula: ["Aire carré", "−", "Aire cercle"],
-    svg: `
-      <svg width="160" height="160" viewBox="0 0 160 160">
-        <rect x="30" y="30" width="100" height="100" fill="#f6ef9f"/>
-        <circle cx="80" cy="80" r="35" fill="white"/>
-      </svg>`
-  },
-  {
-    name: "Figure 4",
-    formula: ["Aire carré", "−", "Aire carré", "+", "Aire demi-cercle"],
-    svg: `
-      <svg width="160" height="180" viewBox="0 0 160 180">
-        <rect x="30" y="60" width="100" height="100" fill="#f6ef9f"/>
-        <rect x="55" y="85" width="50" height="50" fill="white"/>
-        <path d="M30,60 a50,50 0 0,1 100,0 z" fill="#f6ef9f"/>
-      </svg>`
-  }
+  { name: "figure1", formula: ["Aire rectangle", "+", "Aire demi-cercle", "+", "Aire demi-cercle"] },
+  { name: "figure2", formula: ["Aire carré", "−", "Aire carré", "+", "Aire triangle"] },
+  { name: "figure3", formula: ["Aire carré", "−", "Aire cercle"] },
+  { name: "figure4", formula: ["Aire carré", "−", "Aire carré", "+", "Aire demi-cercle"] }
 ];
 
-// éléments HTML
 const figureContainer = document.getElementById("figure");
 const tiles = document.querySelectorAll(".tile");
 const dropZone = document.getElementById("dropZone");
 const feedback = document.getElementById("feedback");
 const checkBtn = document.getElementById("checkBtn");
 
-// Choisir une figure aléatoirement
+// Choisir une figure au hasard
 const randomFigure = figures[Math.floor(Math.random() * figures.length)];
-figureContainer.innerHTML = randomFigure.svg;
+figureContainer.className = randomFigure.name;
+
+if (randomFigure.name === "figure1") {
+  figureContainer.innerHTML = `<div class="shape rect"></div>`;
+} else if (randomFigure.name === "figure2") {
+  figureContainer.innerHTML = `<div class="square"></div><div class="triangle"></div>`;
+} else if (randomFigure.name === "figure3") {
+  figureContainer.innerHTML = `<div class="square"></div>`;
+} else if (randomFigure.name === "figure4") {
+  figureContainer.innerHTML = `<div class="square"></div>`;
+}
 
 let dropped = [];
 
