@@ -45,6 +45,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.4s ease;
 }
 
 /* Vignettes */
@@ -83,6 +84,7 @@ h1 {
   align-items: center;
   flex-wrap: wrap;
   background: white;
+  transition: background 0.3s ease;
 }
 .drop-placeholder {
   color: #999;
@@ -135,10 +137,9 @@ h1 {
 <div class="feedback" id="feedback"></div>
 
 <script>
-// Figures SVG + formules associées
+// --- Définition des figures et formules associées ---
 const figures = [
   {
-    name: "Figure 1",
     formula: ["Aire rectangle", "+", "Aire demi-cercle", "+", "Aire demi-cercle"],
     svg: `
       <svg width="220" height="120" viewBox="0 0 220 120">
@@ -148,7 +149,6 @@ const figures = [
       </svg>`
   },
   {
-    name: "Figure 2",
     formula: ["Aire carré", "−", "Aire carré", "+", "Aire triangle"],
     svg: `
       <svg width="180" height="180" viewBox="0 0 180 180">
@@ -158,7 +158,6 @@ const figures = [
       </svg>`
   },
   {
-    name: "Figure 3",
     formula: ["Aire carré", "−", "Aire cercle"],
     svg: `
       <svg width="160" height="160" viewBox="0 0 160 160">
@@ -167,7 +166,6 @@ const figures = [
       </svg>`
   },
   {
-    name: "Figure 4",
     formula: ["Aire carré", "−", "Aire carré", "+", "Aire demi-cercle"],
     svg: `
       <svg width="160" height="180" viewBox="0 0 160 180">
@@ -178,19 +176,31 @@ const figures = [
   }
 ];
 
-// éléments HTML
+// --- Références HTML ---
 const figureContainer = document.getElementById("figure");
 const tiles = document.querySelectorAll(".tile");
 const dropZone = document.getElementById("dropZone");
 const feedback = document.getElementById("feedback");
 const checkBtn = document.getElementById("checkBtn");
 
-// Choisir une figure aléatoirement
-const randomFigure = figures[Math.floor(Math.random() * figures.length)];
-figureContainer.innerHTML = randomFigure.svg;
-
+let currentFigure;
 let dropped = [];
 
+// --- Fonction pour charger une figure aléatoire ---
+function loadRandomFigure() {
+  feedback.textContent = "";
+  dropped = [];
+  dropZone.innerHTML = `<span class="drop-placeholder">Dépose ta formule ici</span>`;
+  figureContainer.style.opacity = "0";
+
+  setTimeout(() => {
+    currentFigure = figures[Math.floor(Math.random() * figures.length)];
+    figureContainer.innerHTML = currentFigure.svg;
+    figureContainer.style.opacity = "1";
+  }, 400);
+}
+
+// --- Gestion du glisser-déposer ---
 tiles.forEach(tile => {
   tile.addEventListener("dragstart", e => {
     e.dataTransfer.setData("text/plain", tile.textContent);
@@ -218,17 +228,23 @@ dropZone.addEventListener("drop", e => {
   }
 });
 
+// --- Vérification + génération suivante ---
 checkBtn.addEventListener("click", () => {
-  const solution = randomFigure.formula.join("");
+  if (!currentFigure) return;
+  const solution = currentFigure.formula.join("");
   const answer = dropped.join("");
   if (answer === solution) {
-    feedback.textContent = "✅ Bravo !";
+    feedback.textContent = "✅ Bravo ! Nouvelle figure...";
     feedback.className = "feedback ok";
+    setTimeout(loadRandomFigure, 1500);
   } else {
     feedback.textContent = "❌ Essaie encore";
     feedback.className = "feedback bad";
   }
 });
+
+// --- Lancer au démarrage ---
+loadRandomFigure();
 </script>
 
 </body>
