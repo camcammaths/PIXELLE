@@ -1,1 +1,333 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parcours Développement</title>
 
+<style>
+  @font-face {
+    font-family: 'Androgy Demo';
+    src: url('https://fonts.cdnfonts.com/s/96247/AndrogyDemo.woff') format('woff');
+  }
+
+  :root{
+    --primary:#3a86ff;
+    --bg:#f0f4f8;
+    --rad:12px;
+  }
+
+  body{
+    background:var(--bg);
+    font-family:Arial,Helvetica,sans-serif;
+    text-align:center;
+    color:#222;
+    margin:0;
+    padding:2rem;
+  }
+
+  h1{
+    font-family:'Androgy Demo',sans-serif;
+    color:var(--primary);
+    font-size:2.5rem;
+    margin-bottom:2rem;
+  }
+
+  #levels{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:40px;
+    margin-bottom:2rem;
+  }
+
+  .level{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    background:white;
+    border:4px solid var(--primary);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    font-size:1.2rem;
+    cursor:pointer;
+    transition:all .3s ease;
+    box-shadow:0 4px 8px rgba(0,0,0,.1);
+  }
+
+  .level:hover{
+    transform:scale(1.05);
+    background:#dff0ff;
+  }
+
+  .level.completed{
+    background:var(--primary);
+    color:white;
+  }
+
+  .connector{
+    width:6px;
+    height:40px;
+    background:var(--primary);
+  }
+
+  #game{
+    display:none;
+    background:white;
+    border-radius:var(--rad);
+    padding:1.5rem;
+    box-shadow:0 4px 12px rgba(0,0,0,.1);
+    width:90%;
+    max-width:600px;
+    margin:auto;
+  }
+
+  #expression{
+    font-weight:700;
+    margin-bottom:14px;
+  }
+
+  #slots,#palette{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+
+  .slot,.brick{
+    min-width:90px;
+    padding:10px;
+    border-radius:var(--rad);
+    font-weight:700;
+    cursor:grab;
+    user-select:none;
+  }
+
+  .slot{
+    border:2px dashed var(--primary);
+    background:#fff;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-style:italic;
+  }
+
+  .slot.filled{
+    background:#dff0ff;
+    border-style:solid;
+  }
+
+  .brick{
+    background:var(--primary);
+    color:#fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+
+  .brick:active{ cursor:grabbing; }
+
+  #feedback{
+    font-weight:700;
+    margin-top:8px;
+    height:1.2rem;
+  }
+
+  #backBtn{
+    margin-top:1rem;
+    padding:10px 20px;
+    background:var(--primary);
+    color:white;
+    border:none;
+    border-radius:var(--rad);
+    cursor:pointer;
+    font-weight:bold;
+  }
+
+  #backBtn:hover{
+    opacity:.9;
+  }
+</style>
+</head>
+
+<body>
+<h1>Parcours Développement</h1>
+
+<div id="levels">
+  <div class="level" data-lvl="1">Niveau 1</div>
+  <div class="connector"></div>
+  <div class="level" data-lvl="2">Niveau 2</div>
+  <div class="connector"></div>
+  <div class="level" data-lvl="3">Niveau 3</div>
+  <div class="connector"></div>
+  <div class="level" data-lvl="4">Niveau 4</div>
+  <div class="connector"></div>
+  <div class="level" data-lvl="5">Niveau 5</div>
+</div>
+
+<div id="game">
+  <div id="expression"></div>
+  <div id="slots"></div>
+  <div id="palette"></div>
+  <div id="feedback"></div>
+  <button id="backBtn">⬅ Retour</button>
+</div>
+
+<script>
+(() => {
+  const levels = document.querySelectorAll('.level');
+  const gameEl = document.getElementById('game');
+  const expressionEl = document.getElementById('expression');
+  const slotsEl = document.getElementById('slots');
+  const paletteEl = document.getElementById('palette');
+  const feedbackEl = document.getElementById('feedback');
+  const backBtn = document.getElementById('backBtn');
+  let currentLevel = 1;
+  let brickIdCounter = 0;
+
+  // Génère un entier aléatoire
+  const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+  // Génére les exercices selon le niveau
+  function generateQuestion(level){
+    const sign = Math.random()<0.5 ? '+' : '-';
+    let expr, terms, choices = new Set();
+
+    if(level===1){
+      const a=rand(2,5), b=rand(1,5);
+      expr = `${a}(x + ${b})`;
+      terms=[`${a}x`,`+${a*b}`];
+      choices = new Set([`${a}x`,`+${a*b}`,`${a+b}x`,`-${a*b}`,`${a}x + ${b}`]);
+    }
+    else if(level===2){
+      const a=rand(2,6), b=rand(1,6);
+      expr = `${a}(x - ${b})`;
+      terms=[`${a}x`,`-${a*b}`];
+      choices = new Set([`${a}x`,`-${a*b}`,`${a*b}x`,`+${a*b}`]);
+    }
+    else if(level===3){
+      const a=rand(2,4), b=rand(1,6), c=rand(1,6);
+      expr = `${a}(x + ${b}) + ${c}`;
+      terms=[`${a}x`,`+${a*b+c}`];
+      choices = new Set([`${a}x`,`+${a*b+c}`,`${a*b}x`,`-${a*b}`,`+${a*b-c}`]);
+    }
+    else if(level===4){
+      const a=rand(1,5), b=rand(1,5);
+      expr = `(x + ${a})(x + ${b})`;
+      terms=[`x²`,`+${a+b}x`,`+${a*b}`];
+      choices = new Set([`x²`,`+${a+b}x`,`+${a*b}`,`+${a*b+b}`,`x`]);
+    }
+    else{
+      const a=rand(2,3), b=rand(1,4), c=rand(1,4);
+      expr = `${a}(x + ${b})(x + ${c})`;
+      terms=[`${a}x²`,`+${a*(b+c)}x`,`+${a*b*c}`];
+      choices = new Set([`${a}x²`,`+${a*(b+c)}x`,`+${a*b*c}`,`x²`,`-${a*b*c}`]);
+    }
+
+    return {expr, terms, choices:[...choices].sort(()=>Math.random()-0.5)};
+  }
+
+  function createBrick(text){
+    const id=`b-${++brickIdCounter}`;
+    const el=document.createElement('div');
+    el.className='brick';
+    el.id=id;
+    el.textContent=text;
+    el.draggable=true;
+    el.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('text/plain',id);
+    });
+    return el;
+  }
+
+  function renderQuestion(){
+    const q=generateQuestion(currentLevel);
+    expressionEl.textContent=q.expr;
+    slotsEl.innerHTML='';
+    paletteEl.innerHTML='';
+    feedbackEl.textContent='';
+
+    q.terms.forEach(t=>{
+      const s=document.createElement('div');
+      s.className='slot';
+      s.dataset.expect=t;
+      s.addEventListener('dragover',e=>e.preventDefault());
+      s.addEventListener('drop',e=>{
+        e.preventDefault();
+        const id=e.dataTransfer.getData('text/plain');
+        const dragged=document.getElementById(id);
+        if(dragged){
+          if(s.firstChild) paletteEl.appendChild(s.firstChild);
+          s.appendChild(dragged);
+          s.classList.add('filled');
+          checkSlots();
+        }
+      });
+      slotsEl.appendChild(s);
+    });
+
+    q.choices.forEach(c=>paletteEl.appendChild(createBrick(c)));
+
+    paletteEl.addEventListener('click',e=>{
+      const b=e.target.closest('.brick');
+      if(!b)return;
+      const firstEmpty=[...slotsEl.children].find(s=>!s.firstChild);
+      if(firstEmpty){
+        firstEmpty.appendChild(b);
+        firstEmpty.classList.add('filled');
+        checkSlots();
+      }
+    });
+  }
+
+  function checkSlots(){
+    const slots=[...slotsEl.children];
+    let allCorrect=true;
+    slots.forEach(s=>{
+      const exp=s.dataset.expect;
+      const act=s.firstChild?s.firstChild.textContent:null;
+      if(act===exp){
+        s.style.borderColor='green';
+      }else if(act){
+        s.style.borderColor='red';
+        allCorrect=false;
+      }else s.style.borderColor='';
+    });
+
+    if(allCorrect && slots.every(s=>s.firstChild)){
+      feedbackEl.textContent='Bravo ! ✅';
+      markCompleted(currentLevel);
+      setTimeout(()=>showLevels(),1200);
+    }else{
+      feedbackEl.textContent='Vérifie les signes ❌';
+    }
+  }
+
+  // Marquer un niveau comme terminé
+  function markCompleted(lvl){
+    const el=document.querySelector(`.level[data-lvl="${lvl}"]`);
+    if(el)el.classList.add('completed');
+  }
+
+  // Afficher la grille des niveaux
+  function showLevels(){
+    gameEl.style.display='none';
+    document.getElementById('levels').style.display='flex';
+  }
+
+  // Afficher le jeu
+  function startLevel(lvl){
+    currentLevel=+lvl;
+    document.getElementById('levels').style.display='none';
+    gameEl.style.display='block';
+    renderQuestion();
+  }
+
+  levels.forEach(l=>l.addEventListener('click',()=>startLevel(l.dataset.lvl)));
+  backBtn.addEventListener('click',showLevels);
+})();
+</script>
+</body>
+</html>
