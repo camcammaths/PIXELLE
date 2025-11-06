@@ -1,9 +1,10 @@
+DEVELOPPEMENT
 <!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Parcours Développement</title>
+<title>Developpement</title>
 
 <style>
   @font-face {
@@ -30,23 +31,7 @@
     font-family:'Androgy Demo',sans-serif;
     font-size:2.5rem;
     color:var(--primary-color);
-    margin-bottom:1rem;
-  }
-
-  .levels button{
-    background:var(--primary-color);
-    color:#fff;
-    border:none;
-    border-radius:var(--rad);
-    padding:10px 18px;
-    margin:6px;
-    font-weight:700;
-    cursor:pointer;
-    box-shadow:0 2px 6px rgba(0,0,0,.15);
-  }
-
-  .levels button.active{
-    background:#265dcf;
+    margin-bottom:2rem;
   }
 
   #expression{
@@ -105,15 +90,7 @@
 </head>
 
 <body>
-  <h1>Développement</h1>
-  <div class="levels">
-    <button data-level="1" class="active">Niveau 1</button>
-    <button data-level="2">Niveau 2</button>
-    <button data-level="3">Niveau 3</button>
-    <button data-level="4">Niveau 4</button>
-    <button data-level="5">Niveau 5</button>
-  </div>
-
+  <h1>Developpement</h1>
   <div id="expression">a(x + b)</div>
   <div id="slots" aria-label="slots"></div>
   <div id="palette" aria-label="palette"></div>
@@ -125,81 +102,33 @@
   const slotsEl = document.getElementById('slots');
   const paletteEl = document.getElementById('palette');
   const feedbackEl = document.getElementById('feedback');
-  const levelButtons = document.querySelectorAll('.levels button');
   let brickIdCounter = 0;
-  let currentLevel = 1;
 
   function randomInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-  function generateQuestion(level){
-    let expr, terms = new Set();
+  function generateQuestion(){
+    const a = randomInt(2,6);
+    const b = randomInt(1,6);
+    const sign = Math.random()<0.5 ? '+' : '-';
+    const expr = `${a}(x ${sign} ${b})`;
+    const constTermVal = sign === '+' ? a*b : -a*b;
+    const terms = [`${a}x`, `${sign}${Math.abs(constTermVal)}`];
 
-    if(level === 1){ // a(x ± b)
-      const a = randomInt(2,6);
-      const b = randomInt(1,6);
-      const sign = Math.random()<0.5?'+':'-';
-      expr = `${a}(x ${sign} ${b})`;
-      const constTerm = sign==='+'?a*b:-a*b;
-      terms = new Set([`${a}x`, `${sign}${Math.abs(constTerm)}`]);
+    const choices = new Set();
+    choices.add(`${a}x`);
+    choices.add(`${sign}${Math.abs(constTermVal)}`);
+    while(choices.size < 5){
+      const wrongSign = Math.random()<0.5?'+':'-';
+      const wrongVal = wrongSign === '+' ? a*b : -a*b;
+      if(Math.random() < 0.3){
+        const altA = a + (Math.random()<0.5?1:-1);
+        if(altA > 0) choices.add(`${altA}x`);
+      } else {
+        choices.add(`${wrongSign}${Math.abs(wrongVal)}`);
+      }
     }
 
-    if(level === 2){ // (x + a)(x + b)
-      const a = randomInt(1,6);
-      const b = randomInt(1,6);
-      const s1 = Math.random()<0.5?'+':'-';
-      const s2 = Math.random()<0.5?'+':'-';
-      expr = `(x ${s1} ${a})(x ${s2} ${b})`;
-      const aVal = s1==='+'?a:-a;
-      const bVal = s2==='+'?b:-b;
-      const termsArr = [`x²`, `${aVal+bVal>=0?'+':''}${aVal+bVal}x`, `${aVal*bVal>=0?'+':''}${aVal*bVal}`];
-      terms = new Set(termsArr);
-    }
-
-    if(level === 3){ // (ax + b)(x + c)
-      const a = randomInt(2,4);
-      const b = randomInt(1,6);
-      const c = randomInt(1,6);
-      const s1 = Math.random()<0.5?'+':'-';
-      const s2 = Math.random()<0.5?'+':'-';
-      expr = `(${a}x ${s1} ${b})(x ${s2} ${c})`;
-      const bVal = s1==='+'?b:-b;
-      const cVal = s2==='+'?c:-c;
-      const termsArr = [`${a}x²`, `${a*cVal + bVal>=0?'+':''}${a*cVal + bVal}x`, `${bVal*cVal>=0?'+':''}${bVal*cVal}`];
-      terms = new Set(termsArr);
-    }
-
-    if(level === 4){ // (ax + b)(cx + d)
-      const a = randomInt(2,4);
-      const b = randomInt(1,6);
-      const c = randomInt(2,4);
-      const d = randomInt(1,6);
-      const s1 = Math.random()<0.5?'+':'-';
-      const s2 = Math.random()<0.5?'+':'-';
-      expr = `(${a}x ${s1} ${b})(${c}x ${s2} ${d})`;
-      const bVal = s1==='+'?b:-b;
-      const dVal = s2==='+'?d:-d;
-      const termsArr = [
-        `${a*c}x²`,
-        `${a*dVal + bVal*c>=0?'+':''}${a*dVal + bVal*c}x`,
-        `${bVal*dVal>=0?'+':''}${bVal*dVal}`
-      ];
-      terms = new Set(termsArr);
-    }
-
-    if(level === 5){ // mélange aléatoire
-      const l = randomInt(1,4);
-      return generateQuestion(l);
-    }
-
-    const allChoices = new Set([...terms]);
-    while(allChoices.size < 6){
-      const sign = Math.random()<0.5?'+':'-';
-      const val = randomInt(1,20);
-      const type = Math.random()<0.5?'x':'';
-      allChoices.add(`${sign}${val}${type}`);
-    }
-
-    return {expr, terms:[...terms], choices:[...allChoices].sort(()=>Math.random()-0.5)};
+    return {expr, terms, choices: [...choices].sort(()=>Math.random()-0.5)};
   }
 
   function createBrick(text){
@@ -210,36 +139,40 @@
     el.draggable = true;
     el.textContent = text;
 
-    el.addEventListener('dragstart', e=>{
+    el.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', id);
-      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.effectAllowed = 'move';
     });
-    el.addEventListener('keydown', e=>{
-      if(e.key==='Enter'){
-        const firstEmpty = Array.from(slotsEl.children).find(s=>!s.firstChild);
+
+    el.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        const firstEmpty = Array.from(slotsEl.children).find(s => !s.firstChild);
         if(firstEmpty) firstEmpty.appendChild(el);
         checkSlots();
       }
     });
+
     return el;
   }
 
   function renderQuestion(){
-    const q = generateQuestion(currentLevel);
+    const q = generateQuestion();
     expressionEl.textContent = q.expr;
-    slotsEl.innerHTML='';
-    paletteEl.innerHTML='';
-    feedbackEl.textContent='';
+    slotsEl.innerHTML = '';
+    paletteEl.innerHTML = '';
+    feedbackEl.textContent = '';
 
-    q.terms.forEach(term=>{
-      const slot=document.createElement('div');
-      slot.className='slot';
-      slot.dataset.expect=term;
-      slot.addEventListener('dragover', e=>e.preventDefault());
-      slot.addEventListener('drop', e=>{
+    q.terms.forEach(term => {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.dataset.expect = term;
+      slot.setAttribute('aria-label', `slot ${term}`);
+
+      slot.addEventListener('dragover', (e) => e.preventDefault());
+      slot.addEventListener('drop', (e) => {
         e.preventDefault();
-        const id=e.dataTransfer.getData('text/plain');
-        const dragged=document.getElementById(id);
+        const id = e.dataTransfer.getData('text/plain');
+        const dragged = document.getElementById(id);
         if(dragged){
           if(slot.firstChild) paletteEl.appendChild(slot.firstChild);
           slot.appendChild(dragged);
@@ -247,54 +180,48 @@
           checkSlots();
         }
       });
+
       slotsEl.appendChild(slot);
     });
 
-    q.choices.forEach(choice=>{
-      paletteEl.appendChild(createBrick(choice));
+    q.choices.forEach(choice => {
+      const b = createBrick(choice);
+      paletteEl.appendChild(b);
     });
 
-    paletteEl.onclick=(e)=>{
-      const target=e.target.closest('.brick');
-      if(!target)return;
-      const firstEmpty=Array.from(slotsEl.children).find(s=>!s.firstChild);
+    paletteEl.addEventListener('click', (e) => {
+      const target = e.target.closest('.brick');
+      if(!target) return;
+      const firstEmpty = Array.from(slotsEl.children).find(s => !s.firstChild);
       if(firstEmpty){
         firstEmpty.appendChild(target);
         firstEmpty.classList.add('filled');
         checkSlots();
       }
-    };
+    }, {once: false});
   }
 
   function checkSlots(){
-    const slots=Array.from(slotsEl.children);
-    let allCorrect=true;
-    slots.forEach(slot=>{
-      const expected=slot.dataset.expect;
-      const actual=slot.firstChild?slot.firstChild.textContent:null;
-      if(actual===expected){
-        slot.style.borderColor='green';
-      }else{
-        slot.style.borderColor=actual?'red':'';
-        allCorrect=false;
+    const slots = Array.from(slotsEl.children);
+    let allCorrect = true;
+    slots.forEach(slot => {
+      const expected = slot.dataset.expect;
+      const actual = slot.firstChild ? slot.firstChild.textContent : null;
+      if(actual === expected){
+        slot.style.borderColor = 'green';
+      } else {
+        slot.style.borderColor = actual ? 'red' : '';
+        allCorrect = false;
       }
     });
-    if(allCorrect&&slots.every(s=>s.firstChild)){
-      feedbackEl.textContent='Bravo ! ✅ Nouvelle question...';
-      setTimeout(renderQuestion,1000);
-    }else{
-      feedbackEl.textContent='Vérifie les signes ❌';
+
+    if(allCorrect && slots.every(s => s.firstChild)){
+      feedbackEl.textContent = 'Bravo ! ✅ Nouvelle question...';
+      setTimeout(renderQuestion, 900);
+    } else {
+      feedbackEl.textContent = 'Vérifie les signes ❌';
     }
   }
-
-  levelButtons.forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      levelButtons.forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      currentLevel=parseInt(btn.dataset.level);
-      renderQuestion();
-    });
-  });
 
   renderQuestion();
 })();
