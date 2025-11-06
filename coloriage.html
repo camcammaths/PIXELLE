@@ -9,7 +9,9 @@
 :root{
   --bg:#f8fbff;
   --shadow:0 6px 18px rgba(25,42,70,0.08);
+  --primary:#3a86ff;
 }
+*{box-sizing:border-box}
 body{
   margin:0;
   font-family:'Androgy Demo',sans-serif;
@@ -23,18 +25,18 @@ header{
   padding:1rem;
 }
 h1{
-  color:#3a86ff;
-  font-size:2rem;
+  color:var(--primary);
+  font-size:1.6rem;
   margin:0;
 }
 .controls select, .controls button{
-  padding:0.5rem;
+  padding:0.45rem 0.6rem;
   border-radius:8px;
   border:1px solid #ddd;
   font-family:inherit;
 }
 button{
-  background:#3a86ff;
+  background:var(--primary);
   color:#fff;
   border:none;
   cursor:pointer;
@@ -46,13 +48,26 @@ button{
   margin:1rem;
   flex-wrap:wrap;
   justify-content:center;
+  align-items:center;
 }
 .color-btn{
-  width:40px;
-  height:40px;
-  border-radius:6px;
-  border:2px solid #000;
+  width:44px;
+  height:44px;
+  border-radius:8px;
+  border:3px solid rgba(0,0,0,0.12);
   cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .08s, border-color .12s;
+}
+.color-btn.selected{
+  border-color:#000;
+  transform:translateY(-3px);
+}
+.color-label{
+  font-size:0.9rem;
+  margin-left:0.5rem;
 }
 main{
   padding:1rem;
@@ -64,15 +79,17 @@ main{
   border-radius:12px;
   box-shadow:var(--shadow);
   padding:1rem;
+  width:100%;
+  max-width:920px;
 }
 svg{
   width:100%;
-  max-width:800px;
   height:auto;
-  border-radius:12px;
-  background:linear-gradient(#b3e5fc,#fdfdfd);
+  display:block;
+  border-radius:8px;
+  background:linear-gradient(#bfe9ff,#fdfdfd);
 }
-footer{
+.footer{
   text-align:center;
   color:#6b7280;
   padding:1rem;
@@ -82,7 +99,7 @@ footer{
   justify-content:center;
   flex-wrap:wrap;
   gap:1rem;
-  margin-top:1rem;
+  margin-top:0.75rem;
 }
 .legend-item{
   display:flex;
@@ -90,7 +107,14 @@ footer{
   gap:0.4rem;
 }
 .legend-color{
-  width:20px;height:20px;border-radius:4px;border:1px solid #000;
+  width:18px;height:18px;border-radius:4px;border:1px solid #000;
+}
+#message{
+  text-align:center;
+  margin-top:0.8rem;
+  font-weight:600;
+  color:green;
+  display:none;
 }
 </style>
 </head>
@@ -102,121 +126,289 @@ footer{
   </div>
 </header>
 
-<div class="palette" id="palette"></div>
+<div class="palette" id="palette" aria-hidden="false"></div>
 
 <main>
   <div class="workspace" id="workspace"></div>
 </main>
 
-<footer>
-  Clique sur une couleur puis sur la case du bon résultat pour la colorier 🌈
-</footer>
+<div class="footer">
+  Clique sur une couleur puis sur la case correspondante. Seuls les clics avec la couleur correcte colorient la case. Une fois tout juste, le dessin apparaît !  
+  <div id="message">Bravo — le dessin apparaît 🎉</div>
+</div>
 
 <script>
-const ws=document.getElementById('workspace');
-const genBtn=document.getElementById('generate');
-const palette=document.getElementById('palette');
-let currentColor=null;
-
-// Association résultat → couleur
+/* --------- Configuration des couleurs par valeur (-3..3) --------- */
 const colorMap = {
   "-3": "#8B4513", // tronc foncé
-  "-2": "#A0522D", // racines
+  "-2": "#A0522D", // racines / sol sombre
   "-1": "#006400", // feuilles foncées
    "0": "#228B22", // feuilles
    "1": "#ADFF2F", // feuillage clair
    "2": "#87CEEB", // ciel
-   "3": "#F4A460"  // sol ou lumière
+   "3": "#F4A460"  // lumière / sol clair
 };
 
-// Palette dynamique
+/* palette et workspace */
+const palette = document.getElementById('palette');
+const ws = document.getElementById('workspace');
+const genBtn = document.getElementById('generate');
+const messageEl = document.getElementById('message');
+
+let currentColor = null;
+let currentColorValue = null; // la valeur cible sélectionnée (ex: "2")
+
+/* Construire la palette visuelle */
 function buildPalette(){
-  palette.innerHTML="";
-  Object.entries(colorMap).forEach(([val,color])=>{
-    const btn=document.createElement("div");
-    btn.className="color-btn";
-    btn.dataset.value=val;
-    btn.dataset.color=color;
-    btn.style.background=color;
-    btn.title=`Résultat = ${val}`;
-    btn.addEventListener("click",()=>currentColor=color);
+  palette.innerHTML = '';
+  // On montre les valeurs dans l'ordre : -3 ... 3
+  const keys = Object.keys(colorMap).map(Number).sort((a,b)=>a-b).map(String);
+  keys.forEach(key=>{
+    const color = colorMap[key];
+    const btn = document.createElement('div');
+    btn.className = 'color-btn';
+    btn.style.background = color;
+    btn.setAttribute('role','button');
+    btn.setAttribute('aria-label',`Couleur pour résultat ${key}`);
+    btn.dataset.value = key;
+    btn.dataset.color = color;
+    btn.title = `Résultat = ${key}`;
+    btn.addEventListener('click', ()=>{
+      // dé-selectionner tout d'abord
+      document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      currentColor = color;
+      currentColorValue = key;
+    });
     palette.appendChild(btn);
   });
 }
 
-// Génère une expression aléatoire (résultats bornés)
-function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
-function randomExpr(){
-  const ops=['+','-'];
-  let a=randInt(-5,5), b=randInt(-5,5);
-  const op=ops[randInt(0,ops.length-1)];
-  let expr=`${a} ${op} ${b}`;
-  let val=Math.round(eval(expr));
-  val=Math.max(-3,Math.min(3,val)); // borne entre -3 et 3
-  return {expr:expr.replace('*','×').replace('/','÷'),val};
+/* Génère une expression exactement égale à l'une des valeurs -3..3 */
+function randomExprForTarget(target){
+  // ops + ou -
+  const ops = ['+','-'];
+  // On choisit un 'a' raisonnable et on calcule 'b' pour obtenir target
+  // On boucle si b sort de la plage souhaitée (-9..9) pour conserver des nombres lisibles
+  for(let attempt=0; attempt<200; attempt++){
+    const op = ops[Math.floor(Math.random()*ops.length)];
+    const a = Math.floor(Math.random()*15) - 7; // -7..7
+    let b;
+    if(op === '+'){
+      b = target - a;
+    } else { // '-'
+      // a - b = target  => b = a - target
+      b = a - target;
+    }
+    if(b >= -12 && b <= 12){
+      const exprText = `${a} ${op} ${b}`;
+      return {expr: exprText, val: target};
+    }
+  }
+  // fallback (devrait pas arriver)
+  return {expr: `${target} + 0`, val: target};
 }
 
-// Crée la grille
+/* Génère la grille SVG et attache listeners */
 function genColoriage(){
-  ws.innerHTML="";
-  const cols=6, rows=8;
-  const cellW=100, cellH=70;
-  const width=cols*cellW+40, height=rows*cellH+80;
-  const svgns='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(svgns,'svg');
-  svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+  messageEl.style.display = 'none';
+  currentColor = null;
+  currentColorValue = null;
+  // dé-selection palette
+  document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('selected'));
 
-  for(let r=0;r<rows;r++){
-    for(let c=0;c<cols;c++){
-      const x=20+c*cellW, y=40+r*cellH;
-      const {expr,val}=randomExpr();
-      const rect=document.createElementNS(svgns,'rect');
-      rect.setAttribute('x',x);
-      rect.setAttribute('y',y);
-      rect.setAttribute('width',cellW-6);
-      rect.setAttribute('height',cellH-6);
-      rect.setAttribute('rx',8);
-      rect.setAttribute('fill','#fff');
-      rect.setAttribute('stroke','#000');
-      rect.style.cursor='pointer';
-      rect.dataset.value=val;
+  ws.innerHTML = '';
+  const cols = 6, rows = 8;
+  const cellW = 100, cellH = 70;
+  const width = cols*cellW + 40;
+  const height = rows*cellH + 80;
+  const svgns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgns,'svg');
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('aria-hidden','false');
+
+  // Préparer une distribution aléatoire des valeurs cibles pour chaque case
+  const targets = [];
+  const possibleVals = Object.keys(colorMap).map(Number); // [-3..3]
+  // On remplit la grille en choisissant aléatoirement parmi possibleVals
+  for(let i=0;i<cols*rows;i++){
+    targets.push(possibleVals[Math.floor(Math.random()*possibleVals.length)]);
+  }
+
+  for(let r=0; r<rows; r++){
+    for(let c=0; c<cols; c++){
+      const x = 20 + c*cellW;
+      const y = 40 + r*cellH;
+      const target = targets[r*cols + c];
+      const {expr, val} = randomExprForTarget(target);
+
+      const rect = document.createElementNS(svgns,'rect');
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', y);
+      rect.setAttribute('width', cellW-6);
+      rect.setAttribute('height', cellH-6);
+      rect.setAttribute('rx', 10);
+      rect.setAttribute('fill', '#ffffff');
+      rect.setAttribute('stroke', '#000000');
+      rect.style.cursor = 'pointer';
+      rect.dataset.value = String(val);
+      rect.dataset.filled = 'false';
       svg.appendChild(rect);
 
-      const text=document.createElementNS(svgns,'text');
-      text.setAttribute('x',x+cellW/2-4);
-      text.setAttribute('y',y+cellH/2+4);
-      text.setAttribute('text-anchor','middle');
-      text.setAttribute('font-size','14');
-      text.textContent=expr;
+      const text = document.createElementNS(svgns,'text');
+      text.setAttribute('x', x + (cellW/2) - 4);
+      text.setAttribute('y', y + (cellH/2) + 6);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '14');
+      text.setAttribute('font-family', 'inherit');
+      text.textContent = expr;
       svg.appendChild(text);
 
-      rect.addEventListener('click',()=>{
-        if(currentColor){
-          const correctColor=colorMap[rect.dataset.value];
-          if(currentColor===correctColor){
-            rect.setAttribute('fill',currentColor);
-          } else {
-            rect.setAttribute('fill','#ffcccc'); // erreur en rouge clair
-            setTimeout(()=>rect.setAttribute('fill','#fff'),500);
-          }
+      // Click handler
+      rect.addEventListener('click', ()=>{
+        if(!currentColor) {
+          // Pas de couleur choisie : petit flash pour indiquer qu'il faut choisir
+          rect.setAttribute('fill','#fff7cc');
+          setTimeout(()=>{ if(rect.dataset.filled === 'false') rect.setAttribute('fill','#ffffff') }, 180);
+          return;
+        }
+        const correctColor = colorMap[rect.dataset.value];
+        if(currentColor === correctColor){
+          rect.setAttribute('fill', currentColor);
+          rect.dataset.filled = 'true';
+          checkCompletion(); // tester si tout est rempli
+        } else {
+          // erreur visuelle
+          rect.setAttribute('fill', '#ffcccc');
+          setTimeout(()=>{ if(rect.dataset.filled === 'false') rect.setAttribute('fill','#ffffff') }, 420);
         }
       });
     }
   }
+
   ws.appendChild(svg);
 
   // Légende
-  const legend=document.createElement('div');
-  legend.className='legend';
-  legend.innerHTML=Object.entries(colorMap).map(([v,c])=>
-    `<div class="legend-item"><div class="legend-color" style="background:${c}"></div>= ${v}</div>`
-  ).join("");
+  const legend = document.createElement('div');
+  legend.className = 'legend';
+  legend.innerHTML = Object.keys(colorMap).map(k=>
+    `<div class="legend-item"><div class="legend-color" style="background:${colorMap[k]}"></div>= ${k}</div>`
+  ).join('');
   ws.appendChild(legend);
 }
 
+/* Vérifie si toutes les cases sont correctement coloriées */
+function checkCompletion(){
+  const svg = ws.querySelector('svg');
+  if(!svg) return;
+  const rects = svg.querySelectorAll('rect');
+  for(const r of rects){
+    if(r.dataset.filled !== 'true') return; // tant qu'une n'est pas remplie, on quitte
+  }
+  // si on arrive ici, toutes les cases sont correctement coloriées
+  triggerMagicReveal();
+}
+
+/* Ajoute un dessin d'arbre au-dessus (effet magique) */
+function triggerMagicReveal(){
+  // empêcher répétition
+  if(document.getElementById('magic-tree')) return;
+  const svg = ws.querySelector('svg');
+  if(!svg) return;
+
+  // création d'un nouveau calque SVG (même viewBox) pour le dessin
+  const width = svg.viewBox.baseVal.width;
+  const height = svg.viewBox.baseVal.height;
+  const svgns = 'http://www.w3.org/2000/svg';
+  const overlay = document.createElementNS(svgns,'svg');
+  overlay.setAttribute('id','magic-tree');
+  overlay.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  overlay.style.position = 'relative';
+  overlay.style.marginTop = '-'+(height+20)+'px'; // superposer au-dessus de la grille
+  overlay.style.pointerEvents = 'none'; // pour que la grille reste cliquable (déjà colorié)
+  overlay.style.overflow = 'visible';
+
+  // Tronc
+  const trunk = document.createElementNS(svgns,'rect');
+  trunk.setAttribute('x', width/2 - 40);
+  trunk.setAttribute('y', height - 220);
+  trunk.setAttribute('width', 80);
+  trunk.setAttribute('height', 200);
+  trunk.setAttribute('rx', 20);
+  trunk.setAttribute('fill', colorMap["-3"]);
+  trunk.setAttribute('opacity','0');
+  trunk.setAttribute('transform', `translate(0, 20)`);
+  overlay.appendChild(trunk);
+
+  // Grandes feuilles (cercles superposés)
+  const leaves = [];
+  const leafPositions = [
+    {cx: width/2, cy: height-300, r:120},
+    {cx: width/2 -110, cy: height-240, r:90},
+    {cx: width/2 +110, cy: height-240, r:90},
+    {cx: width/2, cy: height-180, r:70}
+  ];
+  leafPositions.forEach((p,i)=>{
+    const circle = document.createElementNS(svgns,'circle');
+    circle.setAttribute('cx', p.cx);
+    circle.setAttribute('cy', p.cy);
+    circle.setAttribute('r', p.r);
+    // choisir dégradé léger en combinant les couleurs de feuille
+    circle.setAttribute('fill', i%2===0 ? colorMap["0"] : colorMap["1"]);
+    circle.setAttribute('opacity','0');
+    circle.setAttribute('transform', `translate(0, 20) scale(0.85)`);
+    overlay.appendChild(circle);
+    leaves.push(circle);
+  });
+
+  // soleil (cercle en haut droite)
+  const sun = document.createElementNS(svgns,'circle');
+  sun.setAttribute('cx', width - 80);
+  sun.setAttribute('cy', 60);
+  sun.setAttribute('r', 36);
+  sun.setAttribute('fill', colorMap["3"]);
+  sun.setAttribute('opacity','0');
+  overlay.appendChild(sun);
+
+  // Ombre au sol
+  const ground = document.createElementNS(svgns,'ellipse');
+  ground.setAttribute('cx', width/2);
+  ground.setAttribute('cy', height - 10);
+  ground.setAttribute('rx', 260);
+  ground.setAttribute('ry', 18);
+  ground.setAttribute('fill', colorMap["-2"]);
+  ground.setAttribute('opacity','0');
+  overlay.appendChild(ground);
+
+  // Ajouter overlay au workspace (au-dessus)
+  ws.appendChild(overlay);
+
+  // Animation simple en JS (apparition progressive)
+  let step = 0;
+  const anim = setInterval(()=>{
+    step++;
+    const t = Math.min(1, step/12);
+    trunk.setAttribute('opacity', String(t));
+    trunk.setAttribute('transform', `translate(0, ${20*(1-t)}) scale(${0.9 + 0.1*t})`);
+    leaves.forEach((c, idx)=>{
+      const ot = Math.min(1, (step - idx*1)/10);
+      c.setAttribute('opacity', String(ot));
+      c.setAttribute('transform', `translate(0, ${20*(1-ot)}) scale(${0.85 + 0.15*ot})`);
+    });
+    sun.setAttribute('opacity', String(Math.min(1, (step-2)/8)));
+    ground.setAttribute('opacity', String(Math.min(1, (step-3)/8)));
+    if(step >= 14){
+      clearInterval(anim);
+      messageEl.style.display = 'block';
+    }
+  }, 55);
+}
+
+/* Initialisation */
 buildPalette();
-genBtn.onclick=genColoriage;
-window.onload=genColoriage;
+genColoriage();
+
+genBtn.addEventListener('click', genColoriage);
 </script>
 </body>
 </html>
