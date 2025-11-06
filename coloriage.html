@@ -3,13 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Coloriage interactif — Arbre nombres relatifs</title>
+<title>Coloriage magique — Arbre des relatifs</title>
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet">
 <style>
 :root{
-  --primary-color:#3a86ff;
   --bg:#f8fbff;
-  --muted:#6b7280;
   --shadow:0 6px 18px rgba(25,42,70,0.08);
 }
 body{
@@ -21,28 +19,22 @@ body{
 header{
   display:flex;
   align-items:center;
-  gap:1rem;
+  justify-content:space-between;
   padding:1rem;
 }
 h1{
-  color:var(--primary-color);
-  font-size:2.2rem;
+  color:#3a86ff;
+  font-size:2rem;
   margin:0;
 }
-.controls{
-  margin-left:auto;
-  display:flex;
-  gap:0.5rem;
-  align-items:center;
-}
-select,button{
+.controls select, .controls button{
   padding:0.5rem;
   border-radius:8px;
   border:1px solid #ddd;
   font-family:inherit;
 }
 button{
-  background:var(--primary-color);
+  background:#3a86ff;
   color:#fff;
   border:none;
   cursor:pointer;
@@ -51,32 +43,40 @@ button{
 .palette{
   display:flex;
   gap:0.5rem;
-  margin-top:0.5rem;
+  margin:1rem;
+  flex-wrap:wrap;
+  justify-content:center;
 }
 .color-btn{
-  width:30px;
-  height:30px;
+  width:40px;
+  height:40px;
   border-radius:6px;
   border:2px solid #000;
   cursor:pointer;
 }
-main{padding:1rem;display:flex;gap:1rem;}
+main{
+  padding:1rem;
+  display:flex;
+  justify-content:center;
+}
 .workspace{
-  flex:1;
   background:#fff;
   border-radius:12px;
   box-shadow:var(--shadow);
   padding:1rem;
-  text-align:center;
 }
 svg{
   width:100%;
   max-width:800px;
   height:auto;
   border-radius:12px;
-  background:linear-gradient(#87ceeb,#fdfdfd);
+  background:linear-gradient(#b3e5fc,#fdfdfd);
 }
-footer{text-align:center;color:var(--muted);padding:1rem;}
+footer{
+  text-align:center;
+  color:#6b7280;
+  padding:1rem;
+}
 .legend{
   display:flex;
   justify-content:center;
@@ -96,101 +96,110 @@ footer{text-align:center;color:var(--muted);padding:1rem;}
 </head>
 <body>
 <header>
-<h1>Coloriage interactif — Arbre</h1>
-<div class="controls">
-<label for="level">Niveau</label>
-<select id="level">
-  <option value="5">5e</option>
-  <option value="4" selected>4e</option>
-  <option value="3">3e</option>
-</select>
-<label for="mode">Opérations</label>
-<select id="mode">
-  <option value="addsub">+ / -</option>
-  <option value="mult">× / ÷</option>
-  <option value="mix">Mix</option>
-</select>
-<button id="generate">Nouvelle feuille</button>
-</div>
+  <h1>Coloriage magique — Arbre des relatifs</h1>
+  <div class="controls">
+    <button id="generate">Nouvelle feuille</button>
+  </div>
 </header>
 
-<div class="palette">
-  <div class="color-btn" data-color="#8B4513" title="Tronc (5)" style="background:#8B4513"></div>
-  <div class="color-btn" data-color="#228B22" title="Feuilles (3)" style="background:#228B22"></div>
-  <div class="color-btn" data-color="#87ceeb" title="Ciel (7)" style="background:#87ceeb"></div>
-</div>
+<div class="palette" id="palette"></div>
 
 <main>
-<div class="workspace" id="workspace"></div>
+  <div class="workspace" id="workspace"></div>
 </main>
 
 <footer>
-Clique sur une couleur puis sur une case pour la colorier.
+  Clique sur une couleur puis sur la case du bon résultat pour la colorier 🌈
 </footer>
 
 <script>
 const ws=document.getElementById('workspace');
 const genBtn=document.getElementById('generate');
-const levelSel=document.getElementById('level');
-const modeSel=document.getElementById('mode');
-let currentColor = null;
+const palette=document.getElementById('palette');
+let currentColor=null;
 
-// Palette
-document.querySelectorAll('.color-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>currentColor=btn.dataset.color);
-});
+// Association résultat → couleur
+const colorMap = {
+  "-3": "#8B4513", // tronc foncé
+  "-2": "#A0522D", // racines
+  "-1": "#006400", // feuilles foncées
+   "0": "#228B22", // feuilles
+   "1": "#ADFF2F", // feuillage clair
+   "2": "#87CEEB", // ciel
+   "3": "#F4A460"  // sol ou lumière
+};
 
-function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
-
-function randomExpr(level,mode){
-  const ops={addsub:['+','-'],mult:['*','/'],mix:['+','-','*','/']};
-  const chosen=ops[mode];
-  let a=randInt(-9,9), b=randInt(-9,9);
-  let op=chosen[Math.floor(Math.random()*chosen.length)];
-  if(op==='/'&&b===0)b=1;
-  let expr=`${a} ${op} ${b}`;
-  let val;
-  try{val=eval(expr);}catch{val=0;}
-  return {text:expr.replace('*','×').replace('/','÷'),val:Math.round(val*100)/100};
+// Palette dynamique
+function buildPalette(){
+  palette.innerHTML="";
+  Object.entries(colorMap).forEach(([val,color])=>{
+    const btn=document.createElement("div");
+    btn.className="color-btn";
+    btn.dataset.value=val;
+    btn.dataset.color=color;
+    btn.style.background=color;
+    btn.title=`Résultat = ${val}`;
+    btn.addEventListener("click",()=>currentColor=color);
+    palette.appendChild(btn);
+  });
 }
 
+// Génère une expression aléatoire (résultats bornés)
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randomExpr(){
+  const ops=['+','-'];
+  let a=randInt(-5,5), b=randInt(-5,5);
+  const op=ops[randInt(0,ops.length-1)];
+  let expr=`${a} ${op} ${b}`;
+  let val=Math.round(eval(expr));
+  val=Math.max(-3,Math.min(3,val)); // borne entre -3 et 3
+  return {expr:expr.replace('*','×').replace('/','÷'),val};
+}
+
+// Crée la grille
 function genColoriage(){
-  ws.innerHTML='';
-  const level=+levelSel.value;
-  const mode=modeSel.value;
-  const cols=6,rows=8,cellW=100,cellH=70;
-  const width=cols*cellW+40,height=rows*cellH+80;
+  ws.innerHTML="";
+  const cols=6, rows=8;
+  const cellW=100, cellH=70;
+  const width=cols*cellW+40, height=rows*cellH+80;
   const svgns='http://www.w3.org/2000/svg';
   const svg=document.createElementNS(svgns,'svg');
   svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
 
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
-      const x=20+c*cellW, y=60+r*cellH;
-      const {text,val}=randomExpr(level,mode);
-
+      const x=20+c*cellW, y=40+r*cellH;
+      const {expr,val}=randomExpr();
       const rect=document.createElementNS(svgns,'rect');
       rect.setAttribute('x',x);
       rect.setAttribute('y',y);
-      rect.setAttribute('width',cellW-4);
-      rect.setAttribute('height',cellH-4);
+      rect.setAttribute('width',cellW-6);
+      rect.setAttribute('height',cellH-6);
       rect.setAttribute('rx',8);
       rect.setAttribute('fill','#fff');
       rect.setAttribute('stroke','#000');
       rect.style.cursor='pointer';
+      rect.dataset.value=val;
       svg.appendChild(rect);
 
-      const t=document.createElementNS(svgns,'text');
-      t.setAttribute('x',x+cellW/2-4);
-      t.setAttribute('y',y+cellH/2+4);
-      t.setAttribute('text-anchor','middle');
-      t.setAttribute('font-size','14');
-      t.textContent=text;
-      svg.appendChild(t);
+      const text=document.createElementNS(svgns,'text');
+      text.setAttribute('x',x+cellW/2-4);
+      text.setAttribute('y',y+cellH/2+4);
+      text.setAttribute('text-anchor','middle');
+      text.setAttribute('font-size','14');
+      text.textContent=expr;
+      svg.appendChild(text);
 
-      // clic pour colorier
       rect.addEventListener('click',()=>{
-        if(currentColor) rect.setAttribute('fill',currentColor);
+        if(currentColor){
+          const correctColor=colorMap[rect.dataset.value];
+          if(currentColor===correctColor){
+            rect.setAttribute('fill',currentColor);
+          } else {
+            rect.setAttribute('fill','#ffcccc'); // erreur en rouge clair
+            setTimeout(()=>rect.setAttribute('fill','#fff'),500);
+          }
+        }
       });
     }
   }
@@ -199,14 +208,13 @@ function genColoriage(){
   // Légende
   const legend=document.createElement('div');
   legend.className='legend';
-  legend.innerHTML=`
-    <div class="legend-item"><div class="legend-color" style="background:#8B4513"></div>= 5 (Tronc)</div>
-    <div class="legend-item"><div class="legend-color" style="background:#228B22"></div>= 3 (Feuilles)</div>
-    <div class="legend-item"><div class="legend-color" style="background:#87ceeb"></div>= 7 (Ciel)</div>
-  `;
+  legend.innerHTML=Object.entries(colorMap).map(([v,c])=>
+    `<div class="legend-item"><div class="legend-color" style="background:${c}"></div>= ${v}</div>`
+  ).join("");
   ws.appendChild(legend);
 }
 
+buildPalette();
 genBtn.onclick=genColoriage;
 window.onload=genColoriage;
 </script>
