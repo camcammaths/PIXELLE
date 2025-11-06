@@ -6,83 +6,53 @@
 <title>Coloriage magique — Arbre des relatifs</title>
 <link href="https://fonts.googleapis.com/css2?family=Androgy+Demo&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#f8fbff;
-  --shadow:0 6px 18px rgba(25,42,70,0.08);
-}
-body{
-  margin:0;
-  font-family:'Androgy Demo',sans-serif;
-  background:var(--bg);
-  text-align:center;
-}
-header{
-  background:white;
-  box-shadow:var(--shadow);
-  padding:1rem;
-}
-h1{color:#3a86ff;font-size:2rem;margin:0;}
-#workspace{
-  margin:2rem auto;
-  background:white;
-  border-radius:12px;
-  box-shadow:var(--shadow);
-  width:800px;
-  padding:1rem;
-}
-svg{
-  width:100%;
-  height:auto;
-  background:linear-gradient(#bde0fe,#f8fbff);
-  border-radius:12px;
-}
-.palette{
-  display:flex;
-  justify-content:center;
-  gap:0.5rem;
-  margin-top:1rem;
-}
-.color-btn{
-  width:35px;height:35px;border-radius:6px;cursor:pointer;border:2px solid #000;
-}
+body{margin:0;font-family:'Androgy Demo',sans-serif;text-align:center;background:#f8fbff;}
+header{padding:1rem;background:white;box-shadow:0 6px 18px rgba(25,42,70,0.08);}
+h1{color:#3a86ff;font-size:1.8rem;margin:0;}
+#workspace{margin:1rem auto;background:white;border-radius:12px;box-shadow:0 6px 18px rgba(25,42,70,0.08);width:800px;padding:1rem;}
+svg{width:100%;height:auto;background:linear-gradient(#bde0fe,#f8fbff);border-radius:12px;}
+.palette{display:flex;justify-content:center;gap:0.5rem;margin:1rem;}
+.color-btn{width:35px;height:35px;border-radius:6px;cursor:pointer;border:2px solid #000;}
 footer{color:#6b7280;margin:1rem;}
+.controls{margin-top:0.5rem;margin-bottom:0.5rem;}
+select,button{padding:0.4rem 0.6rem;border-radius:6px;margin:0 0.3rem;}
 </style>
 </head>
 <body>
 <header>
 <h1>Coloriage magique — Arbre des relatifs</h1>
-<button id="generate">Nouvelle feuille</button>
+<div class="controls">
+  <select id="mode">
+    <option value="addsub">Addition et Soustraction</option>
+    <option value="multdiv">Multiplication et Division</option>
+    <option value="all">Tous les calculs</option>
+  </select>
+  <button id="generate">Nouvelle feuille</button>
+  <button id="showCorrection">Afficher la correction</button>
+</div>
 </header>
 
 <div id="workspace"></div>
-
 <div class="palette" id="palette"></div>
-
 <footer>
 Clique sur une couleur puis sur les cases pour les colorier 🌈  
-<br>Quand tu colories correctement, un dessin d’arbre apparaît !
+Quand tu colories correctement, un dessin apparaît !
 </footer>
 
 <script>
 const ws = document.getElementById('workspace');
 const paletteDiv = document.getElementById('palette');
 const genBtn = document.getElementById('generate');
+const modeSel = document.getElementById('mode');
+const showCorrBtn = document.getElementById('showCorrection');
 let currentColor = null;
 
 // Couleurs associées aux résultats
-const colorMap = {
-  "-3": "#1a237e", // bleu nuit
-  "-2": "#1565c0", // bleu moyen
-  "-1": "#64b5f6", // bleu clair
-  "0": "#8B4513",  // marron (tronc)
-  "1": "#388e3c",  // vert foncé
-  "2": "#66bb6a",  // vert clair
-  "3": "#a5d6a7"   // vert pâle
-};
+const colorMap = {"-3":"#1a237e","-2":"#1565c0","-1":"#64b5f6","0":"#8B4513","1":"#388e3c","2":"#66bb6a","3":"#a5d6a7"};
 
-// Palette visuelle
+// Palette
 function createPalette(){
-  paletteDiv.innerHTML = '';
+  paletteDiv.innerHTML='';
   Object.entries(colorMap).forEach(([val,col])=>{
     const btn=document.createElement('div');
     btn.className='color-btn';
@@ -94,29 +64,36 @@ function createPalette(){
 }
 createPalette();
 
-// Fonction utilitaire
+// Utilitaires
 function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
-
-// Génère une expression avec parenthèses pour les négatifs
-function randomExpr(){
-  const ops=['+','-','*','/'];
-  let a=randInt(-9,9), b=randInt(-9,9);
-  let op=ops[randInt(0,ops.length-1)];
-  if(op==='/' && b===0) b=1;
-  const showA = a<0 ? `(${a})` : a;
-  const showB = b<0 ? `(${b})` : b;
-  let expr = `${showA} ${op} ${showB}`;
-  let val;
-  try { val = eval(expr); } catch { val = 0; }
-  val = Math.round(val);
-  if(val < -3) val = -3;
-  if(val > 3) val = 3;
-  const display = expr.replace('*','×').replace('/','÷');
-  return { text: display, val };
+function getOps(mode){
+  if(mode==='addsub') return ['+','-'];
+  if(mode==='multdiv') return ['*','/'];
+  return ['+','-','*','/'];
 }
 
+// Génère expression avec parenthèses pour négatifs
+function randomExpr(mode){
+  const ops=getOps(mode);
+  let a=randInt(-9,9),b=randInt(-9,9);
+  let op=ops[randInt(0,ops.length-1)];
+  if(op==='/' && b===0)b=1;
+  const showA = a<0?`(${a})`:a;
+  const showB = b<0?`(${b})`:b;
+  let expr=`${showA} ${op} ${showB}`;
+  let val;
+  try{val=Math.round(eval(expr));}catch{val=0;}
+  if(val<-3)val=-3;
+  if(val>3)val=3;
+  expr=expr.replace('*','×').replace('/','÷');
+  return {text:expr,val};
+}
+
+// Génère la grille
 function genColoriage(){
   ws.innerHTML='';
+  currentColor=null;
+  const mode = modeSel.value;
   const svgns='http://www.w3.org/2000/svg';
   const svg=document.createElementNS(svgns,'svg');
   const cols=8,rows=10,cellW=80,cellH=60;
@@ -126,86 +103,79 @@ function genColoriage(){
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
       const x=20+c*cellW, y=20+r*cellH;
-      const {text,val}=randomExpr();
-
+      const {text,val}=randomExpr(mode);
       const rect=document.createElementNS(svgns,'rect');
-      rect.setAttribute('x',x);
-      rect.setAttribute('y',y);
-      rect.setAttribute('width',cellW-4);
-      rect.setAttribute('height',cellH-4);
-      rect.setAttribute('rx',8);
-      rect.setAttribute('fill','#fff');
-      rect.setAttribute('stroke','#000');
-      rect.dataset.val=val;
-      rect.style.cursor='pointer';
+      rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',cellW-4);rect.setAttribute('height',cellH-4);
+      rect.setAttribute('rx',8);rect.setAttribute('fill','#fff');rect.setAttribute('stroke','#000');
+      rect.dataset.val=val;rect.dataset.filled='false';rect.style.cursor='pointer';
       svg.appendChild(rect);
 
       const t=document.createElementNS(svgns,'text');
-      t.setAttribute('x',x+cellW/2);
-      t.setAttribute('y',y+cellH/2+5);
-      t.setAttribute('text-anchor','middle');
-      t.setAttribute('font-size','14');
+      t.setAttribute('x',x+cellW/2);t.setAttribute('y',y+cellH/2+5);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','14');
       t.textContent=text;
       svg.appendChild(t);
 
       rect.addEventListener('click',()=>{
-        if(!currentColor) return;
-        rect.setAttribute('fill',currentColor);
-        checkCompletion(svg);
+        if(!currentColor)return;
+        const correct=colorMap[rect.dataset.val];
+        if(currentColor===correct){
+          rect.setAttribute('fill',currentColor);
+          rect.dataset.filled='true';
+          checkCompletion(svg);
+        }else{
+          rect.setAttribute('fill','#ffcccc');
+          setTimeout(()=>{if(rect.dataset.filled==='false') rect.setAttribute('fill','#fff')},400);
+        }
       });
     }
   }
-
   ws.appendChild(svg);
 }
 
+// Vérifie si tout est colorié correctement
 function checkCompletion(svg){
-  // Vérifie si tout est bien colorié
   const rects = svg.querySelectorAll('rect');
   let allCorrect=true;
-  rects.forEach(r=>{
-    const val=r.dataset.val;
-    const correct=colorMap[val];
-    if(r.getAttribute('fill')!==correct) allCorrect=false;
-  });
-  if(allCorrect){
-    revealDrawing(svg);
-  }
+  rects.forEach(r=>{if(r.dataset.filled!=='true')allCorrect=false;});
+  if(allCorrect)revealDrawing(svg);
 }
 
-// Révèle le dessin final (arbre)
+// Dessin final
 function revealDrawing(svg){
   const svgns='http://www.w3.org/2000/svg';
   const tree=document.createElementNS(svgns,'g');
-  // tronc
   const trunk=document.createElementNS(svgns,'rect');
-  trunk.setAttribute('x',350);
-  trunk.setAttribute('y',400);
-  trunk.setAttribute('width',100);
-  trunk.setAttribute('height',150);
-  trunk.setAttribute('fill','#8B4513');
+  trunk.setAttribute('x',350);trunk.setAttribute('y',400);trunk.setAttribute('width',100);trunk.setAttribute('height',150);trunk.setAttribute('fill','#8B4513');
   tree.appendChild(trunk);
-  // feuillage
+
   const leaves=document.createElementNS(svgns,'circle');
-  leaves.setAttribute('cx',400);
-  leaves.setAttribute('cy',350);
-  leaves.setAttribute('r',120);
-  leaves.setAttribute('fill','#228B22');
+  leaves.setAttribute('cx',400);leaves.setAttribute('cy',350);leaves.setAttribute('r',120);leaves.setAttribute('fill','#228B22');
   tree.appendChild(leaves);
   svg.appendChild(tree);
 
   const txt=document.createElementNS(svgns,'text');
-  txt.setAttribute('x',400);
-  txt.setAttribute('y',100);
-  txt.setAttribute('text-anchor','middle');
-  txt.setAttribute('font-size','24');
-  txt.setAttribute('fill','#3a86ff');
+  txt.setAttribute('x',400);txt.setAttribute('y',100);txt.setAttribute('text-anchor','middle');txt.setAttribute('font-size','24');txt.setAttribute('fill','#3a86ff');
   txt.textContent='Bravo ! 🌳';
   svg.appendChild(txt);
 }
 
+// Afficher la correction
+function showCorrection(){
+  const svg=ws.querySelector('svg');
+  if(!svg)return;
+  const rects=svg.querySelectorAll('rect');
+  rects.forEach(r=>{
+    const val=r.dataset.val;
+    r.setAttribute('fill',colorMap[val]);
+    r.dataset.filled='true';
+  });
+  revealDrawing(svg);
+}
+
 genBtn.onclick=genColoriage;
+showCorrBtn.onclick=showCorrection;
 window.onload=genColoriage;
 </script>
 </body>
 </html>
+
