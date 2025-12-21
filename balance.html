@@ -1,70 +1,64 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Formes 3D Design</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: radial-gradient(circle at center, #111, #000);
-    }
-    canvas { display: block; }
-  </style>
-</head>
-<body>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script>
-  // === Scene & Camera ===
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
-  camera.position.set(0, 2, 7);
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/controls/OrbitControls.js';
 
-  // === Renderer ===
-  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  document.body.appendChild(renderer.domElement);
+// Scene, Camera, Renderer
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(5, 5, 5);
 
-  // === Lights ===
-  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1);
-  keyLight.position.set(5,5,5);
-  scene.add(keyLight);
+const controls = new OrbitControls(camera, renderer.domElement);
 
-  const rimLight = new THREE.DirectionalLight(0x00ffff, 0.6);
-  rimLight.position.set(-5,2,-5);
-  scene.add(rimLight);
+// Lumière
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
 
-  // === Material ===
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x4fd1ff,
-    metalness: 0.6,
-    roughness: 0.2
-  });
+const pointLight = new THREE.PointLight(0xff6f61, 1);
+pointLight.position.set(5, 5, 5);
+scene.add(pointLight);
 
-  // === Formes ===
-  const sphere = new THREE.Mesh(new THREE.SphereGeometry(1,64,64), material);
-  sphere.position.x = -2;
+// Matériau
+const material = new THREE.MeshPhysicalMaterial({
+    color: 0xff6f61,
+    transparent: true,
+    opacity: 0.7,
+    roughness: 0.5,
+    metalness: 0,
+    clearcoat: 1,
+    clearcoatRoughness: 0.1
+});
 
-  const cube = new THREE.Mesh(new THREE.BoxGeometry(1.4,1.4,1.4), material);
+// Formes
+const geometries = [
+    new THREE.SphereGeometry(1, 64, 64),
+    new THREE.BoxGeometry(1.5, 1.5, 1.5),
+    new THREE.ConeGeometry(1, 2, 64),
+    new THREE.CylinderGeometry(0, 1, 2, 4),
+    new THREE.BoxGeometry(2, 1, 1)
+];
 
-  const pyramid = new THREE.Mesh(new THREE.ConeGeometry(1,1.6,4), material);
-  pyramid.position.x = 2;
+geometries.forEach((geo, i) => {
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.position.x = i * 3 - 6;
+    scene.add(mesh);
+});
 
-  scene.add(sphere, cube, pyramid);
+// Animation
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+animate();
 
-  // === Render statique ===
-  renderer.render(scene, camera);
-
-  // === Responsive ===
-  window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth/window.innerHeight;
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.render(scene, camera);
-  });
+});
 </script>
-</body>
-</html>
+
