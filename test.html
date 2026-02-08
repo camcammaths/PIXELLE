@@ -1,333 +1,1408 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Parcours Développement</title>
-
-<style>
-  @font-face {
-    font-family: 'Androgy Demo';
-    src: url('https://fonts.cdnfonts.com/s/96247/AndrogyDemo.woff') format('woff');
-  }
-
-  :root{
-    --primary:#3a86ff;
-    --bg:#f0f4f8;
-    --rad:12px;
-  }
-
-  body{
-    background:var(--bg);
-    font-family:Arial,Helvetica,sans-serif;
-    text-align:center;
-    color:#222;
-    margin:0;
-    padding:2rem;
-  }
-
-  h1{
-    font-family:'Androgy Demo',sans-serif;
-    color:var(--primary);
-    font-size:2.5rem;
-    margin-bottom:2rem;
-  }
-
-  #levels{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:40px;
-    margin-bottom:2rem;
-  }
-
-  .level{
-    width:120px;
-    height:120px;
-    border-radius:50%;
-    background:white;
-    border:4px solid var(--primary);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    font-size:1.2rem;
-    cursor:pointer;
-    transition:all .3s ease;
-    box-shadow:0 4px 8px rgba(0,0,0,.1);
-  }
-
-  .level:hover{
-    transform:scale(1.05);
-    background:#dff0ff;
-  }
-
-  .level.completed{
-    background:var(--primary);
-    color:white;
-  }
-
-  .connector{
-    width:6px;
-    height:40px;
-    background:var(--primary);
-  }
-
-  #game{
-    display:none;
-    background:white;
-    border-radius:var(--rad);
-    padding:1.5rem;
-    box-shadow:0 4px 12px rgba(0,0,0,.1);
-    width:90%;
-    max-width:600px;
-    margin:auto;
-  }
-
-  #expression{
-    font-weight:700;
-    margin-bottom:14px;
-  }
-
-  #slots,#palette{
-    display:flex;
-    gap:10px;
-    justify-content:center;
-    flex-wrap:wrap;
-    margin-bottom:12px;
-  }
-
-  .slot,.brick{
-    min-width:90px;
-    padding:10px;
-    border-radius:var(--rad);
-    font-weight:700;
-    cursor:grab;
-    user-select:none;
-  }
-
-  .slot{
-    border:2px dashed var(--primary);
-    background:#fff;
-    min-height:48px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-style:italic;
-  }
-
-  .slot.filled{
-    background:#dff0ff;
-    border-style:solid;
-  }
-
-  .brick{
-    background:var(--primary);
-    color:#fff;
-    box-shadow:0 2px 6px rgba(0,0,0,.15);
-  }
-
-  .brick:active{ cursor:grabbing; }
-
-  #feedback{
-    font-weight:700;
-    margin-top:8px;
-    height:1.2rem;
-  }
-
-  #backBtn{
-    margin-top:1rem;
-    padding:10px 20px;
-    background:var(--primary);
-    color:white;
-    border:none;
-    border-radius:var(--rad);
-    cursor:pointer;
-    font-weight:bold;
-  }
-
-  #backBtn:hover{
-    opacity:.9;
-  }
-</style>
-</head>
-
-<body>
-<h1>Parcours Développement</h1>
-
-<div id="levels">
-  <div class="level" data-lvl="1">Niveau 1</div>
-  <div class="connector"></div>
-  <div class="level" data-lvl="2">Niveau 2</div>
-  <div class="connector"></div>
-  <div class="level" data-lvl="3">Niveau 3</div>
-  <div class="connector"></div>
-  <div class="level" data-lvl="4">Niveau 4</div>
-  <div class="connector"></div>
-  <div class="level" data-lvl="5">Niveau 5</div>
-</div>
-
-<div id="game">
-  <div id="expression"></div>
-  <div id="slots"></div>
-  <div id="palette"></div>
-  <div id="feedback"></div>
-  <button id="backBtn">⬅ Retour</button>
-</div>
-
-<script>
-(() => {
-  const levels = document.querySelectorAll('.level');
-  const gameEl = document.getElementById('game');
-  const expressionEl = document.getElementById('expression');
-  const slotsEl = document.getElementById('slots');
-  const paletteEl = document.getElementById('palette');
-  const feedbackEl = document.getElementById('feedback');
-  const backBtn = document.getElementById('backBtn');
-  let currentLevel = 1;
-  let brickIdCounter = 0;
-
-  // Génère un entier aléatoire
-  const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-
-  // Génére les exercices selon le niveau
-  function generateQuestion(level){
-    const sign = Math.random()<0.5 ? '+' : '-';
-    let expr, terms, choices = new Set();
-
-    if(level===1){
-      const a=rand(2,5), b=rand(1,5);
-      expr = `${a}(x + ${b})`;
-      terms=[`${a}x`,`+${a*b}`];
-      choices = new Set([`${a}x`,`+${a*b}`,`${a+b}x`,`-${a*b}`,`${a}x + ${b}`]);
-    }
-    else if(level===2){
-      const a=rand(2,6), b=rand(1,6);
-      expr = `${a}(x - ${b})`;
-      terms=[`${a}x`,`-${a*b}`];
-      choices = new Set([`${a}x`,`-${a*b}`,`${a*b}x`,`+${a*b}`]);
-    }
-    else if(level===3){
-      const a=rand(2,4), b=rand(1,6), c=rand(1,6);
-      expr = `${a}(x + ${b}) + ${c}`;
-      terms=[`${a}x`,`+${a*b+c}`];
-      choices = new Set([`${a}x`,`+${a*b+c}`,`${a*b}x`,`-${a*b}`,`+${a*b-c}`]);
-    }
-    else if(level===4){
-      const a=rand(1,5), b=rand(1,5);
-      expr = `(x + ${a})(x + ${b})`;
-      terms=[`x²`,`+${a+b}x`,`+${a*b}`];
-      choices = new Set([`x²`,`+${a+b}x`,`+${a*b}`,`+${a*b+b}`,`x`]);
-    }
-    else{
-      const a=rand(2,3), b=rand(1,4), c=rand(1,4);
-      expr = `${a}(x + ${b})(x + ${c})`;
-      terms=[`${a}x²`,`+${a*(b+c)}x`,`+${a*b*c}`];
-      choices = new Set([`${a}x²`,`+${a*(b+c)}x`,`+${a*b*c}`,`x²`,`-${a*b*c}`]);
-    }
-
-    return {expr, terms, choices:[...choices].sort(()=>Math.random()-0.5)};
-  }
-
-  function createBrick(text){
-    const id=`b-${++brickIdCounter}`;
-    const el=document.createElement('div');
-    el.className='brick';
-    el.id=id;
-    el.textContent=text;
-    el.draggable=true;
-    el.addEventListener('dragstart',e=>{
-      e.dataTransfer.setData('text/plain',id);
-    });
-    return el;
-  }
-
-  function renderQuestion(){
-    const q=generateQuestion(currentLevel);
-    expressionEl.textContent=q.expr;
-    slotsEl.innerHTML='';
-    paletteEl.innerHTML='';
-    feedbackEl.textContent='';
-
-    q.terms.forEach(t=>{
-      const s=document.createElement('div');
-      s.className='slot';
-      s.dataset.expect=t;
-      s.addEventListener('dragover',e=>e.preventDefault());
-      s.addEventListener('drop',e=>{
-        e.preventDefault();
-        const id=e.dataTransfer.getData('text/plain');
-        const dragged=document.getElementById(id);
-        if(dragged){
-          if(s.firstChild) paletteEl.appendChild(s.firstChild);
-          s.appendChild(dragged);
-          s.classList.add('filled');
-          checkSlots();
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance de Roberval 3D Photoréaliste</title>
+    <style>
+        @font-face {
+            font-family: 'Androgy Demo';
+            src: url('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/orbitron/Orbitron-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-display: swap;
         }
-      });
-      slotsEl.appendChild(s);
-    });
+        
+        @font-face {
+            font-family: 'Mabry Pro';
+            src: url('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'Mabry Pro';
+            src: url('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'Mabry Pro';
+            src: url('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/Inter-SemiBold.ttf') format('truetype');
+            font-weight: 600;
+            font-display: swap;
+        }
+        
+        /* Variables de polices */
+        :root {
+            --font-title: 'Androgy Demo', 'Orbitron', 'Space Grotesk', sans-serif;
+            --font-body: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    q.choices.forEach(c=>paletteEl.appendChild(createBrick(c)));
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, #e8eaed 0%, #d1d5db 50%, #e8eaed 100%);
+            overflow-x: hidden;
+            position: relative;
+        }
 
-    paletteEl.addEventListener('click',e=>{
-      const b=e.target.closest('.brick');
-      if(!b)return;
-      const firstEmpty=[...slotsEl.children].find(s=>!s.firstChild);
-      if(firstEmpty){
-        firstEmpty.appendChild(b);
-        firstEmpty.classList.add('filled');
-        checkSlots();
-      }
-    });
-  }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(200, 200, 200, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-  function checkSlots(){
-    const slots=[...slotsEl.children];
-    let allCorrect=true;
-    slots.forEach(s=>{
-      const exp=s.dataset.expect;
-      const act=s.firstChild?s.firstChild.textContent:null;
-      if(act===exp){
-        s.style.borderColor='green';
-      }else if(act){
-        s.style.borderColor='red';
-        allCorrect=false;
-      }else s.style.borderColor='';
-    });
+        #canvas-container {
+            width: 100vw;
+            height: 70vh;
+            position: relative;
+        }
 
-    if(allCorrect && slots.every(s=>s.firstChild)){
-      feedbackEl.textContent='Bravo ! ✅';
-      markCompleted(currentLevel);
-      setTimeout(()=>showLevels(),1200);
-    }else{
-      feedbackEl.textContent='Vérifie les signes ❌';
-    }
-  }
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            pointer-events: none;
+        }
 
-  // Marquer un niveau comme terminé
-  function markCompleted(lvl){
-    const el=document.querySelector(`.level[data-lvl="${lvl}"]`);
-    if(el)el.classList.add('completed');
-  }
+        .header {
+            text-align: center;
+            padding: 25px 20px;
+            color: #1d1d1f;
+        }
 
-  // Afficher la grille des niveaux
-  function showLevels(){
-    gameEl.style.display='none';
-    document.getElementById('levels').style.display='flex';
-  }
+        .header h1 {
+            font-family: var(--font-title);
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 0.03em;
+        }
 
-  // Afficher le jeu
-  function startLevel(lvl){
-    currentLevel=+lvl;
-    document.getElementById('levels').style.display='none';
-    gameEl.style.display='block';
-    renderQuestion();
-  }
+        .header p {
+            font-family: var(--font-body);
+            font-size: 1.1em;
+            color: #8e8e93;
+            font-weight: 400;
+        }
 
-  levels.forEach(l=>l.addEventListener('click',()=>startLevel(l.dataset.lvl)));
-  backBtn.addEventListener('click',showLevels);
-})();
-</script>
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 12px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            pointer-events: auto;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .info-card h3 {
+            font-family: var(--font-title);
+            font-size: 0.75em;
+            color: #8e8e93;
+            font-weight: 700;
+            margin-bottom: 3px;
+            letter-spacing: 0.1em;
+        }
+
+        .info-card p {
+            font-family: var(--font-body);
+            font-size: 1.6em;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .controls-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 20px 25px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
+            pointer-events: auto;
+        }
+
+        .equation-display {
+            font-family: var(--font-body);
+            text-align: center;
+            font-size: 2.2em;
+            font-weight: 500;
+            color: #1d1d1f;
+            margin-bottom: 15px;
+            letter-spacing: 0.02em;
+        }
+
+        .weights-selector {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .weight-zone {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .weight-label {
+            font-family: var(--font-title);
+            font-size: 0.9em;
+            color: #8e8e93;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .weight-options {
+            display: flex;
+            gap: 20px;
+        }
+
+        .weight-preview {
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            position: relative;
+        }
+
+        .weight-preview:hover {
+            transform: scale(1.1);
+        }
+
+        .weight-preview:active {
+            transform: scale(0.95);
+        }
+
+        .weight-preview canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .btn {
+            font-family: var(--font-body);
+            padding: 8px 20px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            color: #6e6e73;
+            box-shadow: none;
+            letter-spacing: 0;
+        }
+
+        .btn:hover {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.15);
+            transform: none;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            color: #1d1d1f;
+            border-color: rgba(29, 29, 31, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: rgba(29, 29, 31, 0.05);
+            border-color: rgba(29, 29, 31, 0.3);
+        }
+
+        .btn-secondary {
+            color: #e85d75;
+            border-color: rgba(232, 93, 117, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(232, 93, 117, 0.05);
+            border-color: rgba(232, 93, 117, 0.3);
+        }
+
+        .btn-tertiary {
+            color: #4eb4e6;
+            border-color: rgba(78, 180, 230, 0.2);
+        }
+
+        .btn-tertiary:hover {
+            background: rgba(78, 180, 230, 0.05);
+            border-color: rgba(78, 180, 230, 0.3);
+        }
+
+        .btn-success {
+            color: #37b24d;
+            border-color: rgba(55, 178, 77, 0.2);
+        }
+
+        .btn-success:hover {
+            background: rgba(55, 178, 77, 0.05);
+            border-color: rgba(55, 178, 77, 0.3);
+        }
+
+        .btn-danger {
+            color: #ee5a6f;
+            border-color: rgba(238, 90, 111, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: rgba(238, 90, 111, 0.05);
+            border-color: rgba(238, 90, 111, 0.3);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .feedback {
+            font-family: var(--font-body);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(40px);
+            padding: 40px 60px;
+            border-radius: 30px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-size: 2em;
+            font-weight: 700;
+            display: none;
+            z-index: 200;
+            pointer-events: none;
+            animation: feedbackAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes feedbackAppear {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .feedback.success {
+            color: #37b24d;
+            border: 3px solid #51cf66;
+        }
+
+        .feedback.error {
+            color: #c92a2a;
+            border: 3px solid #ff6b6b;
+        }
+
+        .instructions {
+            max-width: 700px;
+            margin: 25px auto;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            pointer-events: auto;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .instructions h3 {
+            font-family: var(--font-title);
+            font-size: 1.2em;
+            margin-bottom: 12px;
+            color: #1d1d1f;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .instructions p {
+            font-family: var(--font-body);
+            color: #6e6e73;
+            line-height: 1.7;
+            font-size: 0.95em;
+        }
+
+        #loading {
+            font-family: var(--font-title);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #e8eaed 0%, #d1d5db 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1d1d1f;
+            z-index: 1000;
+            letter-spacing: 0.1em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .equation-display {
+                font-size: 1.8em;
+            }
+
+            .controls-panel {
+                padding: 20px 15px;
+            }
+
+            .btn {
+                padding: 12px 25px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Chargement de la balance 3D...</div>
+
+    <div class="ui-overlay">
+        <div class="header">
+            <h1>Balance de Roberval 3D</h1>
+        </div>
+
+        <div class="info-bar">
+            <div class="info-card">
+                <h3>Niveau</h3>
+                <p id="level">1</p>
+            </div>
+            <div class="info-card">
+                <h3>Score</h3>
+                <p id="score">0</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="controls-panel">
+        <div class="equation-display" id="equation">
+        </div>
+
+        <div class="weights-selector">
+            <div class="weight-zone">
+                <span class="weight-label">← Gauche</span>
+                <div class="weight-options">
+                    <div class="weight-preview" id="preview-left-x" onclick="addWeight('left', 'x')" title="Ajouter cube X à gauche"></div>
+                    <div class="weight-preview" id="preview-left-1" onclick="addWeight('left', 1)" title="Ajouter sphère 1 à gauche"></div>
+                </div>
+            </div>
+            
+            <div class="weight-zone">
+                <div class="weight-options">
+                    <div class="weight-preview" id="preview-right-x" onclick="addWeight('right', 'x')" title="Ajouter cube X à droite"></div>
+                    <div class="weight-preview" id="preview-right-1" onclick="addWeight('right', 1)" title="Ajouter sphère 1 à droite"></div>
+                </div>
+                <span class="weight-label">Droite →</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-danger" onclick="resetBalance()">Réinitialiser</button>
+            <button class="btn btn-success" onclick="checkSolution()">Vérifier</button>
+            <button class="btn btn-primary" onclick="nextChallenge()">Nouveau Défi</button>
+        </div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, balance;
+        let leftWeights = { x: 0, num: 0 };
+        let rightWeights = { x: 0, num: 0 };
+        let currentLevel = 1;
+        let score = 0;
+        let currentChallenge = null;
+
+        // Audio context pour les sons
+        let audioContext;
+        
+        // Initialiser l'audio context au premier clic (requis par les navigateurs)
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Fonction pour créer un son métallique réaliste
+        function playPlacementSound(type) {
+            initAudio();
+            
+            const now = audioContext.currentTime;
+            
+            // Créer plusieurs oscillateurs pour un son métallique riche
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const oscillator3 = audioContext.createOscillator();
+            
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            // Filtre passe-bande pour son métallique
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1500, now);
+            filter.Q.setValueAtTime(15, now);
+            
+            // Connecter les oscillateurs
+            oscillator1.connect(filter);
+            oscillator2.connect(filter);
+            oscillator3.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'x') {
+                // Son métallique pour le cube - plus grave et résonnant
+                oscillator1.type = 'square';
+                oscillator1.frequency.setValueAtTime(900, now);
+                oscillator1.frequency.exponentialRampToValueAtTime(300, now + 0.15);
+                
+                oscillator2.type = 'square';
+                oscillator2.frequency.setValueAtTime(1350, now);
+                oscillator2.frequency.exponentialRampToValueAtTime(450, now + 0.15);
+                
+                oscillator3.type = 'triangle';
+                oscillator3.frequency.setValueAtTime(600, now);
+                oscillator3.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+                
+                // Enveloppe métallique - attaque rapide, déclin moyen
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.25, now + 0.005);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+            } else {
+                // Son métallique pour la sphère - plus aigu et léger
+                oscillator1.type = 'square';
+                oscillator1.frequency.setValueAtTime(1200, now);
+                oscillator1.frequency.exponentialRampToValueAtTime(400, now + 0.12);
+                
+                oscillator2.type = 'square';
+                oscillator2.frequency.setValueAtTime(1800, now);
+                oscillator2.frequency.exponentialRampToValueAtTime(600, now + 0.12);
+                
+                oscillator3.type = 'triangle';
+                oscillator3.frequency.setValueAtTime(800, now);
+                oscillator3.frequency.exponentialRampToValueAtTime(300, now + 0.12);
+                
+                // Enveloppe plus courte pour sphère
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.2, now + 0.003);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+            }
+            
+            oscillator1.start(now);
+            oscillator2.start(now);
+            oscillator3.start(now);
+            oscillator1.stop(now + 0.3);
+            oscillator2.stop(now + 0.3);
+            oscillator3.stop(now + 0.3);
+        }
+
+        // Son de succès harmonieux
+        function playSuccessSound() {
+            initAudio();
+            
+            const now = audioContext.currentTime;
+            const notes = [523.25, 659.25, 783.99]; // Do-Mi-Sol (C-E-G chord)
+            
+            notes.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
+                
+                oscillator.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(3000, now);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(freq, now + index * 0.1);
+                
+                gainNode.gain.setValueAtTime(0, now + index * 0.1);
+                gainNode.gain.linearRampToValueAtTime(0.1, now + index * 0.1 + 0.02);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + index * 0.1 + 0.5);
+                
+                oscillator.start(now + index * 0.1);
+                oscillator.stop(now + index * 0.1 + 0.6);
+            });
+        }
+
+        // Son d'erreur doux (pas agressif)
+        function playErrorSound() {
+            initAudio();
+            
+            const now = audioContext.currentTime;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, now);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(293.66, now); // Ré (D4)
+            oscillator.frequency.linearRampToValueAtTime(261.63, now + 0.2); // Do (C4)
+            
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.08, now + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            
+            oscillator.start(now);
+            oscillator.stop(now + 0.35);
+        }
+
+        const challenges = [
+            { left: {x: 1, num: 2}, right: {x: 0, num: 5}, solution: 3, equation: "x + 2 = 5" },
+            { left: {x: 2, num: 0}, right: {x: 0, num: 8}, solution: 4, equation: "2x = 8" },
+            { left: {x: 1, num: 5}, right: {x: 0, num: 12}, solution: 7, equation: "x + 5 = 12" },
+            { left: {x: 3, num: 0}, right: {x: 0, num: 15}, solution: 5, equation: "3x = 15" },
+            { left: {x: 2, num: 3}, right: {x: 0, num: 11}, solution: 4, equation: "2x + 3 = 11" },
+            { left: {x: 1, num: 0}, right: {x: 0, num: 6}, solution: 6, equation: "x = 6" },
+            { left: {x: 2, num: 4}, right: {x: 0, num: 14}, solution: 5, equation: "2x + 4 = 14" },
+            { left: {x: 4, num: 0}, right: {x: 0, num: 20}, solution: 5, equation: "4x = 20" },
+        ];
+
+        const balanceParts = {
+            beam: null,
+            leftPlate: null,
+            rightPlate: null,
+            leftWeightMeshes: [],
+            rightWeightMeshes: []
+        };
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xe8eaed); // Fond métallique gris
+            scene.fog = new THREE.Fog(0xe8eaed, 15, 35);
+
+            // Camera avec profondeur de champ
+            const container = document.getElementById('canvas-container');
+            camera = new THREE.PerspectiveCamera(
+                35, // FOV plus serré pour effet produit
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 4, 14);
+            camera.lookAt(0, 2.5, 0);
+
+            // Renderer avec post-processing
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true, 
+                alpha: true,
+                powerPreference: "high-performance"
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            container.appendChild(renderer.domElement);
+
+            // Éclairage studio professionnel (comme photo produit)
+            // Lumière ambiante douce
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            // Key Light (principale) - douce et diffuse
+            const keyLight = new THREE.DirectionalLight(0xfff8f0, 1.2);
+            keyLight.position.set(6, 10, 8);
+            keyLight.castShadow = true;
+            keyLight.shadow.camera.left = -8;
+            keyLight.shadow.camera.right = 8;
+            keyLight.shadow.camera.top = 8;
+            keyLight.shadow.camera.bottom = -8;
+            keyLight.shadow.mapSize.width = 4096;
+            keyLight.shadow.mapSize.height = 4096;
+            keyLight.shadow.bias = -0.0001;
+            keyLight.shadow.radius = 3; // Ombres plus douces
+            scene.add(keyLight);
+
+            // Fill Light (remplissage) - pour adoucir les ombres
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(-6, 6, -4);
+            scene.add(fillLight);
+
+            // Rim/Back Light - pour les contours lumineux
+            const rimLight = new THREE.DirectionalLight(0xfff8f0, 0.6);
+            rimLight.position.set(0, 8, -12);
+            scene.add(rimLight);
+
+            // Hemisphere Light pour un éclairage naturel
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe0dcd7, 0.3);
+            scene.add(hemiLight);
+
+            // Ground plane avec ombre douce floue (comme la photo)
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.ShadowMaterial({ 
+                opacity: 0.08,
+                color: 0x000000
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = 0;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Reflective ground subtle
+            const reflectionGeometry = new THREE.PlaneGeometry(100, 100);
+            const reflectionMaterial = new THREE.MeshStandardMaterial({
+                color: 0xe8eaed,
+                metalness: 0.1,
+                roughness: 0.9,
+                envMapIntensity: 0.2
+            });
+            const reflection = new THREE.Mesh(reflectionGeometry, reflectionMaterial);
+            reflection.rotation.x = -Math.PI / 2;
+            reflection.position.y = 0.001;
+            reflection.receiveShadow = true;
+            scene.add(reflection);
+
+            createBalance();
+
+            // Créer les mini-rendus 3D pour les aperçus de poids
+            createWeightPreviews();
+
+            document.getElementById('loading').style.display = 'none';
+
+            animate();
+        }
+
+        function createWeightPreviews() {
+            // Créer des mini-scènes 3D pour chaque aperçu de poids
+            const previewIds = [
+                { id: 'preview-left-x', type: 'X', color: 0xe85d75 },
+                { id: 'preview-left-1', type: '1', color: 0x4eb4e6 },
+                { id: 'preview-right-x', type: 'X', color: 0xe85d75 },
+                { id: 'preview-right-1', type: '1', color: 0x4eb4e6 }
+            ];
+
+            previewIds.forEach(preview => {
+                const container = document.getElementById(preview.id);
+                if (!container) return;
+
+                // Mini-scène
+                const previewScene = new THREE.Scene();
+                previewScene.background = new THREE.Color(0xffffff);
+
+                // Mini-caméra
+                const previewCamera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+                previewCamera.position.set(0, 0.5, 2);
+                previewCamera.lookAt(0, 0, 0);
+
+                // Mini-renderer
+                const previewRenderer = new THREE.WebGLRenderer({ 
+                    antialias: true,
+                    alpha: true 
+                });
+                previewRenderer.setSize(80, 80);
+                previewRenderer.setPixelRatio(window.devicePixelRatio);
+                previewRenderer.shadowMap.enabled = true;
+                container.appendChild(previewRenderer.domElement);
+
+                // Lumières
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                previewScene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(2, 3, 2);
+                directionalLight.castShadow = true;
+                previewScene.add(directionalLight);
+
+                // Créer le poids avec les nouvelles formes
+                let weightMesh;
+                if (preview.type === 'X') {
+                    // Cube métallique avec X
+                    const size = 0.6;
+                    const geometry = new THREE.BoxGeometry(size, size, size);
+                    
+                    const metalMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xa0a0a0,
+                        metalness: 0.9,
+                        roughness: 0.2,
+                        clearcoat: 0.5
+                    });
+                    
+                    const body = new THREE.Mesh(geometry, metalMaterial);
+                    body.castShadow = true;
+                    
+                    // Ajouter le X sur la face avant
+                    const textCanvas = document.createElement('canvas');
+                    textCanvas.width = 256;
+                    textCanvas.height = 256;
+                    const ctx = textCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, 256, 256);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 180px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('X', 128, 128);
+                    
+                    const textTexture = new THREE.CanvasTexture(textCanvas);
+                    const textMaterial = new THREE.MeshBasicMaterial({
+                        map: textTexture,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    
+                    const textPlane = new THREE.Mesh(
+                        new THREE.PlaneGeometry(size * 0.8, size * 0.8),
+                        textMaterial
+                    );
+                    textPlane.position.z = size / 2 + 0.01;
+                    
+                    const group = new THREE.Group();
+                    group.add(body);
+                    group.add(textPlane);
+                    weightMesh = group;
+                    
+                } else {
+                    // Sphère blanche avec 1
+                    const radius = 0.35;
+                    const geometry = new THREE.SphereGeometry(radius, 64, 64);
+                    
+                    const whiteMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xffffff,
+                        metalness: 0.1,
+                        roughness: 0.4
+                    });
+                    
+                    const body = new THREE.Mesh(geometry, whiteMaterial);
+                    body.castShadow = true;
+                    
+                    // Ajouter le 1
+                    const textCanvas = document.createElement('canvas');
+                    textCanvas.width = 256;
+                    textCanvas.height = 256;
+                    const ctx = textCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, 256, 256);
+                    ctx.fillStyle = '#333333';
+                    ctx.font = 'bold 180px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('1', 128, 128);
+                    
+                    const textTexture = new THREE.CanvasTexture(textCanvas);
+                    const textMaterial = new THREE.MeshBasicMaterial({
+                        map: textTexture,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    
+                    const textPlane = new THREE.Mesh(
+                        new THREE.PlaneGeometry(radius * 1.2, radius * 1.2),
+                        textMaterial
+                    );
+                    textPlane.position.z = radius + 0.01;
+                    
+                    const group = new THREE.Group();
+                    group.add(body);
+                    group.add(textPlane);
+                    weightMesh = group;
+                }
+
+                weightMesh.castShadow = true;
+                weightMesh.receiveShadow = true;
+                previewScene.add(weightMesh);
+
+                // Animation de rotation
+                function animatePreview() {
+                    requestAnimationFrame(animatePreview);
+                    weightMesh.rotation.y += 0.01;
+                    previewRenderer.render(previewScene, previewCamera);
+                }
+                animatePreview();
+            });
+        }
+
+        function createBalance() {
+            // Materials ultra-réalistes
+            
+            // Métal chromé poli (comme l'anneau sur la photo)
+            const metalMaterial = new THREE.MeshStandardMaterial({
+                color: 0xc5c5c5,
+                metalness: 0.95,
+                roughness: 0.15,
+                envMapIntensity: 2.0,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1
+            });
+
+            // Bronze/Cuivre chaud (comme le cylindre noir/bronze de la photo)
+            const darkMetalMaterial = new THREE.MeshStandardMaterial({
+                color: 0x4a4a4a,
+                metalness: 0.9,
+                roughness: 0.25,
+                envMapIntensity: 1.5,
+                clearcoat: 0.8,
+                clearcoatRoughness: 0.2
+            });
+
+            // Bronze doré clair pour les plateaux
+            const bronzeMaterial = new THREE.MeshStandardMaterial({
+                color: 0xc9a876,
+                metalness: 0.85,
+                roughness: 0.25,
+                envMapIntensity: 1.8,
+                clearcoat: 0.9,
+                clearcoatRoughness: 0.15
+            });
+
+            // Stand base - plus large et stable
+            const baseGeometry = new THREE.CylinderGeometry(1.2, 1.4, 0.3, 64);
+            const base = new THREE.Mesh(baseGeometry, darkMetalMaterial);
+            base.position.y = 0.15;
+            base.castShadow = true;
+            base.receiveShadow = true;
+            scene.add(base);
+
+            // Anneau décoratif sur la base
+            const ringGeometry = new THREE.TorusGeometry(1.3, 0.05, 16, 64);
+            const ring = new THREE.Mesh(ringGeometry, metalMaterial);
+            ring.rotation.x = Math.PI / 2;
+            ring.position.y = 0.3;
+            ring.castShadow = true;
+            scene.add(ring);
+
+            // Stand pole - plus fin et élégant
+            const poleGeometry = new THREE.CylinderGeometry(0.08, 0.08, 4.5, 32);
+            const pole = new THREE.Mesh(poleGeometry, metalMaterial);
+            pole.position.y = 2.55;
+            pole.castShadow = true;
+            scene.add(pole);
+
+            // Détail haut du pole
+            const poleTopGeometry = new THREE.SphereGeometry(0.12, 32, 32);
+            const poleTop = new THREE.Mesh(poleTopGeometry, metalMaterial);
+            poleTop.position.y = 4.9;
+            poleTop.castShadow = true;
+            scene.add(poleTop);
+
+            // Pivot - plus gros et brillant
+            const pivotGeometry = new THREE.SphereGeometry(0.2, 64, 64);
+            const pivotMaterial = new THREE.MeshStandardMaterial({
+                color: 0x2a2a2a,
+                metalness: 1.0,
+                roughness: 0.05,
+                envMapIntensity: 2.5,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.05
+            });
+            const pivot = new THREE.Mesh(pivotGeometry, pivotMaterial);
+            pivot.position.y = 4.8;
+            pivot.castShadow = true;
+            scene.add(pivot);
+
+            // Beam (main horizontal bar) - design épuré
+            const beamGroup = new THREE.Group();
+            const beamGeometry = new THREE.CylinderGeometry(0.08, 0.08, 9, 32);
+            const beam = new THREE.Mesh(beamGeometry, metalMaterial);
+            beam.rotation.z = Math.PI / 2;
+            beam.castShadow = true;
+            beamGroup.add(beam);
+
+            // Embouts du beam
+            const endCapGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+            const endCapLeft = new THREE.Mesh(endCapGeometry, metalMaterial);
+            endCapLeft.position.x = -4.5;
+            endCapLeft.castShadow = true;
+            beamGroup.add(endCapLeft);
+
+            const endCapRight = new THREE.Mesh(endCapGeometry, metalMaterial);
+            endCapRight.position.x = 4.5;
+            endCapRight.castShadow = true;
+            beamGroup.add(endCapRight);
+
+            beamGroup.position.y = 4.8;
+            balanceParts.beam = beamGroup;
+            scene.add(beamGroup);
+
+            // Chains and plates
+            createChainAndPlate(-4, bronzeMaterial, metalMaterial, 'left');
+            createChainAndPlate(4, bronzeMaterial, metalMaterial, 'right');
+        }
+
+        function createChainAndPlate(xPos, plateMaterial, chainMaterial, side) {
+            // Chain - plus fine et élégante
+            const chainGroup = new THREE.Group();
+            
+            // Chaîne principale
+            const linkHeight = 0.15;
+            const numLinks = 10;
+            for (let i = 0; i < numLinks; i++) {
+                const linkGeometry = new THREE.TorusGeometry(0.04, 0.015, 8, 16);
+                const link = new THREE.Mesh(linkGeometry, chainMaterial);
+                link.rotation.x = i % 2 === 0 ? 0 : Math.PI / 2;
+                link.position.y = 4.8 - (i * linkHeight);
+                link.castShadow = true;
+                chainGroup.add(link);
+            }
+            
+            chainGroup.position.x = xPos;
+            scene.add(chainGroup);
+
+            // Connection au plateau
+            const hookGeometry = new THREE.TorusGeometry(0.08, 0.02, 8, 16);
+            const hook = new THREE.Mesh(hookGeometry, chainMaterial);
+            hook.rotation.x = Math.PI / 2;
+            hook.position.set(xPos, 3.2, 0);
+            hook.castShadow = true;
+            scene.add(hook);
+
+            // Plate - design plus épuré et élégant
+            const plateGroup = new THREE.Group();
+            
+            // Plateau principal - plus fin
+            const plateGeometry = new THREE.CylinderGeometry(1.0, 1.0, 0.06, 64);
+            const plate = new THREE.Mesh(plateGeometry, plateMaterial);
+            plate.castShadow = true;
+            plate.receiveShadow = true;
+            plateGroup.add(plate);
+
+            // Bord surélevé du plateau
+            const rimGeometry = new THREE.TorusGeometry(1.0, 0.04, 16, 64);
+            const rim = new THREE.Mesh(rimGeometry, plateMaterial);
+            rim.rotation.x = Math.PI / 2;
+            rim.position.y = 0.03;
+            rim.castShadow = true;
+            plateGroup.add(rim);
+
+            // Détails gravés sur le plateau (cercles concentriques)
+            for (let i = 0; i < 3; i++) {
+                const detailGeometry = new THREE.TorusGeometry(0.3 + (i * 0.2), 0.008, 8, 64);
+                const detail = new THREE.Mesh(detailGeometry, new THREE.MeshStandardMaterial({
+                    color: 0xa58960,
+                    metalness: 0.9,
+                    roughness: 0.2
+                }));
+                detail.rotation.x = Math.PI / 2;
+                detail.position.y = 0.031;
+                plateGroup.add(detail);
+            }
+
+            plateGroup.position.set(xPos, 3.0, 0);
+            
+            if (side === 'left') {
+                balanceParts.leftPlate = plateGroup;
+            } else {
+                balanceParts.rightPlate = plateGroup;
+            }
+            
+            scene.add(plateGroup);
+        }
+
+        function addWeight(side, type) {
+            // Jouer le son réconfortant
+            playPlacementSound(type);
+            
+            if (side === 'left') {
+                if (type === 'x') leftWeights.x++;
+                else leftWeights.num++;
+            } else {
+                if (type === 'x') rightWeights.x++;
+                else rightWeights.num++;
+            }
+            updateDisplay();
+        }
+
+        function removeWeight(side, type) {
+            if (side === 'left') {
+                if (type === 'x' && leftWeights.x > 0) leftWeights.x--;
+                else if (type === 'num' && leftWeights.num > 0) leftWeights.num--;
+            } else {
+                if (type === 'x' && rightWeights.x > 0) rightWeights.x--;
+                else if (type === 'num' && rightWeights.num > 0) rightWeights.num--;
+            }
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            // Clear existing weight meshes
+            balanceParts.leftWeightMeshes.forEach(mesh => scene.remove(mesh));
+            balanceParts.rightWeightMeshes.forEach(mesh => scene.remove(mesh));
+            balanceParts.leftWeightMeshes = [];
+            balanceParts.rightWeightMeshes = [];
+
+            // Add weights to left plate
+            let leftIndex = 0;
+            for (let i = 0; i < leftWeights.x; i++) {
+                const weight = createWeightMesh(null, 'X');
+                positionWeight(weight, -4, leftIndex++);
+                balanceParts.leftWeightMeshes.push(weight);
+                scene.add(weight);
+            }
+            for (let i = 0; i < leftWeights.num; i++) {
+                const weight = createWeightMesh(null, '1');
+                positionWeight(weight, -4, leftIndex++);
+                balanceParts.leftWeightMeshes.push(weight);
+                scene.add(weight);
+            }
+
+            // Add weights to right plate
+            let rightIndex = 0;
+            for (let i = 0; i < rightWeights.x; i++) {
+                const weight = createWeightMesh(null, 'X');
+                positionWeight(weight, 4, rightIndex++);
+                balanceParts.rightWeightMeshes.push(weight);
+                scene.add(weight);
+            }
+            for (let i = 0; i < rightWeights.num; i++) {
+                const weight = createWeightMesh(null, '1');
+                positionWeight(weight, 4, rightIndex++);
+                balanceParts.rightWeightMeshes.push(weight);
+                scene.add(weight);
+            }
+
+            updateBalance();
+            updateEquation();
+        }
+
+        // Fonction helper pour créer une texture de texte
+        function createTextTexture(text, color = '#ffffff', size = 512) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, size, size);
+            ctx.fillStyle = color;
+            ctx.font = `bold ${size * 0.7}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, size / 2, size / 2);
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createWeightMesh(material, label) {
+            const weightGroup = new THREE.Group();
+            
+            if (label === 'X') {
+                // CUBE MÉTALLIQUE avec "X" gravé - Plus grand que les sphères
+                const size = 0.55;
+                const geometry = new THREE.BoxGeometry(size, size, size, 4, 4, 4);
+                
+                // Matériau métallique
+                const metalMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xa0a0a0,
+                    metalness: 0.9,
+                    roughness: 0.2,
+                    envMapIntensity: 1.5,
+                    clearcoat: 0.5,
+                    clearcoatRoughness: 0.2
+                });
+                
+                const body = new THREE.Mesh(geometry, metalMaterial);
+                body.castShadow = true;
+                body.receiveShadow = true;
+                weightGroup.add(body);
+                
+                // Ajouter le "X" sur chaque face
+                const textTexture = createTextTexture('X', '#ffffff', 512);
+                const textMaterial = new THREE.MeshBasicMaterial({
+                    map: textTexture,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                // Créer un sprite de texte pour chaque face visible
+                const textScale = size * 0.8;
+                const positions = [
+                    { pos: [0, 0, size/2 + 0.01], rot: [0, 0, 0] },           // Front
+                    { pos: [0, 0, -size/2 - 0.01], rot: [0, Math.PI, 0] },    // Back
+                    { pos: [size/2 + 0.01, 0, 0], rot: [0, Math.PI/2, 0] },   // Right
+                    { pos: [-size/2 - 0.01, 0, 0], rot: [0, -Math.PI/2, 0] }, // Left
+                    { pos: [0, size/2 + 0.01, 0], rot: [-Math.PI/2, 0, 0] },  // Top
+                    { pos: [0, -size/2 - 0.01, 0], rot: [Math.PI/2, 0, 0] }   // Bottom
+                ];
+                
+                positions.forEach(({ pos, rot }) => {
+                    const planeGeometry = new THREE.PlaneGeometry(textScale, textScale);
+                    const textMesh = new THREE.Mesh(planeGeometry, textMaterial);
+                    textMesh.position.set(...pos);
+                    textMesh.rotation.set(...rot);
+                    weightGroup.add(textMesh);
+                });
+                
+            } else if (label === '1') {
+                // SPHÈRE BLANCHE avec "1" gravé
+                const radius = 0.28;
+                const geometry = new THREE.SphereGeometry(radius, 64, 64);
+                
+                // Matériau blanc mat
+                const whiteMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    metalness: 0.1,
+                    roughness: 0.4,
+                    envMapIntensity: 0.5
+                });
+                
+                const body = new THREE.Mesh(geometry, whiteMaterial);
+                body.castShadow = true;
+                body.receiveShadow = true;
+                weightGroup.add(body);
+                
+                // Ajouter le "1" sur la sphère (face avant)
+                const textTexture = createTextTexture('1', '#333333', 512);
+                const textMaterial = new THREE.MeshBasicMaterial({
+                    map: textTexture,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const textScale = radius * 1.2;
+                const planeGeometry = new THREE.PlaneGeometry(textScale, textScale);
+                const textMesh = new THREE.Mesh(planeGeometry, textMaterial);
+                textMesh.position.z = radius + 0.01;
+                weightGroup.add(textMesh);
+                
+            } else if (label === '-1') {
+                // SPHÈRE SEMI-TRANSPARENTE avec "-1" gravé
+                const radius = 0.28;
+                const geometry = new THREE.SphereGeometry(radius, 64, 64);
+                
+                // Matériau semi-transparent
+                const transparentMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    metalness: 0.1,
+                    roughness: 0.3,
+                    transparent: true,
+                    opacity: 0.4,
+                    envMapIntensity: 0.8
+                });
+                
+                const body = new THREE.Mesh(geometry, transparentMaterial);
+                body.castShadow = true;
+                body.receiveShadow = true;
+                weightGroup.add(body);
+                
+                // Ajouter le "-1" sur la sphère
+                const textTexture = createTextTexture('-1', '#666666', 512);
+                const textMaterial = new THREE.MeshBasicMaterial({
+                    map: textTexture,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const textScale = radius * 1.4;
+                const planeGeometry = new THREE.PlaneGeometry(textScale, textScale);
+                const textMesh = new THREE.Mesh(planeGeometry, textMaterial);
+                textMesh.position.z = radius + 0.01;
+                weightGroup.add(textMesh);
+            }
+
+            return weightGroup;
+        }
+
+        function positionWeight(weight, plateX, index) {
+            const radius = 0.6;
+            const maxPerRing = 6;
+            const ring = Math.floor(index / maxPerRing);
+            const posInRing = index % maxPerRing;
+            const angle = (posInRing * Math.PI * 2) / maxPerRing;
+            const currentRadius = radius * (1 - ring * 0.3);
+            
+            weight.position.set(
+                plateX + Math.cos(angle) * currentRadius,
+                3.2 + ring * 0.35,
+                Math.sin(angle) * currentRadius
+            );
+            
+            // Légère rotation aléatoire pour plus de naturel
+            weight.rotation.y = Math.random() * Math.PI * 2;
+        }
+
+        function updateBalance() {
+            if (!currentChallenge) return;
+
+            const leftValue = leftWeights.x * currentChallenge.solution + leftWeights.num;
+            const rightValue = rightWeights.x * currentChallenge.solution + rightWeights.num;
+            const diff = leftValue - rightValue;
+            const maxRotation = 0.15;
+            const rotation = Math.max(-maxRotation, Math.min(maxRotation, diff * 0.04));
+
+            // Rotate beam avec animation fluide
+            if (balanceParts.beam) {
+                balanceParts.beam.rotation.z = rotation;
+            }
+
+            // Move plates avec déplacement subtil
+            const displacement = rotation * 2.5;
+            if (balanceParts.leftPlate) {
+                balanceParts.leftPlate.position.y = 3.0 - displacement;
+            }
+            if (balanceParts.rightPlate) {
+                balanceParts.rightPlate.position.y = 3.0 + displacement;
+            }
+
+            // Animer les poids avec la plate
+            balanceParts.leftWeightMeshes.forEach((weight, index) => {
+                const radius = 0.6;
+                const maxPerRing = 6;
+                const ring = Math.floor(index / maxPerRing);
+                weight.position.y = 3.2 + ring * 0.35 - displacement;
+            });
+
+            balanceParts.rightWeightMeshes.forEach((weight, index) => {
+                const radius = 0.6;
+                const maxPerRing = 6;
+                const ring = Math.floor(index / maxPerRing);
+                weight.position.y = 3.2 + ring * 0.35 + displacement;
+            });
+        }
+
+        function updateEquation() {
+            const equationDiv = document.getElementById('equation');
+            
+            let leftSide = '';
+            if (leftWeights.x > 0) {
+                leftSide += leftWeights.x > 1 ? `${leftWeights.x}x` : 'x';
+            }
+            if (leftWeights.num > 0) {
+                leftSide += (leftSide ? ' + ' : '') + leftWeights.num;
+            }
+            if (!leftSide) leftSide = '0';
+
+            let rightSide = '';
+            if (rightWeights.x > 0) {
+                rightSide += rightWeights.x > 1 ? `${rightWeights.x}x` : 'x';
+            }
+            if (rightWeights.num > 0) {
+                rightSide += (rightSide ? ' + ' : '') + rightWeights.num;
+            }
+            if (!rightSide) rightSide = '0';
+
+            equationDiv.textContent = `${leftSide} = ${rightSide}`;
+        }
+
+        function checkSolution() {
+            const feedback = document.getElementById('feedback');
+            
+            if (!currentChallenge) {
+                playErrorSound();
+                feedback.className = 'feedback error';
+                feedback.textContent = '⚠️ Commence par un nouveau défi !';
+                feedback.style.display = 'block';
+                setTimeout(() => feedback.style.display = 'none', 2000);
+                return;
+            }
+
+            const isCorrect = 
+                leftWeights.x === currentChallenge.left.x &&
+                leftWeights.num === currentChallenge.left.num &&
+                rightWeights.x === currentChallenge.right.x &&
+                rightWeights.num === currentChallenge.right.num;
+
+            if (isCorrect) {
+                playSuccessSound();
+                feedback.className = 'feedback success';
+                feedback.textContent = `🎉 Parfait ! ${currentChallenge.equation} → x = ${currentChallenge.solution}`;
+                score += 10 * currentLevel;
+                document.getElementById('score').textContent = score;
+                feedback.style.display = 'block';
+                setTimeout(() => feedback.style.display = 'none', 3000);
+            } else {
+                playErrorSound();
+                feedback.className = 'feedback error';
+                feedback.textContent = '❌ Pas encore... Réessaie !';
+                feedback.style.display = 'block';
+                setTimeout(() => feedback.style.display = 'none', 2000);
+            }
+        }
+
+        function resetBalance() {
+            leftWeights = { x: 0, num: 0 };
+            rightWeights = { x: 0, num: 0 };
+            updateDisplay();
+        }
+
+        function nextChallenge() {
+            const challengeIndex = Math.floor(Math.random() * challenges.length);
+            currentChallenge = challenges[challengeIndex];
+            
+            resetBalance();
+            
+            const equationDiv = document.getElementById('equation');
+            equationDiv.textContent = `Reproduis : ${currentChallenge.equation}`;
+            
+            if (score > 0 && score % 50 === 0) {
+                currentLevel++;
+                document.getElementById('level').textContent = currentLevel;
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotation très subtile de la caméra (mouvement studio)
+            const time = Date.now() * 0.00008;
+            camera.position.x = Math.sin(time) * 1.2;
+            camera.position.z = 14 + Math.cos(time) * 0.8;
+            camera.lookAt(0, 3, 0);
+            
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // Start
+        init();
+    </script>
 </body>
 </html>
