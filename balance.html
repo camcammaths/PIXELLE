@@ -57,16 +57,7 @@ body::after {
   font-family:var(--serif); font-style:italic; font-weight:300;
   font-size:0.8rem; letter-spacing:0.22em; color:var(--mink); opacity:0.65;
 }
-.pills { display:flex; gap:3px; margin-top:10px; pointer-events:all; }
-.pill {
-  font-family:var(--mono); font-size:0.5rem; letter-spacing:0.13em;
-  padding:3px 10px; border-radius:20px; cursor:pointer;
-  transition:all 0.28s; border:1px solid transparent;
-}
-.pill.locked   { color:rgba(44,38,32,0.2); border-color:rgba(44,38,32,0.08); cursor:not-allowed; }
-.pill.unlocked { color:var(--mink); border-color:rgba(44,38,32,0.14); }
-.pill.unlocked:hover { border-color:rgba(44,38,32,0.32); color:var(--ink); }
-.pill.active   { background:var(--ink); color:#f5f0e8; }
+
 
 .hd-right { text-align:right; }
 .score-l { font-family:var(--mono); font-size:0.48rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--taupe); display:block; }
@@ -81,7 +72,7 @@ body::after {
   display:flex; flex-direction:column; align-items:center;
   padding-bottom:28px; pointer-events:none;
 }
-.eq-meta { font-family:var(--mono); font-size:0.5rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--taupe); opacity:0.6; margin-bottom:6px; }
+
 .eq-disp {
   font-family:var(--serif); font-style:italic; font-weight:300;
   font-size:2.6rem; color:var(--ink); opacity:0.82;
@@ -223,10 +214,7 @@ body::after {
 <canvas id="three"></canvas>
 
 <header class="hd">
-  <div>
-    <div class="brand">Balance — équations</div>
-    <div class="pills" id="pills"></div>
-  </div>
+  <div class="brand">Balance — équations</div>
   <div class="hd-right">
     <span class="score-l">Points</span>
     <div class="score-n" id="sc">0</div>
@@ -255,8 +243,7 @@ body::after {
 
 <!-- Zone équation -->
 <div class="eq-zone">
-  <div class="eq-meta" id="eMeta">6ème · 1 · Égalité directe</div>
-  <div class="eq-disp" id="eDisp">x = 5</div>
+  <div class="eq-disp" id="eDisp">x = ?</div>
   <div class="eq-state" id="eSt">Manipule les plateaux</div>
 </div>
 
@@ -287,6 +274,8 @@ body::after {
     <button class="cb" onclick="closeS()">Continuer →</button>
   </div>
 </div>
+
+
 
 <!-- Overlay déblocage -->
 <div class="ov" id="ovU">
@@ -707,38 +696,37 @@ function setTilt() {
   const d = L.x*ex.s + L.n - (R.x*ex.s + R.n);
   tiltTarget = Math.max(-0.24, Math.min(0.24, d * -0.028));
 }
-
 /* ═══════════════════════════════════════
    DONNÉES
 ═══════════════════════════════════════ */
 const GR = {
   "6ème":{ tot:4, ex:[
-    {lv:"6ème · 1", co:"Égalité directe",   hi:"x est seul à gauche. Pose des 1 à droite jusqu'à l'équilibre.",   e:{lx:1,ln:0,rx:0,rn:5},  s:5},
-    {lv:"6ème · 2", co:"x + 3 = 8",         hi:"Retire 3 unités des deux plateaux en même temps.",                e:{lx:1,ln:3,rx:0,rn:8},  s:5},
-    {lv:"6ème · 3", co:"x + 2 = 7",         hi:"x + 2 = 7 — retire 2 de chaque côté.",                           e:{lx:1,ln:2,rx:0,rn:7},  s:5},
-    {lv:"6ème · 4", co:"x + 4 = 10",        hi:"x + 4 = 10 — retire 4 de chaque côté.",                          e:{lx:1,ln:4,rx:0,rn:10}, s:6},
+    {hi:"Retire 3 unités des deux plateaux en même temps.",                e:{lx:1,ln:3,rx:0,rn:8},  s:5},
+    {hi:"x + 2 = 7 — retire 2 de chaque côté.",                           e:{lx:1,ln:2,rx:0,rn:7},  s:5},
+    {hi:"x + 4 = 10 — retire 4 de chaque côté.",                          e:{lx:1,ln:4,rx:0,rn:10}, s:6},
+    {hi:"x + 5 = 11 — retire 5 de chaque côté.",                          e:{lx:1,ln:5,rx:0,rn:11}, s:6},
   ]},
   "5ème":{ tot:5, ex:[
-    {lv:"5ème · 1", co:"2x = 6",            hi:"2 flèches x valent 6 — retire une flèche de chaque côté.",        e:{lx:2,ln:0,rx:0,rn:6},  s:3},
-    {lv:"5ème · 2", co:"3x = 12",           hi:"Retire une flèche x de chaque côté, jusqu'à n'en avoir qu'une.",  e:{lx:3,ln:0,rx:0,rn:12}, s:4},
-    {lv:"5ème · 3", co:"2x + 1 = 9",        hi:"Retire +1 des deux côtés d'abord, puis résous 2x = 8.",          e:{lx:2,ln:1,rx:0,rn:9},  s:4},
-    {lv:"5ème · 4", co:"3x + 2 = 14",       hi:"3x + 2 = 14 → retire 2 → 3x = 12 → retire x → x = 4",           e:{lx:3,ln:2,rx:0,rn:14}, s:4},
-    {lv:"5ème · 5", co:"2x + 5 = 13",       hi:"2x + 5 = 13 → retire 5 → 2x = 8 → x = 4",                      e:{lx:2,ln:5,rx:0,rn:13}, s:4},
+    {hi:"2 flèches x valent 6 — retire une flèche de chaque côté.",        e:{lx:2,ln:0,rx:0,rn:6},  s:3},
+    {hi:"Retire une flèche x de chaque côté, jusqu'à n'en avoir qu'une.",  e:{lx:3,ln:0,rx:0,rn:12}, s:4},
+    {hi:"Retire +1 des deux côtés d'abord, puis résous 2x = 8.",          e:{lx:2,ln:1,rx:0,rn:9},  s:4},
+    {hi:"3x + 2 = 14 → retire 2 → 3x = 12 → retire x → x = 4",           e:{lx:3,ln:2,rx:0,rn:14}, s:4},
+    {hi:"2x + 5 = 13 → retire 5 → 2x = 8 → x = 4",                       e:{lx:2,ln:5,rx:0,rn:13}, s:4},
   ]},
   "4ème":{ tot:5, ex:[
-    {lv:"4ème · 1", co:"2x + 3 = 11",       hi:"Retire 3 → 2x = 8 → retire x → x = 4",                          e:{lx:2,ln:3,rx:0,rn:11}, s:4},
-    {lv:"4ème · 2", co:"3x + 4 = 16",       hi:"3x + 4 = 16 → 3x = 12 → x = 4",                                 e:{lx:3,ln:4,rx:0,rn:16}, s:4},
-    {lv:"4ème · 3", co:"4x + 2 = 18",       hi:"4x + 2 = 18 → 4x = 16 → x = 4",                                 e:{lx:4,ln:2,rx:0,rn:18}, s:4},
-    {lv:"4ème · 4", co:"5x + 3 = 23",       hi:"5x + 3 = 23 → 5x = 20 → x = 4",                                 e:{lx:5,ln:3,rx:0,rn:23}, s:4},
-    {lv:"4ème · 5", co:"3x + 7 = 22",       hi:"3x + 7 = 22 → 3x = 15 → x = 5",                                 e:{lx:3,ln:7,rx:0,rn:22}, s:5},
+    {hi:"Retire 3 → 2x = 8 → retire x → x = 4",                          e:{lx:2,ln:3,rx:0,rn:11}, s:4},
+    {hi:"3x + 4 = 16 → 3x = 12 → x = 4",                                 e:{lx:3,ln:4,rx:0,rn:16}, s:4},
+    {hi:"4x + 2 = 18 → 4x = 16 → x = 4",                                 e:{lx:4,ln:2,rx:0,rn:18}, s:4},
+    {hi:"5x + 3 = 23 → 5x = 20 → x = 4",                                 e:{lx:5,ln:3,rx:0,rn:23}, s:4},
+    {hi:"3x + 7 = 22 → 3x = 15 → x = 5",                                 e:{lx:3,ln:7,rx:0,rn:22}, s:5},
   ]},
   "3ème":{ tot:6, ex:[
-    {lv:"3ème · 1", co:"4x + 5 = 25",       hi:"4x + 5 = 25 → 4x = 20 → x = 5",                                 e:{lx:4,ln:5,rx:0,rn:25}, s:5},
-    {lv:"3ème · 2", co:"5x + 2 = 27",       hi:"5x + 2 = 27 → 5x = 25 → x = 5",                                 e:{lx:5,ln:2,rx:0,rn:27}, s:5},
-    {lv:"3ème · 3", co:"6x + 3 = 33",       hi:"6x + 3 = 33 → 6x = 30 → x = 5",                                 e:{lx:6,ln:3,rx:0,rn:33}, s:5},
-    {lv:"3ème · 4", co:"4x + 8 = 28",       hi:"4x + 8 = 28 → 4x = 20 → x = 5",                                 e:{lx:4,ln:8,rx:0,rn:28}, s:5},
-    {lv:"3ème · 5", co:"7x + 1 = 36",       hi:"7x + 1 = 36 → 7x = 35 → x = 5",                                 e:{lx:7,ln:1,rx:0,rn:36}, s:5},
-    {lv:"3ème · 6", co:"3x + 12 = 27",      hi:"3x + 12 = 27 → 3x = 15 → x = 5",                                e:{lx:3,ln:12,rx:0,rn:27},s:5},
+    {hi:"4x + 5 = 25 → 4x = 20 → x = 5",                                 e:{lx:4,ln:5,rx:0,rn:25}, s:5},
+    {hi:"5x + 2 = 27 → 5x = 25 → x = 5",                                 e:{lx:5,ln:2,rx:0,rn:27}, s:5},
+    {hi:"6x + 3 = 33 → 6x = 30 → x = 5",                                 e:{lx:6,ln:3,rx:0,rn:33}, s:5},
+    {hi:"4x + 8 = 28 → 4x = 20 → x = 5",                                 e:{lx:4,ln:8,rx:0,rn:28}, s:5},
+    {hi:"7x + 1 = 36 → 7x = 35 → x = 5",                                 e:{lx:7,ln:1,rx:0,rn:36}, s:5},
+    {hi:"3x + 12 = 27 → 3x = 15 → x = 5",                                e:{lx:3,ln:12,rx:0,rn:27},s:5},
   ]},
 };
 const ORD = ["6ème","5ème","4ème","3ème"];
@@ -779,8 +767,6 @@ function fE(s) {
   return p.join(' + ') || `<span class="np">0</span>`;
 }
 function updEq() {
-  const ex=getEx(); if(!ex) return;
-  document.getElementById('eMeta').textContent=`${ex.lv} · ${ex.co}`;
   document.getElementById('eDisp').innerHTML=`${fE(L)} = ${fE(R)}`;
 }
 
@@ -860,7 +846,7 @@ function doReset() { load(); }
 function showHint() {
   const ex=getEx(); if(!ex) return; nhints++;
   const b=document.getElementById('hbox'); b.textContent=ex.hi; b.style.display='block';
-  setTimeout(()=>b.style.display='none',5000);
+  setTimeout(()=>b.style.display='none', 6000);
 }
 function swG(g) {
   if(!P[g].u) return; grade=g;
@@ -873,10 +859,6 @@ function toggleH() {
 
 /* Progression */
 function updPg() {
-  document.getElementById('pills').innerHTML=ORD.map(g=>{
-    const cls=P[g].u?(g===grade?'active':'unlocked'):'locked';
-    return `<div class="pill ${cls}" onclick="${P[g].u?`swG('${g}')`:''}">${g}</div>`;
-  }).join('');
   const d=P[grade], tot=GR[grade].tot;
   document.getElementById('pFill').style.width=(d.c/tot*100)+'%';
   document.getElementById('pTxt').textContent=`${d.c} / ${tot}`;
