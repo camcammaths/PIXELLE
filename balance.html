@@ -634,7 +634,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(38, innerWidth/innerHeight, 0.1, 100);
-camera.position.set(0, 1.8, 11);  // remonter de 0.8 à 1.8 (+ 1 unité)
+camera.position.set(0, 0.8, 11);  // position initiale
 camera.lookAt(0, 0.2, 0);
 
 /* ─── LUMIÈRES — reproduction exacte photo LOV ───
@@ -696,73 +696,81 @@ scene.add(new THREE.HemisphereLight(
    - Couleur de base : argenté légèrement chaud, avec teinte beige
    ─────────────────────────────────────────── */
 const M = {
-  // Corps principal — argenté chaud satiné brossé
+  // Argenté très clair LOV — presque blanc dans les highlights
   steel: new THREE.MeshStandardMaterial({
-    color: 0xd8d2cc,    // argenté légèrement chaud
+    color: 0xebe7e3,        // argenté très clair, chaud
+    roughness: 0.20,        // brossé brillant
+    metalness: 0.98,
+  }),
+  // Socle — même tonalité, légèrement plus sombre
+  base: new THREE.MeshStandardMaterial({
+    color: 0xdcd8d4,
+    roughness: 0.26,
+    metalness: 0.97,
+  }),
+  // Pivot — le plus brillant (arêtes vives blanches)
+  pivot: new THREE.MeshStandardMaterial({
+    color: 0xf2eee8,        // presque blanc
+    roughness: 0.12,        // très brillant
+    metalness: 0.99,
+  }),
+  // Plateaux — argenté clair uniforme
+  plate: new THREE.MeshStandardMaterial({
+    color: 0xe6e2de,
+    roughness: 0.22,
+    metalness: 0.98,
+  }),
+  // Fléau — argenté clair principal
+  beam: new THREE.MeshStandardMaterial({
+    color: 0xebe7e3,
+    roughness: 0.20,
+    metalness: 0.98,
+  }),
+  // Parties sombres — taupe rosé chaud (comme ombres photo)
+  dark: new THREE.MeshStandardMaterial({
+    color: 0xc4beb8,        // taupe clair rosé
     roughness: 0.28,
     metalness: 0.96,
   }),
-  // Socle — légèrement plus sombre/mat
-  base: new THREE.MeshStandardMaterial({
-    color: 0xbcb8b2,
-    roughness: 0.38,
-    metalness: 0.94,
-  }),
-  // Pivot extérieur — très brillant (arête vive dans la photo)
-  pivot: new THREE.MeshStandardMaterial({
-    color: 0xe8e4e0,
-    roughness: 0.14,
-    metalness: 0.98,
-  }),
-  // Plateaux — satiné doux
-  plate: new THREE.MeshStandardMaterial({
-    color: 0xccc8c2,
-    roughness: 0.30,
-    metalness: 0.96,
-  }),
-  // Fléau — légèrement plus clair, surface large
-  beam: new THREE.MeshStandardMaterial({
-    color: 0xdedad4,
+  // Cubes — même argenté que la balance
+  wx: new THREE.MeshStandardMaterial({
+    color: 0xe2ded8,
     roughness: 0.24,
     metalness: 0.97,
   }),
-  // Parties sombres — taupe satiné, jamais noir
-  dark: new THREE.MeshStandardMaterial({
-    color: 0x948e88,
-    roughness: 0.42,
-    metalness: 0.92,
-  }),
-  // Poids x — champagne rosé chaud (comme le fond de la photo)
-  wx: new THREE.MeshStandardMaterial({
-    color: 0xc4a08a,
-    roughness: 0.35,
-    metalness: 0.91,
-  }),
-  // Poids 1 — argenté bleuté cool
   wn: new THREE.MeshStandardMaterial({
-    color: 0xa8b4c0,
+    color: 0xd8d4d0,
     roughness: 0.26,
-    metalness: 0.94,
+    metalness: 0.96,
   }),
 };
 
 /* ─── GROUPE PRINCIPAL ─── */
 const root = new THREE.Group();
+root.position.y = 1.5;  // remonter légèrement
+root.scale.set(0.80, 0.80, 0.80);  // rétrécir légèrement (80%)
 scene.add(root);
 
-/* ─── SOCLE — demi-cylindre évasé ─── */
-const baseG = new THREE.CylinderGeometry(1.0, 1.2, 0.22, 64, 1, false, 0, Math.PI);
+/* ─── SOCLE — cylindre complet évasé ─── */
+// Base évasée complète (cylindre à 360°)
+const baseG = new THREE.CylinderGeometry(1.0, 1.2, 0.22, 64);
 const base  = new THREE.Mesh(baseG, M.base);
-base.rotation.y = Math.PI;
 base.position.y = -3.1;
 base.castShadow = true; base.receiveShadow = true;
 root.add(base);
 
-// Socle supérieur (plat)
-const baseTopG = new THREE.CylinderGeometry(1.0, 1.0, 0.06, 64, 1, false, 0, Math.PI*2);
+// Plateau supérieur circulaire complet
+const baseTopG = new THREE.CylinderGeometry(1.0, 1.0, 0.06, 64);
 const baseTop  = new THREE.Mesh(baseTopG, M.dark);
 baseTop.position.y = -2.99;
 root.add(baseTop);
+
+// Bord arrondi du socle (finition)
+const baseRimG = new THREE.TorusGeometry(1.0, 0.03, 16, 64);
+const baseRim = new THREE.Mesh(baseRimG, M.steel);
+baseRim.rotation.x = Math.PI / 2;
+baseRim.position.y = -2.96;
+root.add(baseRim);
 
 /* ─── COLONNE — deux tiges cylindriques parallèles ─── */
 function addCol(xOff) {
@@ -837,7 +845,7 @@ makeSuspension( 4.8);
 /* ─── PLATEAUX — plateaux plats circulaires ─── */
 function makeBowl(xPos) {
   const group = new THREE.Group();
-  group.position.set(xPos, -1.95, 0);
+  group.position.set(xPos, -1.95, 0);  // position originale
   beamGroup.add(group);
 
   // Plateau plat circulaire (cylindre très court)
@@ -866,68 +874,64 @@ beamGroup.add(wgR);
 
 function clearG(g) { while(g.children.length) g.remove(g.children[0]); }
 
-// Créer texture métal brossé avec micro-stries + gravure
+// Créer texture métal brossé LOV — argenté clair avec micro-stries
 function makeMetalTexture(text, baseColor) {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
   
-  // Base couleur métal
-  const grad = ctx.createLinearGradient(0, 0, 512, 512);
-  grad.addColorStop(0, baseColor);
-  grad.addColorStop(0.5, baseColor);
-  grad.addColorStop(1, baseColor);
-  ctx.fillStyle = grad;
+  // Base argentée claire
+  ctx.fillStyle = baseColor;
   ctx.fillRect(0, 0, 512, 512);
   
-  // Stries de brossage (verticales)
-  ctx.globalAlpha = 0.08;
-  for(let i = 0; i < 512; i += 2) {
-    const variation = Math.random() * 0.3 + 0.7;
-    ctx.fillStyle = variation > 0.85 ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)';
-    ctx.fillRect(i, 0, 1, 512);
+  // Stries brossées horizontales très fines (comme la photo)
+  ctx.globalAlpha = 0.04;
+  for(let i = 0; i < 512; i += 1) {
+    const variation = Math.random();
+    ctx.fillStyle = variation > 0.5 ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+    ctx.fillRect(0, i, 512, 1);
   }
   ctx.globalAlpha = 1;
   
-  // Gravure profonde avec ombre portée
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = 4;
-  ctx.shadowOffsetX = 2;
-  ctx.shadowOffsetY = 2;
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.font = 'italic bold 300px Georgia, serif';
+  // Gravure très subtile (à peine visible comme sur LOV)
+  ctx.shadowColor = 'rgba(0,0,0,0.2)';
+  ctx.shadowBlur = 2;
+  ctx.shadowOffsetX = 1;
+  ctx.shadowOffsetY = 1;
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.font = 'italic 280px Georgia, serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, 258, 268);
+  ctx.fillText(text, 258, 266);
   
-  // Highlight de gravure
+  // Highlight très léger
   ctx.shadowColor = 'transparent';
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.fillText(text, 254, 264);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillText(text, 254, 262);
   
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
   return texture;
 }
 
-// Normal map pour relief brossé
+// Normal map pour stries brossées
 function makeNormalMap() {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
   
-  // Base normal map (bleu = surface plate)
+  // Base normal
   ctx.fillStyle = '#8080ff';
   ctx.fillRect(0, 0, 512, 512);
   
-  // Stries brossées verticales (perturbation légère)
-  ctx.globalAlpha = 0.3;
-  for(let i = 0; i < 512; i += 3) {
-    const h = Math.random() * 20 + 118;
+  // Stries horizontales fines
+  ctx.globalAlpha = 0.2;
+  for(let i = 0; i < 512; i += 2) {
+    const h = Math.random() * 15 + 120;
     ctx.fillStyle = `rgb(${h}, ${h}, 255)`;
-    ctx.fillRect(i, 0, 2, 512);
+    ctx.fillRect(0, i, 512, 1);
   }
   
   const texture = new THREE.CanvasTexture(canvas);
@@ -935,21 +939,21 @@ function makeNormalMap() {
   return texture;
 }
 
-// Poids x — MÉTAL GRIS FONCÉ brossé
+// Poids x — argenté clair LOV
 function makeWeightX() {
   const g = new THREE.BoxGeometry(0.36, 0.36, 0.36);
   
-  const albedo = makeMetalTexture('x', '#6a6a6a');
+  const albedo = makeMetalTexture('x', '#e2ded8');
   const normal = makeNormalMap();
   
   const mat = new THREE.MeshStandardMaterial({
     map: albedo,
     normalMap: normal,
-    normalScale: new THREE.Vector2(0.4, 0.4),
-    color: 0x6a6a6a,        // gris foncé métallique
-    roughness: 0.30,        // métal brossé satiné
-    metalness: 0.96,        // très métallique
-    envMapIntensity: 1.8,   // reflets prononcés
+    normalScale: new THREE.Vector2(0.3, 0.3),
+    color: 0xe2ded8,        // argenté clair
+    roughness: 0.24,        // brossé satiné
+    metalness: 0.97,
+    envMapIntensity: 1.8,
   });
   
   const mesh = new THREE.Mesh(g, mat);
@@ -958,21 +962,21 @@ function makeWeightX() {
   return mesh;
 }
 
-// Poids 1 — MÉTAL GRIS CLAIR brossé (presque argenté)
+// Poids 1 — légèrement plus sombre
 function makeWeight1() {
   const g = new THREE.BoxGeometry(0.26, 0.26, 0.26);
   
-  const albedo = makeMetalTexture('1', '#c8c8c8');
+  const albedo = makeMetalTexture('1', '#d8d4d0');
   const normal = makeNormalMap();
   
   const mat = new THREE.MeshStandardMaterial({
     map: albedo,
     normalMap: normal,
-    normalScale: new THREE.Vector2(0.5, 0.5),
-    color: 0xc8c8c8,        // gris clair argenté
-    roughness: 0.22,        // plus brillant
-    metalness: 0.97,
-    envMapIntensity: 1.9,
+    normalScale: new THREE.Vector2(0.3, 0.3),
+    color: 0xd8d4d0,
+    roughness: 0.26,
+    metalness: 0.96,
+    envMapIntensity: 1.8,
   });
   
   const mesh = new THREE.Mesh(g, mat);
